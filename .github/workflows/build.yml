@@ -50,7 +50,7 @@ jobs:
       env:
         DJANGO: ${{ matrix.django-version }}
 
-    - name: Upload coverage
-      uses: codecov/codecov-action@v1
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v2
       with:
         name: Python ${{ matrix.python-version }}
