@@ -8,7 +8,7 @@ from edc_visit_schedule.constants import DAY01, DAY14
 
 from effect_form_validators.effect_subject import VitalSignsFormValidator
 
-from .mixins import TestCaseMixin
+from ..mixins import TestCaseMixin
 
 
 class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
