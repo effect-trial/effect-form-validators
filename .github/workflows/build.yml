@@ -14,6 +14,10 @@ jobs:
         django-version: ['3.2']
 
     steps:
+    - name: Install pycups and words dependency
+      run: |
+        sudo apt-get install libcups2-dev wamerican
+
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
