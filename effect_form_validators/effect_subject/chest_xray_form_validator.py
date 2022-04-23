@@ -1,8 +1,4 @@
-import pdb
-
-from edc_constants.choices import YES_NO_NA
 from edc_constants.constants import NORMAL, OTHER, YES
-from edc_constants.utils import get_display
 from edc_form_validators import INVALID_ERROR
 from edc_form_validators.form_validator import FormValidator
 
