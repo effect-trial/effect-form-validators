@@ -1,9 +1,10 @@
 [build-system]
 requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
+#build_wheel_for_editable =
 
 [tool.setuptools_scm]
-write_to = "_version.py"
+write_to = "VERSION"
 
 [tool.black]
 line-length = 95
@@ -12,6 +13,7 @@ target-version = ["py39"]
 [tool.isort]
 profile = "black"
 py_version = "39"
+skip = [".tox", ".eggs"]
 
 [tool.coverage.run]
 parallel = true
@@ -19,7 +21,7 @@ branch = true
 source = ["edc_form_validators"]
 
 [tool.coverage.paths]
-source = ["edc_form_validators", ".tox/*/site-packages"]
+source = ["edc_form_validators"]
 
 [tool.coverage.report]
 show_missing = true
