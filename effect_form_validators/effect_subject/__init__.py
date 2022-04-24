@@ -1,1 +1,2 @@
 from .chest_xray_form_validator import ChestXrayFormValidator
+from .vital_signs_form_validator import VitalSignsFormValidator
