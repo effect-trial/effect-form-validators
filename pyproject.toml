@@ -3,8 +3,11 @@ requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 #build_wheel_for_editable =
 
+#[tox]
+#isolated_build = true
+
 [tool.setuptools_scm]
-write_to = "VERSION"
+write_to = "effect_form_validators/_version.py"
 
 [tool.black]
 line-length = 95
@@ -18,18 +21,13 @@ skip = [".tox", ".eggs"]
 [tool.coverage.run]
 parallel = true
 branch = true
-source = ["edc_form_validators"]
+source = ["effect_form_validators"]
 
 [tool.coverage.paths]
-source = ["edc_form_validators"]
+source = ["effect_form_validators"]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
 omit = ["requirements.txt"]
 
-[tools.flake8]
-ignore = ["E226","E302","E41","W503","F601","E203","F401"]
-max-line-length = 95
-max-complexity = 10
-exclude = ["effect_form_validators/migrations/*"]
