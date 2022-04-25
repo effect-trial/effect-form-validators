@@ -3,9 +3,6 @@ requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
 build-backend = "setuptools.build_meta"
 #build_wheel_for_editable =
 
-#[tox]
-#isolated_build = true
-
 [tool.setuptools_scm]
 write_to = "effect_form_validators/_version.py"
 
@@ -31,3 +28,48 @@ show_missing = true
 skip_covered = true
 omit = ["requirements.txt"]
 
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist =
+    py{39}-dj{32,dev},
+    lint
+isolated_build = true
+
+[gh-actions]
+python =
+    3.9: py39, lint
+
+[gh-actions:env]
+DJANGO =
+    3.2: dj32, lint
+    dev: djdev
+
+[flake8]
+ignore = E226,E302,E41,F401,W503,W605
+max-complexity = 10
+max-line-length = 95
+exclude = __init__.py,effect_form_validators/migrations/*,.tox/*
+
+[testenv]
+deps =
+    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/tox.txt
+    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/test_utils.txt
+    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/edc.txt
+    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/third_party_dev.txt
+    dj32: Django>=3.2,<3.3
+    djdev: https://github.com/django/django/tarball/main
+
+commands =
+    pip install -U pip django_mock_queries
+    pip --version
+    coverage run -a runtests.py
+    coverage report
+
+[testenv:lint]
+deps = -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/lint.txt
+commands =
+    isort --profile=black --check --diff . --skip 'migrations' --skip '.tox'
+    black --check --diff . --extend-exclude 'effect_form_validators/migrations/*'
+    flake8 effect_form_validators
+"""
