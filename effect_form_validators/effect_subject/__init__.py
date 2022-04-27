@@ -1,2 +1,5 @@
+from .arv_history_form_validator import ArvHistoryFormValidator
+from .arv_treatment_form_validator import ArvTreatmentFormValidator
+from .blood_culture_form_validator import BloodCultureFormValidator
 from .chest_xray_form_validator import ChestXrayFormValidator
 from .vital_signs_form_validator import VitalSignsFormValidator

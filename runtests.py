@@ -34,6 +34,7 @@ DEFAULT_SETTINGS = dict(
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        "edc_dashboard.middleware.DashboardMiddleware",
     ],
     ROOT_URLCONF="effect_form_validators.urls",
     TEMPLATES=[
