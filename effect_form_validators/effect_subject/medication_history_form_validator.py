@@ -9,8 +9,9 @@ from edc_registration import get_registered_subject_model_cls
 
 class MedicalHistoryFormValidator(FormValidator):
     def _clean(self) -> None:
-        self.required_if(YES, field="tb_prev_dx", field_required="tb_site")
-        self.required_if(NO, field="on_tb_tx", field_required="tb_dx_ago")
+        self.applicable_if(YES, field="tb_prev_dx", field_applicable="tb_site")
+        self.applicable_if(YES, field="tb_prev_dx", field_applicable="on_tb_tx")
+        self.applicable_if(NO, field="on_tb_tx", field_applicable="tb_dx_ago")
         self.applicable_if(YES, field="on_tb_tx", field_applicable="on_rifampicin")
         self.required_if(NO, field="on_rifampicin", field_required="rifampicin_start_date")
         self.validate_hiv_diagnosis()

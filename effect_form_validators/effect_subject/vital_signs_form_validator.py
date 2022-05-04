@@ -14,5 +14,5 @@ class VitalSignsFormValidator(CrfFormValidator):
             self.applicable_if_true(
                 condition=condition,
                 field_applicable=fld,
-                not_applicable_msg="This field is not applicable at baseline",
+                not_applicable_msg="Not applicable at baseline",
             )

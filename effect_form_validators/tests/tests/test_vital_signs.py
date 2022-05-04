@@ -63,7 +63,7 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
                 self.assertIn(
-                    "This field is not applicable at baseline",
+                    "Not applicable at baseline",
                     str(cm.exception.error_dict.get("reportable_as_ae")),
                 )
 
@@ -77,7 +77,7 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     form_validator.validate()
                 self.assertIn("patient_admitted", cm.exception.error_dict)
                 self.assertIn(
-                    "This field is not applicable at baseline",
+                    "Not applicable at baseline",
                     str(cm.exception.error_dict.get("patient_admitted")),
                 )
 
