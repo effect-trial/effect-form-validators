@@ -15,6 +15,7 @@ DEFAULT_SETTINGS = dict(
     BASE_DIR=Path(__file__).resolve().parent.parent,
     SECRET_KEY="django-insecure-37g_by$&j(g8r9uqn%*@i3!4y6_rxlyf57itfp+)_)z2(6!=$l",
     DEBUG=True,
+    SUBJECT_CONSENT_MODEL=None,
     ALLOWED_HOSTS=[],
     INSTALLED_APPS=[
         "django.contrib.admin",
@@ -24,7 +25,7 @@ DEFAULT_SETTINGS = dict(
         "django.contrib.sessions",
         "django.contrib.messages",
         "django.contrib.staticfiles",
-        "effect_form_validators",
+        "effect_form_validators.apps.AppConfig",
     ],
     MIDDLEWARE=[
         "django.middleware.security.SecurityMiddleware",
@@ -34,6 +35,7 @@ DEFAULT_SETTINGS = dict(
         "django.contrib.auth.middleware.AuthenticationMiddleware",
         "django.contrib.messages.middleware.MessageMiddleware",
         "django.middleware.clickjacking.XFrameOptionsMiddleware",
+        "edc_dashboard.middleware.DashboardMiddleware",
     ],
     ROOT_URLCONF="effect_form_validators.urls",
     TEMPLATES=[

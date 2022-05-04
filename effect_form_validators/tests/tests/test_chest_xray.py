@@ -1,12 +1,26 @@
+from datetime import datetime
+
+from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.constants import NO, NORMAL, OTHER, YES
 from edc_utils import get_utcnow
 
-from effect_form_validators.effect_subject import ChestXrayFormValidator
+from effect_form_validators.effect_subject import ChestXrayFormValidator as Base
 
 from ..mixins import TestCaseMixin
+from .form_validator_test_mixin import FormValidatorTestMixin
+
+
+class ChestXrayFormValidator(FormValidatorTestMixin, Base):
+    @property
+    def consent_datetime(self) -> datetime:
+        return get_utcnow() - relativedelta(years=1)
+
+    @property
+    def previous_chest_xray_date(self):
+        return (get_utcnow() - relativedelta(years=1)).date()
 
 
 class TestChestXrayFormValidation(TestCaseMixin, TestCase):
@@ -16,7 +30,7 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
         self.signs_and_symptoms = MockModel(
             mock_name="SignsAndSymptoms",
             subject_visit=self.subject_visit,
-            report_datetime=get_utcnow(),
+            report_datetime=self.subject_visit.report_datetime,
             xray_performed=YES,
         )
         self.xray_result_other = MockModel(
@@ -73,7 +87,7 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
         self.subject_visit.signsandsymptoms.xray_performed = YES
         cleaned_data.update(
             chest_xray=YES,
-            chest_xray_date=get_utcnow(),
+            chest_xray_date=self.subject_visit.report_datetime.date(),
             chest_xray_results=MockSet(self.xray_result_normal),
             chest_xray_results_other="blah",
         )
@@ -87,7 +101,7 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
         self.subject_visit.signsandsymptoms.xray_performed = YES
         cleaned_data.update(
             chest_xray=YES,
-            chest_xray_date=get_utcnow(),
+            chest_xray_date=self.subject_visit.report_datetime.date(),
             chest_xray_results=MockSet(self.xray_result_other),
             chest_xray_results_other=None,
         )
@@ -101,7 +115,7 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
         self.subject_visit.signsandsymptoms.xray_performed = YES
         cleaned_data.update(
             chest_xray=YES,
-            chest_xray_date=get_utcnow(),
+            chest_xray_date=self.subject_visit.report_datetime.date(),
             chest_xray_results=MockSet(self.xray_result_other),
             chest_xray_results_other="blah",
         )
@@ -130,7 +144,7 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
         self.subject_visit.signsandsymptoms.xray_performed = YES
         cleaned_data.update(
             chest_xray=YES,
-            chest_xray_date=get_utcnow(),
+            chest_xray_date=self.subject_visit.report_datetime.date(),
             chest_xray_results=None,
             chest_xray_results_other=None,
         )
@@ -144,7 +158,7 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
         self.subject_visit.signsandsymptoms.xray_performed = NO
         cleaned_data.update(
             chest_xray=YES,
-            chest_xray_date=get_utcnow(),
+            chest_xray_date=self.subject_visit.report_datetime.date(),
             chest_xray_results=None,
             chest_xray_results_other=None,
         )

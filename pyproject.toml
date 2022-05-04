@@ -8,26 +8,62 @@ write_to = "_version.py"
 [tool.black]
 line-length = 95
 target-version = ["py39"]
+extend-exclude = '''^(.*\/)*\b(migrations)\b($|\/.*$)'''
 
 [tool.isort]
 profile = "black"
 py_version = "39"
+skip = [".tox", ".eggs", "migrations"]
 
 [tool.coverage.run]
 parallel = true
 branch = true
-source = ["edc_form_validators"]
+source = ["effect_form_validators"]
 
 [tool.coverage.paths]
-source = ["edc_form_validators", ".tox/*/site-packages"]
+source = ["effect_form_validators"]
 
 [tool.coverage.report]
 show_missing = true
 skip_covered = true
 omit = ["requirements.txt"]
 
-[tools.flake8]
-ignore = ["E226","E302","E41","W503","F601","E203","F401"]
-max-line-length = 95
-max-complexity = 10
-exclude = ["effect_form_validators/migrations/*"]
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist =
+    py{39}-dj{32,dev},
+    lint
+isolated_build = true
+
+[gh-actions]
+python =
+    3.9: py39, lint
+
+[gh-actions:env]
+DJANGO =
+    3.2: dj32, lint
+    dev: djdev
+
+[testenv]
+deps =
+    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/tox.txt
+    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/test_utils.txt
+    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/edc.txt
+    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/third_party_dev.txt
+    dj32: Django>=3.2,<3.3
+    djdev: https://github.com/django/django/tarball/main
+
+commands =
+    pip install -U pip edc-microbiology
+    pip --version
+    coverage run -a runtests.py
+    coverage report
+
+[testenv:lint]
+deps = -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/lint.txt
+commands =
+    isort --profile=black --check --diff .
+    black --check --diff .
+    flake8 .
+"""

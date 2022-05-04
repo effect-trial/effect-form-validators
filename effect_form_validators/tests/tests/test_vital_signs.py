@@ -1,14 +1,19 @@
-from typing import Optional
+from typing import Any, Optional
 
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import TestCase, tag
 from edc_constants.constants import NO, NOT_APPLICABLE, YES
 from edc_visit_schedule.constants import DAY01, DAY14
 
-from effect_form_validators.effect_subject import VitalSignsFormValidator
+from effect_form_validators.effect_subject import VitalSignsFormValidator as Base
 
 from ..mixins import TestCaseMixin
+from .form_validator_test_mixin import FormValidatorTestMixin
+
+
+class VitalSignsFormValidator(FormValidatorTestMixin, Base):
+    pass
 
 
 class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
@@ -28,6 +33,7 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
         )
         return cleaned_data
 
+    @tag("1")
     def test_baseline_with_valid_data_ok(self):
         cleaned_data = self.get_cleaned_data(visit_code=DAY01)
         form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
@@ -57,7 +63,7 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
                 self.assertIn(
-                    "This field is not applicable at baseline",
+                    "Not applicable at baseline",
                     str(cm.exception.error_dict.get("reportable_as_ae")),
                 )
 
@@ -71,7 +77,7 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     form_validator.validate()
                 self.assertIn("patient_admitted", cm.exception.error_dict)
                 self.assertIn(
-                    "This field is not applicable at baseline",
+                    "Not applicable at baseline",
                     str(cm.exception.error_dict.get("patient_admitted")),
                 )
 
