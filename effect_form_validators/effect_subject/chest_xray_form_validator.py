@@ -1,14 +1,21 @@
-from edc_constants.constants import NORMAL, OTHER, YES
+from datetime import date
+from typing import Optional
+
+from edc_constants.constants import NO, NORMAL, OTHER, YES
+from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
-from edc_form_validators.form_validator import FormValidator
+from edc_utils.text import formatted_date
 
 
-class ChestXrayFormValidator(FormValidator):
+class ChestXrayFormValidator(CrfFormValidator):
     def clean(self):
+        super().clean()
 
         self.validate_against_ssx()
 
         self.required_if(YES, field="chest_xray", field_required="chest_xray_date")
+
+        self.validate_chest_xray_date()
 
         self.m2m_required_if(YES, field="chest_xray", m2m_field="chest_xray_results")
 
@@ -26,12 +33,74 @@ class ChestXrayFormValidator(FormValidator):
             "xray_performed",
             None,
         )
-        if (
-            xray_performed
-            and self.cleaned_data.get("chest_xray")
-            and self.cleaned_data.get("chest_xray") != xray_performed
+        if xray_performed and self.cleaned_data.get("chest_xray"):
+            if xray_performed == YES and self.cleaned_data.get("chest_xray") != YES:
+                raise self.raise_validation_error(
+                    {
+                        "chest_xray": (
+                            "Invalid. X-ray performed. Expected YES. See `Signs and Symptoms`"
+                        )
+                    },
+                    INVALID_ERROR,
+                )
+            elif xray_performed == NO and self.cleaned_data.get("chest_xray") != NO:
+                raise self.raise_validation_error(
+                    {
+                        "chest_xray": (
+                            "Invalid. X-ray not performed. Expected NO. "
+                            "See `Signs and Symptoms`"
+                        )
+                    },
+                    INVALID_ERROR,
+                )
+
+    def validate_chest_xray_date(self):
+        if self.cleaned_data.get("report_datetime") and self.cleaned_data.get(
+            "chest_xray_date"
         ):
-            raise self.raise_validation_error(
-                {"chest_xray": "Invalid. X-ray not performed. See `Signs and Symptoms`"},
-                INVALID_ERROR,
+            if (
+                self.cleaned_data.get("chest_xray_date")
+                > self.cleaned_data.get("report_datetime").date()
+            ):
+                self.raise_validation_error(
+                    {"chest_xray_date": "Invalid. Cannot be after report date"}, INVALID_ERROR
+                )
+
+            elif self.cleaned_data.get("chest_xray_date") < self.consent_datetime.date():
+                self.raise_validation_error(
+                    {"chest_xray_date": "Invalid. Cannot be before consent date"},
+                    INVALID_ERROR,
+                )
+            elif (
+                self.previous_chest_xray_date
+                and self.cleaned_data.get("chest_xray_date") < self.previous_chest_xray_date
+            ):
+                self.raise_validation_error(
+                    {
+                        "chest_xray_date": (
+                            "Invalid. Previous chest x-ray was reported "
+                            f"on {formatted_date(self.previous_chest_xray_date)}."
+                        )
+                    },
+                    INVALID_ERROR,
+                )
+
+    @property
+    def previous_chest_xray_date(self) -> Optional[date]:
+        """Returns"""
+        try:
+            exclude_opts = dict(id=self.instance.id)
+        except AttributeError:
+            exclude_opts = {}
+        qs = (
+            self.instance.__class__.objects.filter(subject_visit=self.subject_visit)
+            .exclude(
+                subject_visit__appointment__timepoint__lt=self.subject_visit.appointment.timepoint,
+                **exclude_opts,
             )
+            .order_by("subject_visit__visit_code", "subject_visit__visit_code_sequence")
+        )
+        try:
+            return qs.last().chest_xray_date
+        except AttributeError:
+            return None

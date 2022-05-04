@@ -1,8 +1,8 @@
 from edc_constants.constants import NO, OTHER, YES
-from edc_form_validators import FormValidator
+from edc_crf.crf_form_validator import CrfFormValidator
 
 
-class ArvHistoryFormValidator(FormValidator):
+class ArvHistoryFormValidator(CrfFormValidator):
     def clean(self) -> None:
         self.date_not_before(
             "arv_initiation_date",
