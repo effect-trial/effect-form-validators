@@ -15,6 +15,7 @@ from edc_csf.constants import (
     CN_PALSY_RIGHT_OTHER,
     FOCAL_NEUROLOGIC_DEFICIT_OTHER,
 )
+from edc_form_validators import NOT_APPLICABLE_ERROR
 from edc_visit_schedule.utils import is_baseline
 
 
@@ -133,36 +134,40 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
         # hospitalization not reportable at baseline
         baseline = is_baseline(self.cleaned_data.get("subject_visit"))
         for fld in self.reportable_fields:
-            self.applicable_if_true(
-                not baseline,
-                field_applicable=fld,
-                not_applicable_msg="Not applicable at baseline.",
-            )
+            if baseline and self.cleaned_data.get(fld) != NOT_APPLICABLE:
+                raise self.raise_validation_error(
+                    {fld: "Not applicable at baseline."}, NOT_APPLICABLE_ERROR
+                )
 
-        if not is_baseline(self.cleaned_data.get("subject_visit")):
+        if not baseline:
             self.applicable_if(YES, field="any_sx", field_applicable="reportable_as_ae")
 
-        sx_gte_g3_selections = self._get_selection_keys("current_sx_gte_g3")
-        if sx_gte_g3_selections == [NONE] and self.cleaned_data.get("reportable_as_ae") == YES:
-            raise forms.ValidationError(
-                {
-                    "reportable_as_ae": (
-                        "Invalid selection. "
-                        "Expected 'No', if no symptoms at Grade 3 or above were reported."
-                    )
-                }
-            )
-        if sx_gte_g3_selections != [NONE] and self.cleaned_data.get("reportable_as_ae") == NO:
-            raise forms.ValidationError(
-                {
-                    "reportable_as_ae": (
-                        "Invalid selection. "
-                        "Expected 'Yes', if symptoms Grade 3 or above were reported."
-                    )
-                }
-            )
+            sx_gte_g3_selections = self._get_selection_keys("current_sx_gte_g3")
+            if (
+                sx_gte_g3_selections == [NONE]
+                and self.cleaned_data.get("reportable_as_ae") == YES
+            ):
+                raise forms.ValidationError(
+                    {
+                        "reportable_as_ae": (
+                            "Invalid selection. "
+                            "Expected 'No', if no symptoms at Grade 3 or above were reported."
+                        )
+                    }
+                )
+            if (
+                sx_gte_g3_selections != [NONE]
+                and self.cleaned_data.get("reportable_as_ae") == NO
+            ):
+                raise forms.ValidationError(
+                    {
+                        "reportable_as_ae": (
+                            "Invalid selection. "
+                            "Expected 'Yes', if symptoms Grade 3 or above were reported."
+                        )
+                    }
+                )
 
-        if not is_baseline(self.cleaned_data.get("subject_visit")):
             self.applicable_if(YES, field="any_sx", field_applicable="patient_admitted")
 
     def validate_cm_sx_fieldset(self):
