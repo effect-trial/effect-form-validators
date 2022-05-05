@@ -3,28 +3,24 @@ from zoneinfo import ZoneInfo
 from arrow import Arrow
 from django.conf import settings
 from edc_constants.constants import NO, YES
-from edc_form_validators import INVALID_ERROR, FormValidator
+from edc_crf.crf_form_validator import CrfFormValidator
+from edc_form_validators import INVALID_ERROR
 from edc_registration import get_registered_subject_model_cls
 
 
-class MedicalHistoryFormValidator(FormValidator):
+class MedicalHistoryFormValidator(CrfFormValidator):
     def _clean(self) -> None:
         self.applicable_if(YES, field="tb_prev_dx", field_applicable="tb_site")
         self.applicable_if(YES, field="tb_prev_dx", field_applicable="on_tb_tx")
         self.applicable_if(NO, field="on_tb_tx", field_applicable="tb_dx_ago")
         self.applicable_if(YES, field="on_tb_tx", field_applicable="on_rifampicin")
-        self.required_if(NO, field="on_rifampicin", field_required="rifampicin_start_date")
+        self.required_if(YES, field="on_rifampicin", field_required="rifampicin_start_date")
+        self.validate_date_against_report_datetime("rifampicin_start_date")
         self.validate_hiv_diagnosis()
 
     def validate_hiv_diagnosis(self):
+        self.validate_date_against_report_datetime("hiv_dx_date")
         if self.cleaned_data.get("report_datetime") and self.cleaned_data.get("hiv_dx_date"):
-            if (
-                self.cleaned_data.get("hiv_dx_date")
-                > self.cleaned_data.get("report_datetime").date()
-            ):
-                self.raise_validation_error(
-                    {"hiv_dx_date": "Invalid. Cannot be after report date"}, INVALID_ERROR
-                )
             if (
                 self.cleaned_data.get("hiv_dx_date")
                 == self.cleaned_data.get("report_datetime").date()
