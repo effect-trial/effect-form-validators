@@ -37,9 +37,11 @@ class LpCsfFormValidator(
     def validate_csf_culture(self: Any, requisition: str):
         self.require_together(
             field=requisition,
-            field_required="csf_assay_datetime",
+            field_required="csf_culture_assay_datetime",
         )
-        self.validate_requisition(requisition, "csf_assay_datetime", self.csf_culture_panel)
+        self.validate_requisition(
+            requisition, "csf_culture_assay_datetime", self.csf_culture_panel
+        )
         self.required_if_true(
             self.cleaned_data.get("quantitative_culture") is not None,
             field_required=requisition,
