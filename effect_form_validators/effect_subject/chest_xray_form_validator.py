@@ -15,6 +15,8 @@ class ChestXrayFormValidator(CrfFormValidator):
 
         self.required_if(YES, field="chest_xray", field_required="chest_xray_date")
 
+        self.validate_date_against_report_datetime("chest_xray_date")
+
         self.validate_chest_xray_date()
 
         self.m2m_required_if(YES, field="chest_xray", m2m_field="chest_xray_results")
@@ -28,11 +30,13 @@ class ChestXrayFormValidator(CrfFormValidator):
         )
 
     def validate_against_ssx(self):
-        xray_performed = getattr(
-            self.cleaned_data.get("subject_visit").signsandsymptoms,
-            "xray_performed",
-            None,
-        )
+        try:
+            xray_performed = self.cleaned_data.get(
+                "subject_visit"
+            ).signsandsymptoms.xray_performed
+        except AttributeError:
+            xray_performed = None
+
         if xray_performed and self.cleaned_data.get("chest_xray"):
             if xray_performed == YES and self.cleaned_data.get("chest_xray") != YES:
                 raise self.raise_validation_error(
@@ -58,15 +62,7 @@ class ChestXrayFormValidator(CrfFormValidator):
         if self.cleaned_data.get("report_datetime") and self.cleaned_data.get(
             "chest_xray_date"
         ):
-            if (
-                self.cleaned_data.get("chest_xray_date")
-                > self.cleaned_data.get("report_datetime").date()
-            ):
-                self.raise_validation_error(
-                    {"chest_xray_date": "Invalid. Cannot be after report date"}, INVALID_ERROR
-                )
-
-            elif self.cleaned_data.get("chest_xray_date") < self.consent_datetime.date():
+            if self.cleaned_data.get("chest_xray_date") < self.consent_datetime.date():
                 self.raise_validation_error(
                     {"chest_xray_date": "Invalid. Cannot be before consent date"},
                     INVALID_ERROR,
@@ -87,7 +83,7 @@ class ChestXrayFormValidator(CrfFormValidator):
 
     @property
     def previous_chest_xray_date(self) -> Optional[date]:
-        """Returns"""
+        """Returns the date of a previous chest xray, if it exists."""
         try:
             exclude_opts = dict(id=self.instance.id)
         except AttributeError:
