@@ -31,6 +31,8 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
         self.validate_current_sx()
         self.m2m_other_specify(OTHER, m2m_field="current_sx", field_other="current_sx_other")
 
+        self.applicable_if(YES, field="any_sx", field_applicable="cm_sx")
+
         self.validate_current_sx_gte_g3()
         self.m2m_other_specify(
             OTHER, m2m_field="current_sx_gte_g3", field_other="current_sx_gte_g3_other"
@@ -39,8 +41,6 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
         self.validate_current_sx_other_specify_fields()
 
         self.validate_reporting_fieldset()
-
-        self.applicable_if(YES, field="any_sx", field_applicable="cm_sx")
 
     @staticmethod
     def _get_sisx_display_value(key):
