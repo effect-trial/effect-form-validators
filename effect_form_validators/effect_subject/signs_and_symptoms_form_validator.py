@@ -40,7 +40,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
 
         self.validate_reporting_fieldset()
 
-        self.validate_cm_sx_fieldset()
+        self.applicable_if(YES, field="any_sx", field_applicable="cm_sx")
 
     @staticmethod
     def _get_sisx_display_value(key):
@@ -169,17 +169,3 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
                 )
 
             self.applicable_if(YES, field="any_sx", field_applicable="patient_admitted")
-
-    def validate_cm_sx_fieldset(self):
-        self.applicable_if(YES, field="any_sx", field_applicable="cm_sx")
-
-        self.applicable_if(YES, field="cm_sx", field_applicable="cm_sx_lp_done")
-
-        self.m2m_applicable_if(YES, field="cm_sx", m2m_field="cm_sx_bloods_taken")
-        self.m2m_single_selection_if(NONE, m2m_field="cm_sx_bloods_taken")
-        self.m2m_single_selection_if(NOT_APPLICABLE, m2m_field="cm_sx_bloods_taken")
-        self.m2m_other_specify(
-            OTHER,
-            m2m_field="cm_sx_bloods_taken",
-            field_other="cm_sx_bloods_taken_other",
-        )
