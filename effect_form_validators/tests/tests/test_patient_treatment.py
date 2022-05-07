@@ -56,9 +56,8 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             MockModel(mock_name="other", name=OTHER, display_name=OTHER),
         )
 
-        # MyList.objects.create(name="H", display_name="H")
-
-    def get_cleaned_data_patient_no_cm_no_tx(self):
+    @staticmethod
+    def get_cleaned_data_patient_no_cm_no_tx():
         return {
             "report_datetime": get_utcnow(),
             "lp_completed": NO,
@@ -96,7 +95,8 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             "other_drugs_given_other": "",
         }
 
-    def get_cleaned_data_patient_with_cm_with_all_tx(self):
+    @staticmethod
+    def get_cleaned_data_patient_with_cm_with_all_tx():
         return {
             "report_datetime": get_utcnow(),
             "lp_completed": YES,
