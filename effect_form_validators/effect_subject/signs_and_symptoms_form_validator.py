@@ -9,12 +9,12 @@ from edc_constants.constants import (
     VISUAL_LOSS,
     YES,
 )
-from edc_crf.crf_form_validator import CrfFormValidator
-from edc_csf.constants import (
+from edc_constants.disease_constants import (
     CN_PALSY_LEFT_OTHER,
     CN_PALSY_RIGHT_OTHER,
     FOCAL_NEUROLOGIC_DEFICIT_OTHER,
 )
+from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import NOT_APPLICABLE_ERROR
 from edc_visit_schedule.utils import is_baseline
 
@@ -29,11 +29,13 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
         # TODO: Validate xxx_performed NA if telephone or not in person
 
         self.validate_current_sx()
+
         self.m2m_other_specify(OTHER, m2m_field="current_sx", field_other="current_sx_other")
 
         self.applicable_if(YES, field="any_sx", field_applicable="cm_sx")
 
         self.validate_current_sx_gte_g3()
+
         self.m2m_other_specify(
             OTHER, m2m_field="current_sx_gte_g3", field_other="current_sx_gte_g3_other"
         )
