@@ -15,6 +15,7 @@ from edc_constants.disease_constants import (
     FOCAL_NEUROLOGIC_DEFICIT_OTHER,
 )
 from edc_crf.crf_form_validator import CrfFormValidator
+from edc_form_validators import NOT_APPLICABLE_ERROR
 from edc_visit_schedule.utils import is_baseline
 
 
@@ -41,7 +42,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
 
         self.validate_reporting_fieldset()
 
-        self.validate_cm_sx_fieldset()
+        self.applicable_if(YES, field="any_sx", field_applicable="cm_sx")
 
     @staticmethod
     def _get_sisx_display_value(key):
@@ -134,50 +135,39 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
     def validate_reporting_fieldset(self):
         # hospitalization not reportable at baseline
         baseline = is_baseline(self.cleaned_data.get("subject_visit"))
-
-        if baseline:
-            for fld in self.reportable_fields:
-                self.applicable_if_true(
-                    not baseline,
-                    field_applicable=fld,
-                    not_applicable_msg="Not applicable at baseline.",
+        for fld in self.reportable_fields:
+            if baseline and self.cleaned_data.get(fld) != NOT_APPLICABLE:
+                raise self.raise_validation_error(
+                    {fld: "Not applicable at baseline."}, NOT_APPLICABLE_ERROR
                 )
-        elif not baseline:
+
+        if not baseline:
             self.applicable_if(YES, field="any_sx", field_applicable="reportable_as_ae")
 
-        sx_gte_g3_selections = self._get_selection_keys("current_sx_gte_g3")
-        if sx_gte_g3_selections == [NONE] and self.cleaned_data.get("reportable_as_ae") == YES:
-            raise forms.ValidationError(
-                {
-                    "reportable_as_ae": (
-                        "Invalid selection. "
-                        "Expected 'No', if no symptoms at Grade 3 or above were reported."
-                    )
-                }
-            )
-        if sx_gte_g3_selections != [NONE] and self.cleaned_data.get("reportable_as_ae") == NO:
-            raise forms.ValidationError(
-                {
-                    "reportable_as_ae": (
-                        "Invalid selection. "
-                        "Expected 'Yes', if symptoms Grade 3 or above were reported."
-                    )
-                }
-            )
+            sx_gte_g3_selections = self._get_selection_keys("current_sx_gte_g3")
+            if (
+                sx_gte_g3_selections == [NONE]
+                and self.cleaned_data.get("reportable_as_ae") == YES
+            ):
+                raise forms.ValidationError(
+                    {
+                        "reportable_as_ae": (
+                            "Invalid selection. "
+                            "Expected 'No', if no symptoms at Grade 3 or above were reported."
+                        )
+                    }
+                )
+            if (
+                sx_gte_g3_selections != [NONE]
+                and self.cleaned_data.get("reportable_as_ae") == NO
+            ):
+                raise forms.ValidationError(
+                    {
+                        "reportable_as_ae": (
+                            "Invalid selection. "
+                            "Expected 'Yes', if symptoms Grade 3 or above were reported."
+                        )
+                    }
+                )
 
-        if not is_baseline(self.cleaned_data.get("subject_visit")):
             self.applicable_if(YES, field="any_sx", field_applicable="patient_admitted")
-
-    def validate_cm_sx_fieldset(self):
-        self.applicable_if(YES, field="any_sx", field_applicable="cm_sx")
-
-        self.applicable_if(YES, field="cm_sx", field_applicable="cm_sx_lp_done")
-
-        self.m2m_applicable_if(YES, field="cm_sx", m2m_field="cm_sx_bloods_taken")
-        self.m2m_single_selection_if(NONE, m2m_field="cm_sx_bloods_taken")
-        self.m2m_single_selection_if(NOT_APPLICABLE, m2m_field="cm_sx_bloods_taken")
-        self.m2m_other_specify(
-            OTHER,
-            m2m_field="cm_sx_bloods_taken",
-            field_other="cm_sx_bloods_taken_other",
-        )

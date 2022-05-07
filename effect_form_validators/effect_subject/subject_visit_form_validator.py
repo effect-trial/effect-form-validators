@@ -1,5 +1,6 @@
 from django import forms
 from edc_appointment.constants import MISSED_APPT
+from edc_constants.choices import ALIVE_DEAD_UNKNOWN_NA_MISSED
 from edc_constants.constants import (
     ALIVE,
     HOSPITAL_NOTES,
@@ -181,7 +182,7 @@ class SubjectVisitFormValidator(VisitFormValidator):
                 survival_status = self.cleaned_data.get("survival_status")
                 error_msg = (
                     "Invalid: Cannot be "
-                    f"'{survival_status.get_survival_status_display()}' "
+                    f"'{get_display(ALIVE_DEAD_UNKNOWN_NA_MISSED, survival_status)}' "
                     "at baseline"
                 )
 

@@ -21,7 +21,7 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
                 "flucon_dose_datetime"
             ):
                 self.raise_validation_error(
-                    {"flucon_dose_datetime": f"Cannot be after report datetime"}, INVALID_ERROR
+                    {"flucon_dose_datetime": "Cannot be after report datetime"}, INVALID_ERROR
                 )
 
         # flucyt

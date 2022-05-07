@@ -91,7 +91,7 @@ class ChestXrayFormValidator(CrfFormValidator):
         qs = (
             self.instance.__class__.objects.filter(subject_visit=self.subject_visit)
             .exclude(
-                subject_visit__appointment__timepoint__lt=self.subject_visit.appointment.timepoint,
+                subject_visit__appointment__timepoint__lt=self.subject_visit.appointment.timepoint,  # noqa
                 **exclude_opts,
             )
             .order_by("subject_visit__visit_code", "subject_visit__visit_code_sequence")
