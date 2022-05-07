@@ -1,10 +1,12 @@
 from django import forms
 from edc_constants.constants import (
     HEADACHE,
+    IN_PERSON,
     NO,
     NONE,
     NOT_APPLICABLE,
     OTHER,
+    PATIENT,
     UNKNOWN,
     VISUAL_LOSS,
     YES,
@@ -14,9 +16,11 @@ from edc_constants.disease_constants import (
     CN_PALSY_RIGHT_OTHER,
     FOCAL_NEUROLOGIC_DEFICIT_OTHER,
 )
+from edc_constants.utils import get_display
 from edc_crf.crf_form_validator import CrfFormValidator
-from edc_form_validators import NOT_APPLICABLE_ERROR
+from edc_form_validators import INVALID_ERROR, NOT_APPLICABLE_ERROR
 from edc_visit_schedule.utils import is_baseline
+from edc_visit_tracking.choices import ASSESSMENT_TYPES, ASSESSMENT_WHO_CHOICES
 
 
 class SignsAndSymptomsFormValidator(CrfFormValidator):
@@ -24,9 +28,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
     reportable_fields = ["reportable_as_ae", "patient_admitted"]
 
     def clean(self) -> None:
-        # TODO: Validate that patient can't specify UNKNOWN for
-        #  any_sx (e.g. if an in-person or telephone/patient visit)
-        # TODO: Validate xxx_performed NA if telephone or not in person
+        self.validate_any_sx_unknown()
 
         self.validate_current_sx()
 
@@ -42,11 +44,33 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
 
         self.validate_current_sx_other_specify_fields()
 
+        self.validate_investigations_performed()
+
         self.validate_reporting_fieldset()
+
+    def in_person_visit(self):
+        return self.cleaned_data.get("subject_visit").assessment_type == IN_PERSON
 
     @staticmethod
     def _get_sisx_display_value(key):
         return key
+
+    def validate_any_sx_unknown(self):
+        error_msg = ""
+        if self.cleaned_data.get("any_sx") == UNKNOWN:
+            if self.in_person_visit():
+                error_msg = (
+                    "Invalid. Cannot be 'Unknown' "
+                    f"if this is an '{get_display(ASSESSMENT_TYPES,IN_PERSON)}' visit."
+                )
+            elif self.cleaned_data.get("subject_visit").assessment_who == PATIENT:
+                error_msg = (
+                    "Invalid. Cannot be 'Unknown' "
+                    f"if spoke to '{get_display(ASSESSMENT_WHO_CHOICES, PATIENT)}'."
+                )
+
+            if error_msg:
+                raise self.raise_validation_error({"any_sx": error_msg}, INVALID_ERROR)
 
     def validate_current_sx(self):
         if self.cleaned_data.get("any_sx") == YES:
@@ -131,6 +155,17 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
         self.m2m_other_specify(
             VISUAL_LOSS, m2m_field="current_sx", field_other="visual_field_loss"
         )
+
+    def validate_investigations_performed(self):
+        for fld in ["xray_performed", "lp_performed", "urinary_lam_performed"]:
+            self.applicable_if_true(
+                condition=self.in_person_visit(),
+                field_applicable=fld,
+                not_applicable_msg=(
+                    "Invalid. This field is not applicable if this is not "
+                    f"an '{get_display(ASSESSMENT_TYPES,IN_PERSON)}' visit."
+                ),
+            )
 
     def validate_reporting_fieldset(self):
         # hospitalization not reportable at baseline
