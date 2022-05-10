@@ -5,7 +5,6 @@ from edc_constants.constants import (
     IN_PERSON,
     NEXT_OF_KIN,
     NO,
-    NONE,
     NOT_APPLICABLE,
     OTHER,
     PATIENT,
@@ -27,7 +26,6 @@ class SignsAndSymptomsFormValidator(FormValidatorTestMixin, Base):
 class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
     def setUp(self) -> None:
         super().setUp()
-        self.sisx_choice_none = MockModel(mock_name="SiSx", name=NONE, display_name=NONE)
         self.sisx_choice_na = MockModel(
             mock_name="SiSx", name=NOT_APPLICABLE, display_name=NOT_APPLICABLE
         )
@@ -41,10 +39,10 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
         cleaned_data = super().get_cleaned_data(**kwargs)
         cleaned_data.update(
             any_sx=NO,
-            current_sx=MockSet(self.sisx_choice_none),
+            current_sx=MockSet(self.sisx_choice_na),
             current_sx_other="",
             cm_sx=NOT_APPLICABLE,
-            current_sx_gte_g3=MockSet(self.sisx_choice_none),
+            current_sx_gte_g3=MockSet(self.sisx_choice_na),
             current_sx_gte_g3_other="",
             headache_duration="",
             cn_palsy_left_other="",
@@ -155,9 +153,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     cleaned_data = self.get_cleaned_data()
                     cleaned_data.update(
                         any_sx=NO,
-                        current_sx=MockSet(self.sisx_choice_none),
+                        current_sx=MockSet(self.sisx_choice_na),
                         cm_sx=NOT_APPLICABLE,
-                        current_sx_gte_g3=MockSet(self.sisx_choice_none),
+                        current_sx_gte_g3=MockSet(self.sisx_choice_na),
                         xray_performed=NO,
                         lp_performed=NO,
                         urinary_lam_performed=NO,
@@ -201,9 +199,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                         cleaned_data = self.get_cleaned_data()
                         cleaned_data.update(
                             any_sx=NO,
-                            current_sx=MockSet(self.sisx_choice_none),
+                            current_sx=MockSet(self.sisx_choice_na),
                             cm_sx=NOT_APPLICABLE,
-                            current_sx_gte_g3=MockSet(self.sisx_choice_none),
+                            current_sx_gte_g3=MockSet(self.sisx_choice_na),
                             xray_performed=NOT_APPLICABLE,
                             lp_performed=NOT_APPLICABLE,
                             urinary_lam_performed=NOT_APPLICABLE,

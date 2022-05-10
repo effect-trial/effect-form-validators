@@ -3,7 +3,6 @@ from edc_constants.constants import (
     HEADACHE,
     IN_PERSON,
     NO,
-    NONE,
     NOT_APPLICABLE,
     OTHER,
     PATIENT,
@@ -74,21 +73,14 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
 
     def validate_current_sx(self):
         if self.cleaned_data.get("any_sx") == YES:
-            self.m2m_selections_not_expected(NONE, NOT_APPLICABLE, m2m_field="current_sx")
-        elif self.cleaned_data.get("any_sx") == NO:
-            self.m2m_selection_expected(
-                NONE,
-                m2m_field="current_sx",
-                error_msg=f"Expected '{self._get_sisx_display_value(NONE)}' only.",
-            )
-        elif self.cleaned_data.get("any_sx") == UNKNOWN:
+            self.m2m_selections_not_expected(NOT_APPLICABLE, m2m_field="current_sx")
+        elif self.cleaned_data.get("any_sx") in [NO, UNKNOWN]:
             self.m2m_selection_expected(
                 NOT_APPLICABLE,
                 m2m_field="current_sx",
                 error_msg=f"Expected '{self._get_sisx_display_value(NOT_APPLICABLE)}' only.",
             )
 
-        self.m2m_single_selection_if(NONE, m2m_field="current_sx")
         self.m2m_single_selection_if(NOT_APPLICABLE, m2m_field="current_sx")
 
     def _get_selection_keys(self, field_name):
@@ -97,29 +89,20 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
         return []
 
     def validate_current_sx_gte_g3(self):
-        if self.cleaned_data.get("any_sx") == YES:
-            self.m2m_selections_not_expected(NOT_APPLICABLE, m2m_field="current_sx_gte_g3")
-        elif self.cleaned_data.get("any_sx") == NO:
-            self.m2m_selection_expected(
-                NONE,
-                m2m_field="current_sx_gte_g3",
-                error_msg=f"Expected '{self._get_sisx_display_value(NONE)}' only.",
-            )
-        elif self.cleaned_data.get("any_sx") == UNKNOWN:
+        if self.cleaned_data.get("any_sx") in [NO, UNKNOWN]:
             self.m2m_selection_expected(
                 NOT_APPLICABLE,
                 m2m_field="current_sx_gte_g3",
                 error_msg=f"Expected '{self._get_sisx_display_value(NOT_APPLICABLE)}' only.",
             )
 
-        self.m2m_single_selection_if(NONE, m2m_field="current_sx_gte_g3")
         self.m2m_single_selection_if(NOT_APPLICABLE, m2m_field="current_sx_gte_g3")
 
         # G3 selections, if specified, should come from the original symptoms list
         sx_gte_g3_selections = self._get_selection_keys("current_sx_gte_g3")
         sx_selections = self._get_selection_keys("current_sx")
 
-        if sx_gte_g3_selections != [NONE] and [
+        if sx_gte_g3_selections != [NOT_APPLICABLE] and [
             sx for sx in sx_gte_g3_selections if sx not in sx_selections
         ]:
             raise forms.ValidationError(
@@ -127,7 +110,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
                     "current_sx_gte_g3": (
                         "Invalid selection. "
                         "Must be from above list of signs and symptoms, "
-                        f"or '{self._get_sisx_display_value(NONE)}' if none of the "
+                        f"or '{self._get_sisx_display_value(NOT_APPLICABLE)}' if none of the "
                         "symptoms are Grade 3 or above"
                     )
                 }
@@ -181,7 +164,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
 
             sx_gte_g3_selections = self._get_selection_keys("current_sx_gte_g3")
             if (
-                sx_gte_g3_selections == [NONE]
+                sx_gte_g3_selections == [NOT_APPLICABLE]
                 and self.cleaned_data.get("reportable_as_ae") == YES
             ):
                 raise forms.ValidationError(
@@ -193,7 +176,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
                     }
                 )
             if (
-                sx_gte_g3_selections != [NONE]
+                sx_gte_g3_selections != [NOT_APPLICABLE]
                 and self.cleaned_data.get("reportable_as_ae") == NO
             ):
                 raise forms.ValidationError(
