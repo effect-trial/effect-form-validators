@@ -12,4 +12,4 @@ class HospitalizationFormValidator(FormValidator):
 
         self.required_if(YES, field="lp_performed", field_required="lp_count")
 
-        self.required_if(YES, field="have_details", field_required="narrative")
+        self.required_if(YES, field="have_details", field_required="narrative", inverse=False)
