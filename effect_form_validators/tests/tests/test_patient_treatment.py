@@ -141,7 +141,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         try:
             form_validator.validate()
         except forms.ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raise. Got {e}")
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     @tag("1")
     def test_cleaned_data_patient_with_cm_with_all_tx_ok(self):
@@ -151,7 +151,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         try:
             form_validator.validate()
         except forms.ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raise. Got {e}")
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     @tag("1")
     def test_cm_confirmed_na_if_lp_not_completed(self):

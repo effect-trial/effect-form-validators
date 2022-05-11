@@ -58,7 +58,7 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
         try:
             form_validator.validate()
         except ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raise. Got {e}")
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_no_chest_xray_raises(self):
         self.subject_visit.signsandsymptoms.xray_performed = NO
@@ -80,7 +80,7 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
         try:
             form_validator.validate()
         except ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raise. Got {e}")
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_chest_xray_other_field_not_expected_raises(self):
         cleaned_data = self.get_cleaned_data()
@@ -123,7 +123,7 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
         try:
             form_validator.validate()
         except ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raise. Got {e}")
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_chest_xray_expects_date_raises(self):
         cleaned_data = self.get_cleaned_data()

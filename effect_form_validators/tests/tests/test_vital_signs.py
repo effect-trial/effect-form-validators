@@ -40,7 +40,7 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
         try:
             form_validator.validate()
         except ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raise. Got {e}")
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_d14_with_valid_data_ok(self):
         cleaned_data = self.get_cleaned_data(
@@ -51,7 +51,7 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
         try:
             form_validator.validate()
         except ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raise. Got {e}")
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_reportable_as_ae_not_applicable_at_baseline(self):
         cleaned_data = self.get_cleaned_data(visit_code=DAY01)
@@ -104,7 +104,7 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                 try:
                     form_validator.validate()
                 except ValidationError as e:
-                    self.fail(f"ValidationError unexpectedly raise. Got {e}")
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_patient_admitted_is_applicable_if_not_baseline(self):
         cleaned_data = self.get_cleaned_data(
@@ -129,4 +129,4 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                 try:
                     form_validator.validate()
                 except ValidationError as e:
-                    self.fail(f"ValidationError unexpectedly raise. Got {e}")
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
