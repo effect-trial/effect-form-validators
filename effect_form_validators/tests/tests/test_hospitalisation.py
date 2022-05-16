@@ -4,7 +4,7 @@ from django import forms
 from django.test import TestCase
 from edc_constants.constants import NO, NOT_APPLICABLE, UNKNOWN, YES
 from edc_form_validators import FormValidatorTestCaseMixin
-from edc_utils import get_utcnow
+from edc_utils import get_utcnow, get_utcnow_as_date
 
 from effect_form_validators.tests.mixins import TestCaseMixin
 
@@ -19,13 +19,15 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         return {
             "report_datetime": get_utcnow(),
             "have_details": YES,
-            "admitted_date": get_utcnow() - timedelta(days=3),
+            "admitted_date": get_utcnow_as_date() - timedelta(days=3),
             "admitted_date_estimated": NO,
             "discharged": YES,
-            "discharged_date": get_utcnow() - timedelta(days=1),
+            "discharged_date": get_utcnow_as_date() - timedelta(days=1),
             "discharged_date_estimated": NO,
             "lp_performed": YES,
             "lp_count": 2,
+            "csf_positive_cm": YES,
+            "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=2),
             "narrative": "Details of admission",
         }
 
@@ -41,13 +43,15 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data = {
             "report_datetime": get_utcnow(),
             "have_details": NO,
-            "admitted_date": get_utcnow(),
+            "admitted_date": get_utcnow_as_date(),
             "admitted_date_estimated": NO,
             "discharged": UNKNOWN,
             "discharged_date": None,
             "discharged_date_estimated": NOT_APPLICABLE,
             "lp_performed": NO,
             "lp_count": None,
+            "csf_positive_cm": NOT_APPLICABLE,
+            "csf_positive_cm_date": None,
             "narrative": "",
         }
         form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -61,7 +65,7 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow(),
+                "admitted_date": get_utcnow_as_date(),
                 "admitted_date_estimated": NO,
                 "discharged": YES,
                 "discharged_date": None,
@@ -83,10 +87,10 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
                 cleaned_data.update(
                     {
                         "have_details": NO,
-                        "admitted_date": get_utcnow(),
+                        "admitted_date": get_utcnow_as_date(),
                         "admitted_date_estimated": NO,
                         "discharged": answer,
-                        "discharged_date": get_utcnow(),
+                        "discharged_date": get_utcnow_as_date(),
                     }
                 )
                 form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -103,10 +107,10 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow(),
+                "admitted_date": get_utcnow_as_date(),
                 "admitted_date_estimated": NO,
                 "discharged": YES,
-                "discharged_date": get_utcnow(),
+                "discharged_date": get_utcnow_as_date(),
                 "discharged_date_estimated": NOT_APPLICABLE,
             }
         )
@@ -126,7 +130,7 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
                 cleaned_data.update(
                     {
                         "have_details": NO,
-                        "admitted_date": get_utcnow(),
+                        "admitted_date": get_utcnow_as_date(),
                         "admitted_date_estimated": NO,
                         "discharged": answer,
                         "discharged_date": None,
@@ -173,6 +177,104 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         self.assertIn("lp_count", cm.exception.error_dict)
         self.assertEqual(
             {"lp_count": ["This field is not required."]},
+            cm.exception.message_dict,
+        )
+
+    def test_csf_positive_cm_applicable_if_lp_performed_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "lp_performed": YES,
+                "lp_count": 1,
+                "csf_positive_cm": NOT_APPLICABLE,
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(forms.ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("csf_positive_cm", cm.exception.error_dict)
+        self.assertEqual(
+            {"csf_positive_cm": ["This field is applicable."]},
+            cm.exception.message_dict,
+        )
+
+    def test_csf_positive_cm_not_applicable_if_lp_performed_not_yes(self):
+        for lp_answer in [NO, UNKNOWN]:
+            for csf_answer in [YES, NO, UNKNOWN]:
+                with self.subTest(lp_answer=lp_answer, csf_answer=csf_answer):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "lp_performed": lp_answer,
+                            "lp_count": None,
+                            "csf_positive_cm": csf_answer,
+                        }
+                    )
+                    form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(forms.ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("csf_positive_cm", cm.exception.error_dict)
+                    self.assertEqual(
+                        {"csf_positive_cm": ["This field is not applicable."]},
+                        cm.exception.message_dict,
+                    )
+
+    def test_csf_positive_cm_date_required_if_csf_positive_cm_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "lp_performed": YES,
+                "lp_count": 1,
+                "csf_positive_cm": YES,
+                "csf_positive_cm_date": None,
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(forms.ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("csf_positive_cm_date", cm.exception.error_dict)
+        self.assertEqual(
+            {"csf_positive_cm_date": ["This field is required."]},
+            cm.exception.message_dict,
+        )
+
+    def test_csf_positive_cm_date_not_required_if_csf_positive_cm_not_yes(self):
+        for answer in [NO, UNKNOWN]:
+            with self.subTest(answer=answer):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "lp_performed": YES,
+                        "lp_count": 3,
+                        "csf_positive_cm": answer,
+                        "csf_positive_cm_date": get_utcnow_as_date(),
+                    }
+                )
+                form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(forms.ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("csf_positive_cm_date", cm.exception.error_dict)
+                self.assertEqual(
+                    {"csf_positive_cm_date": ["This field is not required."]},
+                    cm.exception.message_dict,
+                )
+
+    def test_csf_positive_cm_date_not_required_if_csf_positive_not_applicable(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "lp_performed": NO,
+                "lp_count": None,
+                "csf_positive_cm": NOT_APPLICABLE,
+                "csf_positive_cm_date": get_utcnow_as_date(),
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(forms.ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("csf_positive_cm_date", cm.exception.error_dict)
+        self.assertEqual(
+            {"csf_positive_cm_date": ["This field is not required."]},
             cm.exception.message_dict,
         )
 
