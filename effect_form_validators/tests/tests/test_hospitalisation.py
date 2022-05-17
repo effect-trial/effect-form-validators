@@ -102,6 +102,65 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
                     cm.exception.message_dict,
                 )
 
+    def test_discharged_date_after_admitted_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "have_details": YES,
+                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date_estimated": NO,
+                "discharged": YES,
+                "discharged_date": get_utcnow_as_date() - timedelta(days=1),
+                "discharged_date_estimated": NO,
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except forms.ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_discharged_date_same_as_admitted_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "have_details": YES,
+                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date_estimated": NO,
+                "discharged": YES,
+                "discharged_date": get_utcnow_as_date() - timedelta(days=3),
+                "discharged_date_estimated": NO,
+                # CSF date cannot be after date discharged
+                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=3),
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except forms.ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_discharged_date_raises_if_earlier_than_admitted_date(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "have_details": YES,
+                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date_estimated": NO,
+                "discharged": YES,
+                "discharged_date": get_utcnow_as_date() - timedelta(days=4),
+                "discharged_date_estimated": NO,
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(forms.ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("discharged_date", cm.exception.error_dict)
+        self.assertEqual(
+            {"discharged_date": ["Invalid. Cannot be before date admitted."]},
+            cm.exception.message_dict,
+        )
+
     def test_discharged_date_estimated_applicable_if_discharged_yes(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
@@ -275,6 +334,135 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         self.assertIn("csf_positive_cm_date", cm.exception.error_dict)
         self.assertEqual(
             {"csf_positive_cm_date": ["This field is not required."]},
+            cm.exception.message_dict,
+        )
+
+    def test_csf_positive_cm_date_after_admitted_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "have_details": YES,
+                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date_estimated": NO,
+                "lp_performed": YES,
+                "lp_count": 2,
+                "csf_positive_cm": YES,
+                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=2),
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except forms.ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_csf_positive_cm_date_same_as_admitted_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "have_details": YES,
+                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date_estimated": NO,
+                "lp_performed": YES,
+                "lp_count": 2,
+                "csf_positive_cm": YES,
+                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=3),
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except forms.ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_csf_positive_cm_date_raises_if_earlier_than_admitted_date(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "have_details": YES,
+                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date_estimated": NO,
+                "lp_performed": YES,
+                "lp_count": 2,
+                "csf_positive_cm": YES,
+                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=4),
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(forms.ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("csf_positive_cm_date", cm.exception.error_dict)
+        self.assertEqual(
+            {"csf_positive_cm_date": ["Invalid. Cannot be before date admitted."]},
+            cm.exception.message_dict,
+        )
+
+    def test_csf_positive_cm_date_before_discharged_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "have_details": YES,
+                "admitted_date": get_utcnow_as_date() - timedelta(days=5),
+                "admitted_date_estimated": NO,
+                "discharged": YES,
+                "discharged_date": get_utcnow_as_date() - timedelta(days=3),
+                "discharged_date_estimated": NO,
+                "lp_performed": YES,
+                "lp_count": 2,
+                "csf_positive_cm": YES,
+                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=4),
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except forms.ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_csf_positive_cm_date_same_as_discharged_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "have_details": YES,
+                "admitted_date": get_utcnow_as_date() - timedelta(days=5),
+                "admitted_date_estimated": NO,
+                "discharged": YES,
+                "discharged_date": get_utcnow_as_date() - timedelta(days=3),
+                "discharged_date_estimated": NO,
+                "lp_performed": YES,
+                "lp_count": 2,
+                "csf_positive_cm": YES,
+                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=3),
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except forms.ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_csf_positive_cm_date_raises_if_after_discharged_date(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "have_details": YES,
+                "admitted_date": get_utcnow_as_date() - timedelta(days=5),
+                "admitted_date_estimated": NO,
+                "discharged": YES,
+                "discharged_date": get_utcnow_as_date() - timedelta(days=3),
+                "discharged_date_estimated": NO,
+                "lp_performed": YES,
+                "lp_count": 2,
+                "csf_positive_cm": YES,
+                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=2),
+            }
+        )
+        form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(forms.ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("csf_positive_cm_date", cm.exception.error_dict)
+        self.assertEqual(
+            {"csf_positive_cm_date": ["Invalid. Cannot be after date discharged."]},
             cm.exception.message_dict,
         )
 
