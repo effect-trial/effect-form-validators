@@ -7,8 +7,7 @@ from edc_form_validators import FormValidatorTestCaseMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
 
 from effect_form_validators.effect_prn import HospitalizationFormValidator as Base
-
-from ..mixins import FormValidatorTestMixin, TestCaseMixin
+from effect_form_validators.tests.mixins import FormValidatorTestMixin, TestCaseMixin
 
 
 class HospitalizationFormValidator(FormValidatorTestMixin, Base):
