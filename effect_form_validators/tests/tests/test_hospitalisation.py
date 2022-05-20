@@ -6,9 +6,13 @@ from edc_constants.constants import NO, NOT_APPLICABLE, UNKNOWN, YES
 from edc_form_validators import FormValidatorTestCaseMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
 
-from effect_form_validators.tests.mixins import TestCaseMixin
+from effect_form_validators.effect_prn import HospitalizationFormValidator as Base
 
-from ...effect_prn import HospitalizationFormValidator
+from ..mixins import FormValidatorTestMixin, TestCaseMixin
+
+
+class HospitalizationFormValidator(FormValidatorTestMixin, Base):
+    pass
 
 
 class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixin, TestCase):
