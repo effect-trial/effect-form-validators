@@ -9,8 +9,7 @@ from edc_utils import get_utcnow
 
 from effect_form_validators.effect_subject import ChestXrayFormValidator as Base
 
-from ..mixins import TestCaseMixin
-from .form_validator_test_mixin import FormValidatorTestMixin
+from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
 
 class ChestXrayFormValidator(FormValidatorTestMixin, Base):
