@@ -8,9 +8,8 @@ from edc_form_validators import FormValidatorTestCaseMixin
 from edc_utils import get_utcnow
 
 from effect_form_validators.effect_subject import PatientTreatmentFormValidator as Base
-from effect_form_validators.tests.mixins import TestCaseMixin
 
-from .form_validator_test_mixin import FormValidatorTestMixin
+from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
 MyInstance = namedtuple("MyList", ["name", "display_name"])
 

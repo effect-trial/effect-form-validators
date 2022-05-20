@@ -15,8 +15,7 @@ from edc_constants.constants import (
 
 from effect_form_validators.effect_subject import SignsAndSymptomsFormValidator as Base
 
-from ..mixins import TestCaseMixin
-from .form_validator_test_mixin import FormValidatorTestMixin
+from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
 
 class SignsAndSymptomsFormValidator(FormValidatorTestMixin, Base):
