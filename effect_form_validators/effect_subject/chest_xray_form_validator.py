@@ -9,7 +9,6 @@ from edc_utils.text import formatted_date
 
 class ChestXrayFormValidator(CrfFormValidator):
     def clean(self):
-        super().clean()
 
         self.validate_against_ssx()
 

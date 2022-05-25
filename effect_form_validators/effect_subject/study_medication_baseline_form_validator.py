@@ -7,7 +7,7 @@ from edc_visit_schedule.utils import is_baseline
 
 class StudyMedicationBaselineFormValidator(CrfFormValidator):
     def clean(self) -> None:
-        if not is_baseline(self.subject_visit):
+        if not is_baseline(instance=self.subject_visit):
             self.raise_validation_error(
                 {"__all__": "This form may only be completed at baseline"}, INVALID_ERROR
             )
