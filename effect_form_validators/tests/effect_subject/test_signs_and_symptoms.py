@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
@@ -20,6 +22,11 @@ from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
 class SignsAndSymptomsFormValidator(FormValidatorTestMixin, Base):
     pass
+
+
+is_baseline_import_path = (
+    "effect_form_validators.effect_subject.signs_and_symptoms_form_validator.is_baseline"
+)
 
 
 class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
@@ -56,7 +63,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
         )
         return cleaned_data
 
-    def test_cleaned_data_ok(self):
+    @patch(is_baseline_import_path)
+    def test_cleaned_data_ok(self, mock_is_baseline):
+        mock_is_baseline.return_value = True
         self.subject_visit.assessment_type = IN_PERSON
         form_validator = SignsAndSymptomsFormValidator(cleaned_data=self.get_cleaned_data())
         try:
@@ -64,7 +73,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_any_sx_unknown_ok(self):
+    @patch(is_baseline_import_path)
+    def test_any_sx_unknown_ok(self, mock_is_baseline):
+        mock_is_baseline.return_value = True
         self.subject_visit.assessment_type = TELEPHONE
         self.subject_visit.assessment_who = NEXT_OF_KIN
         cleaned_data = self.get_cleaned_data()
@@ -93,7 +104,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_any_sx_unknown_raises_if_in_person_visit(self):
+    @patch(is_baseline_import_path)
+    def test_any_sx_unknown_raises_if_in_person_visit(self, mock_is_baseline):
+        mock_is_baseline.return_value = True
         self.subject_visit.assessment_type = IN_PERSON
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(any_sx=UNKNOWN)
@@ -107,7 +120,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
             cm.exception.message_dict,
         )
 
-    def test_unknown_raises_if_telephone_visit_with_patient(self):
+    @patch(is_baseline_import_path)
+    def test_unknown_raises_if_telephone_visit_with_patient(self, mock_is_baseline):
+        mock_is_baseline.return_value = True
         self.subject_visit.assessment_type = TELEPHONE
         self.subject_visit.assessment_who = PATIENT
         cleaned_data = self.get_cleaned_data()
@@ -122,7 +137,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
             cm.exception.message_dict,
         )
 
-    def test_any_sx_unknown_ok_if_did_not_speak_to_patient(self):
+    @patch(is_baseline_import_path)
+    def test_any_sx_unknown_ok_if_did_not_speak_to_patient(self, mock_is_baseline):
+        mock_is_baseline.return_value = True
         self.subject_visit.assessment_type = TELEPHONE
         self.subject_visit.assessment_who = NEXT_OF_KIN
         cleaned_data = self.get_cleaned_data()
@@ -142,7 +159,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertNotIn("any_sx", cm.exception.error_dict)
 
-    def test_investigations_performed_applicable_if_in_person_visit(self):
+    @patch(is_baseline_import_path)
+    def test_investigations_performed_applicable_if_in_person_visit(self, mock_is_baseline):
+        mock_is_baseline.return_value = True
         self.subject_visit.assessment_type = IN_PERSON
 
         for fld in self.investigations_performed_fields:
@@ -183,7 +202,11 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     except ValidationError as e:
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_investigations_performed_not_applicable_if_not_in_person_visit(self):
+    @patch(is_baseline_import_path)
+    def test_investigations_performed_not_applicable_if_not_in_person_visit(
+        self, mock_is_baseline
+    ):
+        mock_is_baseline.return_value = True
         for fld in self.investigations_performed_fields:
             for assess_type, assess_who in [(TELEPHONE, NEXT_OF_KIN), (OTHER, OTHER)]:
                 for answer in [YES, NO]:
