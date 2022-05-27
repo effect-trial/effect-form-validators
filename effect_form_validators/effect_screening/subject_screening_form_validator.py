@@ -2,12 +2,17 @@ from django import forms
 from edc_consent.form_validators import ConsentFormValidatorMixin
 from edc_constants.constants import FEMALE, MALE, NO, OTHER, PENDING, POS, YES
 from edc_form_validators import FormValidator
+from edc_model import estimated_date_from_ago
+from edc_utils.forms import EstimatedDateFromAgoFormMixin
 
 
-class SubjectScreeningFormValidator(ConsentFormValidatorMixin, FormValidator):
+class SubjectScreeningFormValidator(
+    EstimatedDateFromAgoFormMixin, ConsentFormValidatorMixin, FormValidator
+):
     def clean(self) -> None:
         self.get_consent_for_period_or_raise(self.cleaned_data.get("report_datetime"))
         self.validate_age()
+        self.validate_hiv_dx()
         self.validate_cd4()
         self.validate_serum_crag()
         self.validate_lp_and_csf_crag()
@@ -16,6 +21,30 @@ class SubjectScreeningFormValidator(ConsentFormValidatorMixin, FormValidator):
         self.validate_pregnancy()
         self.required_if(
             YES, field="unsuitable_for_study", field_required="reasons_unsuitable"
+        )
+
+    def validate_hiv_dx(self):
+        self.not_required_if(
+            NO,
+            field="hiv_pos",
+            field_required="hiv_dx_ago",
+            inverse=False,
+        )
+        self.not_required_if(
+            NO,
+            field="hiv_pos",
+            field_required="hiv_dx_date",
+            inverse=False,
+        )
+        if self.cleaned_data.get("hiv_pos") == YES and not (
+            self.cleaned_data.get("hiv_dx_ago") or self.cleaned_data.get("hiv_dx_date")
+        ):
+            raise forms.ValidationError(
+                {"hiv_dx_date": "This field is required (or the above)."}
+            )
+
+        self.raise_if_both_ago_and_actual_date(
+            ago_field="hiv_dx_ago", date_field="hiv_dx_date", label="HIV diagnosis"
         )
 
     def validate_cd4(self) -> None:
@@ -38,10 +67,19 @@ class SubjectScreeningFormValidator(ConsentFormValidatorMixin, FormValidator):
                         )
                     }
                 )
+            if self.cleaned_data.get("cd4_date") and self.provided_hiv_dx_date:
+                if self.provided_hiv_dx_date > self.cleaned_data.get("cd4_date"):
+                    raise forms.ValidationError(
+                        {
+                            "cd4_date": (
+                                "Invalid. "
+                                "Most recent CD4 count date cannot be before HIV diagnosis."
+                            )
+                        }
+                    )
 
     def validate_serum_crag(self) -> None:
-        """Assert serum CrAg date is:
-        - positive
+        """Assert serum CrAg is positive, and serum CrAg date is:
         - not before CD4 date
         - within 21 days of CD4
         - within 14 days of report
@@ -165,3 +203,9 @@ class SubjectScreeningFormValidator(ConsentFormValidatorMixin, FormValidator):
             other_specify_field="any_other_mg_ssx_other",
             other_stored_value=YES,
         )
+
+    @property
+    def provided_hiv_dx_date(self):
+        if self.cleaned_data.get("hiv_dx_ago"):
+            return estimated_date_from_ago(data=self.cleaned_data, ago_field="hiv_dx_ago")
+        return self.cleaned_data.get("hiv_dx_date")
