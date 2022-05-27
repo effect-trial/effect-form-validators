@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from typing import Any, Optional
 
 from dateutil.relativedelta import relativedelta
@@ -41,6 +42,9 @@ class TestCaseMixin(TestCase):
             appt_datetime=self.consent_datetime,
             visit_code=DAY01,
             visit_code_sequence=0,
+            visit_schedule_name="visit_schedule",
+            schedule_name="schedule_name",
+            timepoint=Decimal("0.0"),
         )
 
         # subject_visit
@@ -51,6 +55,9 @@ class TestCaseMixin(TestCase):
             visit_code_sequence=0,
             appointment=self.appointment,
             signsandsymptoms=None,
+            visit_schedule_name=self.appointment.visit_schedule,
+            schedule_name=self.appointment.schedule_name,
+            timepoint=self.appointment.timepoint,
         )
 
     def get_cleaned_data(
@@ -69,10 +76,14 @@ class TestCaseMixin(TestCase):
         self.appointment.visit_code = visit_code
         self.appointment.visit_code_sequence = visit_code_sequence
         self.appointment.report_datetime = report_datetime
+        self.appointment.visit_schedule_name = "visit_schedule"
+        self.appointment.schedule_name = "schedule"
         self.subject_visit.appointment = self.appointment
         self.subject_visit.visit_code = visit_code
         self.subject_visit.visit_code_sequence = visit_code_sequence
         self.subject_visit.report_datetime = report_datetime
+        self.subject_visit.visit_schedule_name = "visit_schedule"
+        self.subject_visit.schedule_name = "schedule"
         return dict(
             subject_visit=self.subject_visit,
             report_datetime=report_datetime,

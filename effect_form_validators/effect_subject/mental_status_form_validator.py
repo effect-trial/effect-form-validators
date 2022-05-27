@@ -10,7 +10,7 @@ class MentalStatusFormValidator(CrfFormValidator):
 
     def clean(self) -> None:
 
-        baseline = is_baseline(self.cleaned_data.get("subject_visit"))
+        baseline = is_baseline(instance=self.cleaned_data.get("subject_visit"))
 
         # Cannot have had a recent seizure at baseline
         if baseline and self.cleaned_data.get("recent_seizure") == YES:

@@ -1,8 +1,8 @@
 from edc_constants.constants import NO, OTHER, YES
-from edc_form_validators.form_validator import FormValidator
+from edc_crf.crf_form_validator import CrfFormValidator
 
 
-class PatientTreatmentFormValidator(FormValidator):
+class PatientTreatmentFormValidator(CrfFormValidator):
     def clean(self):
         self.validate_on_cm_tx()
         self.validate_tb_tx()

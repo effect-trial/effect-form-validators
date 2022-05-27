@@ -152,7 +152,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
 
     def validate_reporting_fieldset(self):
         # hospitalization not reportable at baseline
-        baseline = is_baseline(self.cleaned_data.get("subject_visit"))
+        baseline = is_baseline(instance=self.cleaned_data.get("subject_visit"))
         for fld in self.reportable_fields:
             if baseline and self.cleaned_data.get(fld) != NOT_APPLICABLE:
                 raise self.raise_validation_error(

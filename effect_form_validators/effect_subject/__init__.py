@@ -4,7 +4,6 @@ from .blood_culture_form_validator import BloodCultureFormValidator
 from .chest_xray_form_validator import ChestXrayFormValidator
 from .clinical_note_form_validator import ClinicalNoteFormValidator
 from .diagnosis_form_validator import DiagnosesFormValidator
-from .followup_form_validator import FollowupFormValidator
 from .histopathology_form_validator import HistopathologyFormValidator
 from .lp_csf_form_validator import LpCsfFormValidator
 from .medication_adherence_form_validator import MedicationAdherenceFormValidator

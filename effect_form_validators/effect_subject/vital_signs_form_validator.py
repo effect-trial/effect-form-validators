@@ -8,11 +8,9 @@ class VitalSignsFormValidator(CrfFormValidator):
 
         self.required_if_true(True, field_required="dia_blood_pressure")
 
-        condition = not is_baseline(self.cleaned_data.get("subject_visit"))
-
         for fld in ["reportable_as_ae", "patient_admitted"]:
             self.applicable_if_true(
-                condition=condition,
+                condition=not is_baseline(instance=self.cleaned_data.get("subject_visit")),
                 field_applicable=fld,
                 not_applicable_msg="Not applicable at baseline",
             )
