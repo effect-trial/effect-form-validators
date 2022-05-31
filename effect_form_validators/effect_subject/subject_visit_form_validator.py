@@ -17,6 +17,7 @@ from edc_constants.constants import (
 )
 from edc_constants.utils import get_display
 from edc_form_validators import INVALID_ERROR
+from edc_visit_schedule.utils import is_baseline
 from edc_visit_tracking.choices import (
     ASSESSMENT_TYPES,
     ASSESSMENT_WHO_CHOICES,
@@ -95,7 +96,7 @@ class SubjectVisitFormValidator(VisitFormValidator):
 
     def validate_assessment_type(self):
         if (
-            self.cleaned_data.get("appointment").is_baseline_appt
+            is_baseline(instance=self.cleaned_data.get("appointment"))
             and self.cleaned_data.get("assessment_type") != IN_PERSON
         ):
             raise forms.ValidationError(
@@ -178,7 +179,7 @@ class SubjectVisitFormValidator(VisitFormValidator):
         if self.cleaned_data.get("survival_status") != ALIVE:
             error_msg = None
 
-            if self.cleaned_data.get("appointment").is_baseline_appt:
+            if is_baseline(instance=self.cleaned_data.get("appointment")):
                 survival_status = self.cleaned_data.get("survival_status")
                 error_msg = (
                     "Invalid: Cannot be "
@@ -197,7 +198,7 @@ class SubjectVisitFormValidator(VisitFormValidator):
 
     def validate_hospitalized(self):
         if (
-            self.cleaned_data.get("appointment").is_baseline_appt
+            is_baseline(instance=self.cleaned_data.get("appointment"))
             and self.cleaned_data.get("hospitalized") == YES
         ):
             raise forms.ValidationError({"hospitalized": "Invalid. Expected NO at baseline"})
