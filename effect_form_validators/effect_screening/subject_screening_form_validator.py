@@ -68,16 +68,6 @@ class SubjectScreeningFormValidator(
                         )
                     }
                 )
-            if self.cleaned_data.get("cd4_date") and self.provided_hiv_dx_date:
-                if self.provided_hiv_dx_date > self.cleaned_data.get("cd4_date"):
-                    raise forms.ValidationError(
-                        {
-                            "cd4_date": (
-                                "Invalid. "
-                                "Most recent CD4 count date cannot be before HIV diagnosis."
-                            )
-                        }
-                    )
 
     def validate_serum_crag(self) -> None:
         """Assert serum CrAg is positive, and serum CrAg date is:

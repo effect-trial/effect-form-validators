@@ -218,118 +218,40 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     cm.exception.error_dict.get("hiv_dx_new")[0].message,
                 )
 
-    def test_cd4_date_after_hiv_dx_date_ok(self):
-        cleaned_data = self.get_cleaned_data()
-        cleaned_data.update(
-            {
-                "hiv_pos": YES,
-                "hiv_dx_ago": "",
-                "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=30),
-                "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                "cd4_date": get_utcnow_as_date() - relativedelta(days=7),
-            }
-        )
-        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        try:
-            form_validator.validate()
-        except forms.ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+    def test_cd4_date_before_on_after_hiv_dx_date_ok(self):
+        for cd4_days_ago in [8, 7, 6]:
+            with self.subTest(cd4_days_ago=cd4_days_ago):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "hiv_pos": YES,
+                        "hiv_dx_ago": "",
+                        "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=7),
+                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                        "cd4_date": get_utcnow_as_date() - relativedelta(days=cd4_days_ago),
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except forms.ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_cd4_date_after_hiv_dx_ago_ok(self):
-        cleaned_data = self.get_cleaned_data()
-        cleaned_data.update(
-            {
-                "hiv_pos": YES,
-                "hiv_dx_ago": "1m",
-                "hiv_dx_date": None,
-                "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                "cd4_date": get_utcnow_as_date() - relativedelta(days=7),
-            }
-        )
-        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        try:
-            form_validator.validate()
-        except forms.ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raised. Got {e}")
-
-    def test_cd4_date_on_hiv_dx_date_ok(self):
-        cleaned_data = self.get_cleaned_data()
-        cleaned_data.update(
-            {
-                "hiv_pos": YES,
-                "hiv_dx_ago": "",
-                "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=7),
-                "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                "cd4_date": get_utcnow_as_date() - relativedelta(days=7),
-            }
-        )
-        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        try:
-            form_validator.validate()
-        except forms.ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raised. Got {e}")
-
-    def test_cd4_date_on_hiv_dx_ago_ok(self):
-        cleaned_data = self.get_cleaned_data()
-        cleaned_data.update(
-            {
-                "hiv_pos": YES,
-                "hiv_dx_ago": "7d",
-                "hiv_dx_date": None,
-                "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                "cd4_date": get_utcnow_as_date() - relativedelta(days=7),
-            }
-        )
-        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        try:
-            form_validator.validate()
-        except forms.ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raised. Got {e}")
-
-    def test_cd4_date_before_hiv_dx_date_raises(self):
-        cleaned_data = self.get_cleaned_data()
-        cleaned_data.update(
-            {
-                "hiv_pos": YES,
-                "hiv_dx_ago": "",
-                "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=7),
-                "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                "cd4_date": get_utcnow_as_date() - relativedelta(days=8),
-            }
-        )
-        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        with self.assertRaises(ValidationError) as cm:
-            form_validator.validate()
-        self.assertIn("cd4_date", cm.exception.error_dict)
-        self.assertEqual(
-            {
-                "cd4_date": [
-                    "Invalid. Most recent CD4 count date cannot be before HIV diagnosis."
-                ]
-            },
-            cm.exception.message_dict,
-        )
-
-    def test_cd4_date_before_hiv_ago_raises(self):
-        cleaned_data = self.get_cleaned_data()
-        cleaned_data.update(
-            {
-                "hiv_pos": YES,
-                "hiv_dx_ago": "7d",
-                "hiv_dx_date": None,
-                "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                "cd4_date": get_utcnow_as_date() - relativedelta(days=8),
-            }
-        )
-        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        with self.assertRaises(ValidationError) as cm:
-            form_validator.validate()
-        self.assertIn("cd4_date", cm.exception.error_dict)
-        self.assertEqual(
-            {
-                "cd4_date": [
-                    "Invalid. Most recent CD4 count date cannot be before HIV diagnosis."
-                ]
-            },
-            cm.exception.message_dict,
-        )
+    def test_cd4_date_before_on_after_hiv_dx_ago_ok(self):
+        for cd4_days_ago in [8, 7, 6]:
+            with self.subTest(cd4_days_ago=cd4_days_ago):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "hiv_pos": YES,
+                        "hiv_dx_ago": "7d",
+                        "hiv_dx_date": None,
+                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                        "cd4_date": get_utcnow_as_date() - relativedelta(days=cd4_days_ago),
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except forms.ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
