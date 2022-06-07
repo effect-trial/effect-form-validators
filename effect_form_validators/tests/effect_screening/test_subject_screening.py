@@ -30,6 +30,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             "hiv_pos": YES,
             "hiv_dx_ago": "",
             "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=30),
+            "hiv_new_dx": YES,
             "cd4_value": self.ELIGIBLE_CD4_VALUE,
             "cd4_date": get_utcnow_as_date() - relativedelta(days=7),
             "serum_crag_value": POS,
@@ -178,6 +179,44 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             },
             cm.exception.message_dict,
         )
+
+    def test_hiv_dx_new_applicable_if_hiv_pos_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "hiv_pos": YES,
+                "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=30),
+                "hiv_dx_new": NOT_APPLICABLE,
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(forms.ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("hiv_dx_new", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable",
+            cm.exception.error_dict.get("hiv_dx_new")[0].message,
+        )
+
+    def test_hiv_dx_new_not_applicable_if_hiv_pos_no(self):
+        for hiv_dx_new_response in [YES, NO]:
+            with self.subTest(hiv_dx_new_response=hiv_dx_new_response):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "hiv_pos": NO,
+                        "hiv_dx_date": None,
+                        "hiv_dx_new": hiv_dx_new_response,
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(forms.ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("hiv_dx_new", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not applicable",
+                    cm.exception.error_dict.get("hiv_dx_new")[0].message,
+                )
 
     def test_cd4_date_after_hiv_dx_date_ok(self):
         cleaned_data = self.get_cleaned_data()

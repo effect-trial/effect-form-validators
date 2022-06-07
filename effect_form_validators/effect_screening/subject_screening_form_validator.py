@@ -46,6 +46,7 @@ class SubjectScreeningFormValidator(
         self.raise_if_both_ago_and_actual_date(
             ago_field="hiv_dx_ago", date_field="hiv_dx_date", label="HIV diagnosis"
         )
+        self.applicable_if(YES, field="hiv_pos", field_applicable="hiv_dx_new")
 
     def validate_cd4(self) -> None:
         if self.cleaned_data.get("cd4_date") and self.cleaned_data.get("report_datetime"):
