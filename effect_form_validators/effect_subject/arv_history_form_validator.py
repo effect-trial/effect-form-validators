@@ -122,12 +122,6 @@ class ArvHistoryFormValidator(CrfFormValidator):
             message_on_field="cd4_date",
         )
 
-        # self.date_not_before(
-        #     "hiv_diagnosis_date",
-        #     "cd4_date",
-        #     "Invalid. Cannot be before HIV diagnosis date.",
-        # )
-
         # self.required_if(
         #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
         # )
@@ -147,12 +141,6 @@ class ArvHistoryFormValidator(CrfFormValidator):
         #     OTHER,
         #     field="previous_arv_regimen",
         #     field_required="other_previous_arv_regimen",
-        # )
-        #
-        # self.required_if(YES, field="on_oi_prophylaxis", field_required="oi_prophylaxis")
-        #
-        # self.m2m_other_specify(
-        #     OTHER, m2m_field="oi_prophylaxis", field_other="other_oi_prophylaxis"
         # )
 
     def validate_hiv_dx_against_screening_cd4_date(self):
