@@ -28,9 +28,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             "gender": FEMALE,
             "age_in_years": 25,
             "hiv_pos": YES,
-            "hiv_dx_ago": "",
-            "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=30),
-            "hiv_new_dx": YES,
+            "hiv_confirmed_date": get_utcnow_as_date() - relativedelta(days=30),
+            "hiv_confirmed_method": "historical_lab_result",
             "cd4_value": self.ELIGIBLE_CD4_VALUE,
             "cd4_date": get_utcnow_as_date() - relativedelta(days=7),
             "serum_crag_value": POS,
@@ -73,31 +72,29 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         except forms.ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_date_or_date_ago_required_if_hiv_pos_yes(self):
+    def test_hiv_confirmed_date_required_if_hiv_pos_yes(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
                 "hiv_pos": YES,
-                "hiv_dx_ago": "",
-                "hiv_dx_date": None,
+                "hiv_confirmed_date": None,
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
-        self.assertIn("hiv_dx_date", cm.exception.error_dict)
+        self.assertIn("hiv_confirmed_date", cm.exception.error_dict)
         self.assertEqual(
-            {"hiv_dx_date": ["This field is required (or the above)."]},
+            {"hiv_confirmed_date": ["This field is required."]},
             cm.exception.message_dict,
         )
 
-    def test_hiv_dx_date_ok_if_hiv_pos_yes(self):
+    def test_hiv_confirmed_date_ok_if_hiv_pos_yes(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
                 "hiv_pos": YES,
-                "hiv_dx_ago": "",
-                "hiv_dx_date": cleaned_data.get("cd4_date"),
+                "hiv_confirmed_date": cleaned_data.get("cd4_date"),
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
@@ -106,146 +103,69 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         except forms.ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_hiv_dx_ago_ok_if_hiv_pos_yes(self):
-        cleaned_data = self.get_cleaned_data()
-        cleaned_data.update(
-            {
-                "hiv_pos": YES,
-                "hiv_dx_ago": "1y3m",
-                "hiv_dx_date": None,
-            }
-        )
-        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        try:
-            form_validator.validate()
-        except forms.ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raised. Got {e}")
-
-    def test_hiv_dx_date_not_required_if_hiv_pos_no(self):
+    def test_hiv_confirmed_date_not_required_if_hiv_pos_no(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
                 "hiv_pos": NO,
-                "hiv_dx_ago": "",
-                "hiv_dx_date": get_utcnow_as_date(),
+                "hiv_confirmed_date": get_utcnow_as_date(),
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
-        self.assertIn("hiv_dx_date", cm.exception.error_dict)
+        self.assertIn("hiv_confirmed_date", cm.exception.error_dict)
         self.assertEqual(
-            {"hiv_dx_date": ["This field is not required."]},
+            {"hiv_confirmed_date": ["This field is not required."]},
             cm.exception.message_dict,
         )
 
-    def test_hiv_dx_ago_not_required_if_hiv_pos_no(self):
-        cleaned_data = self.get_cleaned_data()
-        cleaned_data.update(
-            {
-                "hiv_pos": NO,
-                "hiv_dx_ago": "1y",
-                "hiv_dx_date": None,
-            }
-        )
-        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        with self.assertRaises(ValidationError) as cm:
-            form_validator.validate()
-        self.assertIn("hiv_dx_ago", cm.exception.error_dict)
-        self.assertEqual(
-            {"hiv_dx_ago": ["This field is not required."]},
-            cm.exception.message_dict,
-        )
-
-    def test_both_hiv_dx_ago_and_hiv_dx_date_raises(self):
+    def test_hiv_confirmed_method_applicable_if_hiv_pos_yes(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
                 "hiv_pos": YES,
-                "hiv_dx_ago": "1y",
-                "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=30),
-            }
-        )
-        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        with self.assertRaises(ValidationError) as cm:
-            form_validator.validate()
-        self.assertIn("hiv_dx_ago", cm.exception.error_dict)
-        self.assertEqual(
-            {
-                "hiv_dx_ago": [
-                    "Date conflict. Do not provide a response "
-                    "here if the exact HIV diagnosis date is available."
-                ]
-            },
-            cm.exception.message_dict,
-        )
-
-    def test_hiv_dx_new_applicable_if_hiv_pos_yes(self):
-        cleaned_data = self.get_cleaned_data()
-        cleaned_data.update(
-            {
-                "hiv_pos": YES,
-                "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=30),
-                "hiv_dx_new": NOT_APPLICABLE,
+                "hiv_confirmed_date": get_utcnow_as_date() - relativedelta(days=30),
+                "hiv_confirmed_method": NOT_APPLICABLE,
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
-        self.assertIn("hiv_dx_new", cm.exception.error_dict)
+        self.assertIn("hiv_confirmed_method", cm.exception.error_dict)
         self.assertIn(
             "This field is applicable",
-            cm.exception.error_dict.get("hiv_dx_new")[0].message,
+            cm.exception.error_dict.get("hiv_confirmed_method")[0].message,
         )
 
-    def test_hiv_dx_new_not_applicable_if_hiv_pos_no(self):
-        for hiv_dx_new_response in [YES, NO]:
-            with self.subTest(hiv_dx_new_response=hiv_dx_new_response):
+    def test_hiv_confirmed_method_not_applicable_if_hiv_pos_no(self):
+        for hiv_confirmed_method_response in ["site_rapid_test", "historical_lab_result"]:
+            with self.subTest(hiv_confirmed_method_response=hiv_confirmed_method_response):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
                     {
                         "hiv_pos": NO,
-                        "hiv_dx_date": None,
-                        "hiv_dx_new": hiv_dx_new_response,
+                        "hiv_confirmed_date": None,
+                        "hiv_confirmed_method": hiv_confirmed_method_response,
                     }
                 )
                 form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
                 with self.assertRaises(forms.ValidationError) as cm:
                     form_validator.validate()
-                self.assertIn("hiv_dx_new", cm.exception.error_dict)
+                self.assertIn("hiv_confirmed_method", cm.exception.error_dict)
                 self.assertIn(
                     "This field is not applicable",
-                    cm.exception.error_dict.get("hiv_dx_new")[0].message,
+                    cm.exception.error_dict.get("hiv_confirmed_method")[0].message,
                 )
 
-    def test_cd4_date_before_on_after_hiv_dx_date_ok(self):
+    def test_cd4_date_before_on_after_hiv_confirmed_date_ok(self):
         for cd4_days_ago in [8, 7, 6]:
             with self.subTest(cd4_days_ago=cd4_days_ago):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
                     {
                         "hiv_pos": YES,
-                        "hiv_dx_ago": "",
-                        "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=7),
-                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                        "cd4_date": get_utcnow_as_date() - relativedelta(days=cd4_days_ago),
-                    }
-                )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-                try:
-                    form_validator.validate()
-                except forms.ValidationError as e:
-                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
-
-    def test_cd4_date_before_on_after_hiv_dx_ago_ok(self):
-        for cd4_days_ago in [8, 7, 6]:
-            with self.subTest(cd4_days_ago=cd4_days_ago):
-                cleaned_data = self.get_cleaned_data()
-                cleaned_data.update(
-                    {
-                        "hiv_pos": YES,
-                        "hiv_dx_ago": "7d",
-                        "hiv_dx_date": None,
+                        "hiv_confirmed_date": get_utcnow_as_date() - relativedelta(days=7),
                         "cd4_value": self.ELIGIBLE_CD4_VALUE,
                         "cd4_date": get_utcnow_as_date() - relativedelta(days=cd4_days_ago),
                     }
