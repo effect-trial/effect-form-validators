@@ -113,43 +113,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
         #     "Invalid. Cannot be before HIV diagnosis date.",
         # )
 
-        # cd4
-        self.validate_date_against_report_datetime("cd4_date")
-        self.date_not_before(
-            "hiv_dx_date",
-            "cd4_date",
-            "Invalid. Cannot be before 'HIV diagnosis first known' date",
-            message_on_field="cd4_date",
-        )
-
-        arv_history_cd4_date = self.cleaned_data.get("cd4_date")
-        arv_history_cd4_result = self.cleaned_data.get("cd4_result")
-        if (
-            arv_history_cd4_result
-            and arv_history_cd4_date
-            and arv_history_cd4_date == self.subject_screening.cd4_date
-            and arv_history_cd4_result != self.subject_screening.cd4_value
-        ):
-            self.raise_validation_error(
-                {
-                    "cd4_result": (
-                        "Invalid. CD4 cannot differ from Subject Screening CD4 "
-                        f"({self.subject_screening.cd4_value}) if collected on same date."
-                    )
-                },
-                INVALID_ERROR,
-            )
-
-        if arv_history_cd4_date and arv_history_cd4_date < self.subject_screening.cd4_date:
-            self.raise_validation_error(
-                {
-                    "cd4_date": (
-                        "Invalid. Last CD4 date cannot be before Subject Screening CD4 date "
-                        f"({self.subject_screening.cd4_date})."
-                    )
-                },
-                INVALID_ERROR,
-            )
+        self.validate_cd4()
 
     # self.required_if(
     #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
@@ -180,8 +144,46 @@ class ArvHistoryFormValidator(CrfFormValidator):
             self.raise_validation_error(
                 {
                     "hiv_dx_date": (
-                        "Invalid. Cannot be after CD4 date specified at screening "
-                        f"({self.subject_screening.cd4_date})"
+                        "Invalid. Cannot be after screening CD4 date "
+                        f"({self.subject_screening.cd4_date})."
+                    )
+                },
+                INVALID_ERROR,
+            )
+
+    def validate_cd4(self):
+        arv_history_cd4_result = self.cleaned_data.get("cd4_result")
+        arv_history_cd4_date = self.cleaned_data.get("cd4_date")
+        if (
+            arv_history_cd4_result
+            and arv_history_cd4_date
+            and arv_history_cd4_date == self.subject_screening.cd4_date
+            and arv_history_cd4_result != self.subject_screening.cd4_value
+        ):
+            self.raise_validation_error(
+                {
+                    "cd4_result": (
+                        "Invalid. Cannot differ from screening CD4 count "
+                        f"({self.subject_screening.cd4_value}) if collected on same date."
+                    )
+                },
+                INVALID_ERROR,
+            )
+
+        self.validate_date_against_report_datetime("cd4_date")
+        self.date_not_before(
+            "hiv_dx_date",
+            "cd4_date",
+            "Invalid. Cannot be before 'HIV diagnosis first known' date",
+            message_on_field="cd4_date",
+        )
+
+        if arv_history_cd4_date and arv_history_cd4_date < self.subject_screening.cd4_date:
+            self.raise_validation_error(
+                {
+                    "cd4_date": (
+                        "Invalid. Cannot be before screening CD4 date "
+                        f"({self.subject_screening.cd4_date})."
                     )
                 },
                 INVALID_ERROR,

@@ -160,7 +160,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertIn("hiv_dx_date", cm.exception.error_dict)
         self.assertIn(
-            f"Invalid. Cannot be after CD4 date specified at screening ({screening_cd4_date})",
+            f"Invalid. Cannot be after screening CD4 date ({screening_cd4_date}).",
             cm.exception.error_dict.get("hiv_dx_date")[0].message,
         )
 
@@ -288,7 +288,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertIn("cd4_result", cm.exception.error_dict)
         self.assertIn(
-            "Invalid. CD4 cannot differ from Subject Screening CD4 "
+            "Invalid. Cannot differ from screening CD4 count "
             "(79) if collected on same date.",
             cm.exception.error_dict.get("cd4_result")[0].message,
         )
@@ -321,8 +321,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertIn("cd4_date", cm.exception.error_dict)
         self.assertIn(
-            "Invalid. Last CD4 date cannot be before Subject Screening CD4 date "
-            f"({screening_cd4_date}).",
+            f"Invalid. Cannot be before screening CD4 date ({screening_cd4_date}).",
             cm.exception.error_dict.get("cd4_date")[0].message,
         )
 
