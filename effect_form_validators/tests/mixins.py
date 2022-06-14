@@ -35,10 +35,13 @@ class FormValidatorTestMixin:
 class TestCaseMixin(TestCase):
     def setUp(self) -> None:
         """Setup appointment and subject_visit Mock models"""
-        self.consent_datetime = get_utcnow() - relativedelta(years=1)
+        self.screening_datetime = get_utcnow() - relativedelta(years=1)
+        self.consent_datetime = self.screening_datetime
+        self.subject_identifier = "12345"
         # appointment
         self.appointment = MockModel(
             mock_name="Appointment",
+            subject_identifier=self.subject_identifier,
             appt_datetime=self.consent_datetime,
             visit_code=DAY01,
             visit_code_sequence=0,
@@ -50,6 +53,7 @@ class TestCaseMixin(TestCase):
         # subject_visit
         self.subject_visit = MockModel(
             mock_name="SubjectVisit",
+            subject_identifier=self.subject_identifier,
             report_datetime=self.consent_datetime,
             visit_code=DAY01,
             visit_code_sequence=0,

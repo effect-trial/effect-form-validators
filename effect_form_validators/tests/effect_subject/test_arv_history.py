@@ -11,12 +11,22 @@ from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
 
 class ArvHistoryFormValidator(FormValidatorTestMixin, Base):
-    pass
+    @property
+    def subject_screening(self):
+        screening_date = get_utcnow_as_date() - relativedelta(years=1)
+        return MockModel(
+            mock_name="SubjectScreening",
+            subject_identifier=self.subject_identifier,
+            cd4_date=screening_date - relativedelta(days=7),
+        )
 
 
 class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
     def setUp(self) -> None:
         super().setUp()
+
+        self.hiv_dx_date = self.screening_datetime.date() - relativedelta(days=30)
+
         self.arv_regimens_choice_na = MockModel(
             mock_name="ArvRegimens", name=NOT_APPLICABLE, display_name=NOT_APPLICABLE
         )
@@ -28,7 +38,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 # HIV Diagnosis
-                "hiv_dx_date": get_utcnow_as_date(),
+                "hiv_dx_date": self.hiv_dx_date,
                 "hiv_dx_date_estimated": NO,
                 # ARV treatment and monitoring
                 "on_art_at_crag": NO,
@@ -72,17 +82,98 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except forms.ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
+    def test_hiv_dx_date_before_screening_cd4_date_ok(self):
+        class OverriddenArvHistoryFormValidator(FormValidatorTestMixin, Base):
+            screening_cd4_date = self.hiv_dx_date + relativedelta(days=1)
+
+            @property
+            def subject_screening(self):
+                return MockModel(
+                    mock_name="SubjectScreening",
+                    subject_identifier=self.subject_identifier,
+                    cd4_date=self.screening_cd4_date,
+                )
+
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                # HIV Diagnosis
+                "hiv_dx_date": self.hiv_dx_date,
+                "hiv_dx_date_estimated": NO,
+            }
+        )
+        form_validator = OverriddenArvHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except forms.ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_hiv_dx_date_on_screening_cd4_date_ok(self):
+        class OverriddenArvHistoryFormValidator(FormValidatorTestMixin, Base):
+            screening_cd4_date = self.hiv_dx_date
+
+            @property
+            def subject_screening(self):
+                return MockModel(
+                    mock_name="SubjectScreening",
+                    subject_identifier=self.subject_identifier,
+                    cd4_date=self.screening_cd4_date,
+                )
+
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                # HIV Diagnosis
+                "hiv_dx_date": self.hiv_dx_date,
+                "hiv_dx_date_estimated": NO,
+            }
+        )
+        form_validator = OverriddenArvHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except forms.ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_hiv_dx_date_after_screening_cd4_date_raises(self):
+        screening_cd4_date = self.hiv_dx_date - relativedelta(day=1)
+
+        class OverriddenArvHistoryFormValidator(FormValidatorTestMixin, Base):
+            @property
+            def subject_screening(self):
+                return MockModel(
+                    mock_name="SubjectScreening",
+                    subject_identifier=self.subject_identifier,
+                    cd4_date=screening_cd4_date,
+                )
+
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                # HIV Diagnosis
+                "hiv_dx_date": self.hiv_dx_date,
+                "hiv_dx_date_estimated": NO,
+            }
+        )
+        form_validator = OverriddenArvHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(forms.ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("hiv_dx_date", cm.exception.error_dict)
+        self.assertIn(
+            f"Invalid. Cannot be after CD4 date specified at screening ({screening_cd4_date})",
+            cm.exception.error_dict.get("hiv_dx_date")[0].message,
+        )
+
     def test_arv_history_cd4_date_after_hiv_dx_date_ok(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
                 # HIV Diagnosis
-                "hiv_dx_date": get_utcnow_as_date() - relativedelta(days=7),
+                "hiv_dx_date": self.hiv_dx_date,
                 "hiv_dx_date_estimated": NO,
                 # CD4 count
                 "has_cd4_result": YES,
                 "cd4_result": 80,
-                "cd4_date": get_utcnow_as_date() - relativedelta(days=6),
+                "cd4_date": self.hiv_dx_date + relativedelta(days=1),
                 "cd4_date_estimated": NO,
             }
         )
@@ -97,12 +188,12 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 # HIV Diagnosis
-                "hiv_dx_date": get_utcnow_as_date(),
+                "hiv_dx_date": self.hiv_dx_date,
                 "hiv_dx_date_estimated": NO,
                 # CD4 count
                 "has_cd4_result": YES,
                 "cd4_result": 80,
-                "cd4_date": get_utcnow_as_date(),
+                "cd4_date": self.hiv_dx_date,
                 "cd4_date_estimated": NO,
             }
         )
@@ -117,12 +208,12 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 # HIV Diagnosis
-                "hiv_dx_date": get_utcnow_as_date(),
+                "hiv_dx_date": self.hiv_dx_date,
                 "hiv_dx_date_estimated": NO,
                 # CD4 count
                 "has_cd4_result": YES,
                 "cd4_result": 80,
-                "cd4_date": get_utcnow_as_date() - relativedelta(days=1),
+                "cd4_date": self.hiv_dx_date - relativedelta(days=1),
                 "cd4_date_estimated": NO,
             }
         )
