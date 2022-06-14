@@ -114,9 +114,6 @@ class ArvHistoryFormValidator(CrfFormValidator):
         # )
 
         # cd4
-        self.required_if(YES, field="has_cd4", field_required="cd4_result")
-        self.required_if(YES, field="has_cd4", field_required="cd4_date")
-        self.applicable_if(YES, field="has_cd4", field_applicable="cd4_date_estimated")
         self.validate_date_against_report_datetime("cd4_date")
         self.date_not_before(
             "hiv_dx_date",
