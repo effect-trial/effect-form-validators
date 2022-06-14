@@ -1,9 +1,18 @@
 from edc_constants.constants import NO, YES
 from edc_crf.crf_form_validator import CrfFormValidator
+from edc_form_validators import INVALID_ERROR
+from edc_screening.utils import get_subject_screening_model_cls
 
 
 class ArvHistoryFormValidator(CrfFormValidator):
+    @property
+    def subject_screening(self):
+        subject_identifier = self.cleaned_data.get("subject_visit").subject_identifier
+        subject_screening_model_cls = get_subject_screening_model_cls()
+        return subject_screening_model_cls.objects.get(subject_identifier=subject_identifier)
+
     def clean(self) -> None:
+        self.validate_hiv_dx_against_screening_cd4_date()
 
         condition = (
             self.cleaned_data.get("on_art_at_crag")
@@ -109,6 +118,12 @@ class ArvHistoryFormValidator(CrfFormValidator):
         self.required_if(YES, field="has_cd4", field_required="cd4_date")
         self.applicable_if(YES, field="has_cd4", field_applicable="cd4_date_estimated")
         self.validate_date_against_report_datetime("cd4_date")
+        self.date_not_before(
+            "hiv_dx_date",
+            "cd4_date",
+            "Invalid. Cannot be before 'HIV diagnosis first known' date",
+            message_on_field="cd4_date",
+        )
 
         # self.date_not_before(
         #     "hiv_diagnosis_date",
@@ -142,3 +157,18 @@ class ArvHistoryFormValidator(CrfFormValidator):
         # self.m2m_other_specify(
         #     OTHER, m2m_field="oi_prophylaxis", field_other="other_oi_prophylaxis"
         # )
+
+    def validate_hiv_dx_against_screening_cd4_date(self):
+        if (
+            self.cleaned_data.get("hiv_dx_date")
+            and self.cleaned_data.get("hiv_dx_date") > self.subject_screening.cd4_date
+        ):
+            self.raise_validation_error(
+                {
+                    "hiv_dx_date": (
+                        "Invalid. Cannot be after CD4 date specified at screening "
+                        f"({self.subject_screening.cd4_date})"
+                    )
+                },
+                INVALID_ERROR,
+            )
