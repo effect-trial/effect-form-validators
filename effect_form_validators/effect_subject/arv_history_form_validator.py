@@ -122,26 +122,55 @@ class ArvHistoryFormValidator(CrfFormValidator):
             message_on_field="cd4_date",
         )
 
-        # self.required_if(
-        #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
-        # )
-        #
-        # if self.cleaned_data.get("has_previous_arv_regimen") == NO:
-        #     self.date_equal(
-        #         "initial_art_date",
-        #         "current_art_regimen_start_date",
-        #         "Invalid. Expected current regimen date to equal initiation date.",
-        #     )
-        #
-        # self.required_if(
-        #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
-        # )
-        #
-        # self.required_if(
-        #     OTHER,
-        #     field="previous_arv_regimen",
-        #     field_required="other_previous_arv_regimen",
-        # )
+        arv_history_cd4_date = self.cleaned_data.get("cd4_date")
+        arv_history_cd4_result = self.cleaned_data.get("cd4_result")
+        if (
+            arv_history_cd4_result
+            and arv_history_cd4_date
+            and arv_history_cd4_date == self.subject_screening.cd4_date
+            and arv_history_cd4_result != self.subject_screening.cd4_value
+        ):
+            self.raise_validation_error(
+                {
+                    "cd4_result": (
+                        "Invalid. CD4 cannot differ from Subject Screening CD4 "
+                        f"({self.subject_screening.cd4_value}) if collected on same date."
+                    )
+                },
+                INVALID_ERROR,
+            )
+
+        if arv_history_cd4_date and arv_history_cd4_date < self.subject_screening.cd4_date:
+            self.raise_validation_error(
+                {
+                    "cd4_date": (
+                        "Invalid. Last CD4 date cannot be before Subject Screening CD4 date "
+                        f"({self.subject_screening.cd4_date})."
+                    )
+                },
+                INVALID_ERROR,
+            )
+
+    # self.required_if(
+    #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
+    # )
+    #
+    # if self.cleaned_data.get("has_previous_arv_regimen") == NO:
+    #     self.date_equal(
+    #         "initial_art_date",
+    #         "current_art_regimen_start_date",
+    #         "Invalid. Expected current regimen date to equal initiation date.",
+    #     )
+    #
+    # self.required_if(
+    #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
+    # )
+    #
+    # self.required_if(
+    #     OTHER,
+    #     field="previous_arv_regimen",
+    #     field_required="other_previous_arv_regimen",
+    # )
 
     def validate_hiv_dx_against_screening_cd4_date(self):
         if (
