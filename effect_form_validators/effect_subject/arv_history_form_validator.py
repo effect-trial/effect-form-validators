@@ -114,7 +114,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
         #     "Invalid. Cannot be before HIV diagnosis date.",
         # )
 
-        self.validate_cd4()
+        self.validate_cd4_date()
 
         self.validate_cd4_against_screening_cd4_data()
 
@@ -154,7 +154,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
                 INVALID_ERROR,
             )
 
-    def validate_cd4(self):
+    def validate_cd4_date(self):
         self.validate_date_against_report_datetime("cd4_date")
         self.date_not_before(
             "hiv_dx_date",
