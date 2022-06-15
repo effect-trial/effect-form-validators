@@ -12,7 +12,8 @@ class ArvHistoryFormValidator(CrfFormValidator):
         return subject_screening_model_cls.objects.get(subject_identifier=subject_identifier)
 
     def clean(self) -> None:
-        self.validate_hiv_dx_against_screening_cd4_date()
+        self.validate_date_against_report_datetime("hiv_dx_date")
+        self.validate_hiv_dx_date_against_screening_cd4_date()
 
         condition = (
             self.cleaned_data.get("on_art_at_crag")
@@ -138,7 +139,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
     #     field_required="other_previous_arv_regimen",
     # )
 
-    def validate_hiv_dx_against_screening_cd4_date(self):
+    def validate_hiv_dx_date_against_screening_cd4_date(self):
         if (
             self.cleaned_data.get("hiv_dx_date")
             and self.cleaned_data.get("hiv_dx_date") > self.subject_screening.cd4_date
