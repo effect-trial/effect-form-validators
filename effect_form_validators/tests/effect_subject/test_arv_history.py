@@ -67,7 +67,6 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "viral_load_date": None,
                 "viral_load_date_estimated": NOT_APPLICABLE,
                 # CD4 count
-                "has_cd4_result": YES,
                 "cd4_result": 80,
                 "cd4_date": self.screening_datetime.date() - relativedelta(days=7),
                 "cd4_date_estimated": NO,
@@ -173,7 +172,6 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "hiv_dx_date": hiv_dx_date,
                 "hiv_dx_date_estimated": NO,
                 # CD4 count
-                "has_cd4_result": YES,
                 "cd4_result": 80,
                 "cd4_date": hiv_dx_date + relativedelta(days=1),
                 "cd4_date_estimated": NO,
@@ -194,7 +192,6 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "hiv_dx_date": hiv_dx_date,
                 "hiv_dx_date_estimated": NO,
                 # CD4 count
-                "has_cd4_result": YES,
                 "cd4_result": 80,
                 "cd4_date": hiv_dx_date,
                 "cd4_date_estimated": NO,
@@ -214,7 +211,6 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "hiv_dx_date": self.hiv_dx_date,
                 "hiv_dx_date_estimated": NO,
                 # CD4 count
-                "has_cd4_result": YES,
                 "cd4_result": 80,
                 "cd4_date": self.hiv_dx_date - relativedelta(days=1),
                 "cd4_date_estimated": NO,
@@ -246,7 +242,6 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 # CD4 count
-                "has_cd4_result": YES,
                 "cd4_result": 80,
                 "cd4_date": screening_cd4_date,
                 "cd4_date_estimated": NO,
@@ -277,7 +272,6 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 # CD4 count
-                "has_cd4_result": YES,
                 "cd4_result": 80,
                 "cd4_date": screening_cd4_date,
                 "cd4_date_estimated": NO,
@@ -310,7 +304,6 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 # CD4 count
-                "has_cd4_result": YES,
                 "cd4_result": 80,
                 "cd4_date": screening_cd4_date - relativedelta(days=1),
                 "cd4_date_estimated": NO,
@@ -342,7 +335,6 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 # CD4 count
-                "has_cd4_result": YES,
                 "cd4_result": 80,
                 "cd4_date": screening_cd4_date + relativedelta(days=1),
                 "cd4_date_estimated": NO,
