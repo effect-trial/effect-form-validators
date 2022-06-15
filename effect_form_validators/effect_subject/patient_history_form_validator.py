@@ -2,7 +2,7 @@ from edc_constants.constants import NO, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 
 
-class MedicalHistoryFormValidator(CrfFormValidator):
+class PatientHistoryFormValidator(CrfFormValidator):
     def _clean(self) -> None:
         self.applicable_if(YES, field="tb_prev_dx", field_applicable="tb_site")
         self.applicable_if(YES, field="tb_prev_dx", field_applicable="on_tb_tx")
