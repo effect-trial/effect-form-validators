@@ -164,17 +164,17 @@ class ArvHistoryFormValidator(CrfFormValidator):
         )
 
     def validate_cd4_against_screening_cd4_data(self):
-        arv_history_cd4_result = self.cleaned_data.get("cd4_result")
+        arv_history_cd4_value = self.cleaned_data.get("cd4_value")
         arv_history_cd4_date = self.cleaned_data.get("cd4_date")
         if (
-            arv_history_cd4_result
+            arv_history_cd4_value
             and arv_history_cd4_date
             and arv_history_cd4_date == self.subject_screening.cd4_date
-            and arv_history_cd4_result != self.subject_screening.cd4_value
+            and arv_history_cd4_value != self.subject_screening.cd4_value
         ):
             self.raise_validation_error(
                 {
-                    "cd4_result": (
+                    "cd4_value": (
                         "Invalid. Cannot differ from screening CD4 count "
                         f"({self.subject_screening.cd4_value}) if collected on same date."
                     )
