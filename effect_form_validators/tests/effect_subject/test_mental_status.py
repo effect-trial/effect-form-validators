@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from edc_constants.constants import NO, NOT_APPLICABLE, YES
-from effect_visit_schedule.constants import DAY01, DAY14
+from edc_visit_schedule.constants import DAY01, DAY14
 
 from effect_form_validators.effect_subject import MentalStatusFormValidator as Base
 
