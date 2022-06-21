@@ -1,7 +1,9 @@
+from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel
 from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
+from edc_utils import get_utcnow_as_date
 
 from effect_form_validators.effect_subject import PatientHistoryFormValidator as Base
 
@@ -247,4 +249,141 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         self.assertIn(
             "This field is not required.",
             str(cm.exception.error_dict.get("flucon_dose_other_reason")),
+        )
+
+    def test_neuro_abnormality_details_required_if_reported_neuro_abnormality_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "reported_neuro_abnormality": YES,
+                "neuro_abnormality_details": "",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("neuro_abnormality_details", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required.",
+            str(cm.exception.error_dict.get("neuro_abnormality_details")),
+        )
+
+        cleaned_data.update(
+            {
+                "neuro_abnormality_details": "Details of abnormality",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_neuro_abnormality_details_not_required_if_reported_neuro_abnormality_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "reported_neuro_abnormality": NO,
+                "neuro_abnormality_details": "Details of abnormality",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("neuro_abnormality_details", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required.",
+            str(cm.exception.error_dict.get("neuro_abnormality_details")),
+        )
+
+    def test_previous_oi_name_required_if_previous_oi_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "previous_oi": YES,
+                "previous_oi_name": "",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("previous_oi_name", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required.",
+            str(cm.exception.error_dict.get("previous_oi_name")),
+        )
+
+        cleaned_data.update(
+            {
+                "previous_oi_name": "Prev OI",
+                "previous_oi_date": get_utcnow_as_date() - relativedelta(months=3),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_previous_oi_name_not_required_if_previous_oi_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "previous_oi": NO,
+                "previous_oi_name": "Prev OI",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("previous_oi_name", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required.",
+            str(cm.exception.error_dict.get("previous_oi_name")),
+        )
+
+    def test_previous_oi_date_required_if_previous_oi_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "previous_oi": YES,
+                "previous_oi_name": "Prev OI",
+                "previous_oi_date": None,
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("previous_oi_date", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required.",
+            str(cm.exception.error_dict.get("previous_oi_date")),
+        )
+
+        cleaned_data.update(
+            {
+                "previous_oi_date": get_utcnow_as_date() - relativedelta(months=3),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_previous_oi_date_not_required_if_previous_oi_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "previous_oi": NO,
+                "previous_oi_date": get_utcnow_as_date() - relativedelta(months=3),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("previous_oi_date", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required.",
+            str(cm.exception.error_dict.get("previous_oi_date")),
         )

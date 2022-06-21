@@ -6,12 +6,14 @@ class PatientHistoryFormValidator(CrfFormValidator):
     def _clean(self) -> None:
         self.validate_flucon()
 
-        # TODO neuro_abnormality_details required if reported_neuro_abnormality
+        self.required_if(
+            YES, field="reported_neuro_abnormality", field_required="neuro_abnormality_details"
+        )
 
         self.validate_tb()
 
-        # TODO: previous_oi_name required if previous_oi
-        # TODO: previous_oi_dx_date required if previous_oi
+        self.required_if(YES, field="previous_oi", field_required="previous_oi_name")
+        self.required_if(YES, field="previous_oi", field_required="previous_oi_date")
 
         self.validate_other_medication()
 
