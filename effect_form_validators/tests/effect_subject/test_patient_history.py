@@ -1,7 +1,7 @@
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from django_mock_queries.query import MockModel
+from django_mock_queries.query import MockModel, MockSet
 from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
 from edc_utils import get_utcnow_as_date
 
@@ -19,6 +19,15 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         super().setUp()
         self.medications_choice_na = MockModel(
             mock_name="Medication", name=NOT_APPLICABLE, display_name=NOT_APPLICABLE
+        )
+        self.medications_choice_tmp_smx = MockModel(
+            mock_name="Medication", name="TMP-SMX", display_name="TMP-SMX"
+        )
+        self.medications_choice_steroids = MockModel(
+            mock_name="Medication", name="steroids", display_name="steroids"
+        )
+        self.medications_choice_other = MockModel(
+            mock_name="Medication", name=OTHER, display_name=OTHER
         )
 
     def get_cleaned_data(self, **kwargs) -> dict:
@@ -42,7 +51,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "previous_oi_name": "",
                 "previous_oi_dx_date": None,
                 "any_medications": NO,
-                "specify_medications": None,
+                "specify_medications": MockSet(self.medications_choice_na),
                 "specify_steroid_other": "",
                 "specify_medications_other": "",
             }
@@ -386,4 +395,227 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         self.assertIn(
             "This field is not required.",
             str(cm.exception.error_dict.get("previous_oi_date")),
+        )
+
+    def test_specify_medications_applicable_if_any_medications_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "any_medications": YES,
+                "specify_medications": MockSet(self.medications_choice_na),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("specify_medications", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable",
+            str(cm.exception.error_dict.get("specify_medications")),
+        )
+
+        cleaned_data.update(
+            {
+                "specify_medications": MockSet(self.medications_choice_tmp_smx),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_specify_medications_including_not_applicable_raises_if_any_medications_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "any_medications": YES,
+                "specify_medications": MockSet(
+                    self.medications_choice_tmp_smx, self.medications_choice_na
+                ),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("specify_medications", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable",
+            str(cm.exception.error_dict.get("specify_medications")),
+        )
+
+        cleaned_data.update(
+            {
+                "specify_medications": MockSet(self.medications_choice_na),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("specify_medications", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable",
+            str(cm.exception.error_dict.get("specify_medications")),
+        )
+
+        cleaned_data.update(
+            {
+                "specify_medications": MockSet(self.medications_choice_tmp_smx),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_specify_medications_not_applicable_if_any_medications_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "any_medications": NO,
+                "specify_medications": MockSet(self.medications_choice_tmp_smx),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("specify_medications", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not applicable",
+            str(cm.exception.error_dict.get("specify_medications")),
+        )
+
+    def test_specify_steroid_other_required_if_specify_medications_includes_steroids(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "any_medications": YES,
+                "specify_medications": MockSet(
+                    self.medications_choice_tmp_smx,
+                    self.medications_choice_steroids,
+                ),
+                "specify_steroid_other": "",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("specify_steroid_other", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required.",
+            str(cm.exception.error_dict.get("specify_steroid_other")),
+        )
+
+        cleaned_data.update(
+            {
+                "specify_steroid_other": "Other steroid",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_specify_steroid_other_not_required_if_specify_medications_excludes_steroids(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "any_medications": YES,
+                "specify_medications": MockSet(self.medications_choice_tmp_smx),
+                "specify_steroid_other": "Some other steroid",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("specify_steroid_other", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("specify_steroid_other")),
+        )
+
+        cleaned_data.update(
+            {
+                "any_medications": NO,
+                "specify_medications": MockSet(self.medications_choice_na),
+                "specify_steroid_other": "Some other steroid",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("specify_steroid_other", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("specify_steroid_other")),
+        )
+
+    def test_specify_medications_other_required_if_specify_medications_includes_other(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "any_medications": YES,
+                "specify_medications": MockSet(
+                    self.medications_choice_tmp_smx,
+                    self.medications_choice_other,
+                ),
+                "specify_medications_other": "",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("specify_medications_other", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required.",
+            str(cm.exception.error_dict.get("specify_medications_other")),
+        )
+
+        cleaned_data.update(
+            {
+                "specify_medications_other": "Other medication",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_specify_medications_other_not_required_if_specify_medications_excludes_other(
+        self,
+    ):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "any_medications": YES,
+                "specify_medications": MockSet(self.medications_choice_tmp_smx),
+                "specify_medications_other": "Other medication",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("specify_medications_other", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("specify_medications_other")),
+        )
+
+        cleaned_data.update(
+            {
+                "any_medications": NO,
+                "specify_medications": MockSet(self.medications_choice_na),
+                "specify_medications_other": "Other medication",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("specify_medications_other", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("specify_medications_other")),
         )

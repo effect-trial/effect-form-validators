@@ -1,5 +1,6 @@
 from edc_constants.constants import NO, OTHER, YES
 from edc_crf.crf_form_validator import CrfFormValidator
+from effect_lists.constants import STEROIDS
 
 
 class PatientHistoryFormValidator(CrfFormValidator):
@@ -32,8 +33,10 @@ class PatientHistoryFormValidator(CrfFormValidator):
         self.validate_date_against_report_datetime("rifampicin_start_date")
 
     def validate_other_medication(self):
-        pass
-        # TODO: specify_medications required if any_medications
-        # TODO: specify_medications NA behaviour???
-        # TODO: specify_steroid_other required if specify_medications == Steroids
-        # TODO: specify_medications_other required if specify_medications == Other
+        self.m2m_applicable_if(YES, field="any_medications", m2m_field="specify_medications")
+        self.m2m_other_specify(
+            STEROIDS, m2m_field="specify_medications", field_other="specify_steroid_other"
+        )
+        self.m2m_other_specify(
+            OTHER, m2m_field="specify_medications", field_other="specify_medications_other"
+        )
