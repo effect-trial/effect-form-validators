@@ -3,7 +3,6 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
-from edc_utils import get_utcnow_as_date
 
 from effect_form_validators.effect_subject import PatientHistoryFormValidator as Base
 
@@ -325,7 +324,9 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 "previous_oi_name": "Prev OI",
-                "previous_oi_date": get_utcnow_as_date() - relativedelta(months=3),
+                "previous_oi_date": (
+                    cleaned_data.get("report_datetime").date() - relativedelta(months=3)
+                ),
             }
         )
         form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
@@ -371,7 +372,9 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
 
         cleaned_data.update(
             {
-                "previous_oi_date": get_utcnow_as_date() - relativedelta(months=3),
+                "previous_oi_date": (
+                    cleaned_data.get("report_datetime").date() - relativedelta(months=3)
+                ),
             }
         )
         form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
@@ -385,7 +388,9 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 "previous_oi": NO,
-                "previous_oi_date": get_utcnow_as_date() - relativedelta(months=3),
+                "previous_oi_date": (
+                    cleaned_data.get("report_datetime").date() - relativedelta(months=3)
+                ),
             }
         )
         form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
@@ -396,6 +401,58 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
             "This field is not required.",
             str(cm.exception.error_dict.get("previous_oi_date")),
         )
+
+    def test_previous_oi_date_after_report_date_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "previous_oi": YES,
+                "previous_oi_name": "Prev OI",
+                "previous_oi_date": (
+                    cleaned_data.get("report_datetime").date() + relativedelta(days=1)
+                ),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("previous_oi_date", cm.exception.error_dict)
+        self.assertIn(
+            "Cannot be after report datetime",
+            str(cm.exception.error_dict.get("previous_oi_date")),
+        )
+
+    def test_previous_oi_date_on_report_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "previous_oi": YES,
+                "previous_oi_name": "Prev OI",
+                "previous_oi_date": cleaned_data.get("report_datetime").date(),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_previous_oi_date_before_report_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "previous_oi": YES,
+                "previous_oi_name": "Prev OI",
+                "previous_oi_date": (
+                    cleaned_data.get("report_datetime").date() - relativedelta(days=1)
+                ),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_specify_medications_applicable_if_any_medications_yes(self):
         cleaned_data = self.get_cleaned_data()

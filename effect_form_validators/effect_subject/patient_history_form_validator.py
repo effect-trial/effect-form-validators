@@ -13,8 +13,7 @@ class PatientHistoryFormValidator(CrfFormValidator):
 
         self.validate_tb()
 
-        self.required_if(YES, field="previous_oi", field_required="previous_oi_name")
-        self.required_if(YES, field="previous_oi", field_required="previous_oi_date")
+        self.validate_previous_oi()
 
         self.validate_other_medication()
 
@@ -31,6 +30,11 @@ class PatientHistoryFormValidator(CrfFormValidator):
         self.applicable_if(YES, field="on_tb_tx", field_applicable="on_rifampicin")
         self.required_if(YES, field="on_rifampicin", field_required="rifampicin_start_date")
         self.validate_date_against_report_datetime("rifampicin_start_date")
+
+    def validate_previous_oi(self):
+        self.required_if(YES, field="previous_oi", field_required="previous_oi_name")
+        self.required_if(YES, field="previous_oi", field_required="previous_oi_date")
+        self.validate_date_against_report_datetime("previous_oi_date")
 
     def validate_other_medication(self):
         self.m2m_applicable_if(YES, field="any_medications", m2m_field="specify_medications")
