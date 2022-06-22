@@ -1,6 +1,5 @@
-from edc_constants.constants import NO, OTHER, YES
+from edc_constants.constants import NO, OTHER, STEROIDS, YES
 from edc_crf.crf_form_validator import CrfFormValidator
-from effect_lists.constants import STEROIDS
 
 
 class PatientHistoryFormValidator(CrfFormValidator):
