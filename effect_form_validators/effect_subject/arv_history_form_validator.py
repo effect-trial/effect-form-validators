@@ -12,7 +12,8 @@ class ArvHistoryFormValidator(CrfFormValidator):
         return subject_screening_model_cls.objects.get(subject_identifier=subject_identifier)
 
     def clean(self) -> None:
-        self.validate_hiv_dx_against_screening_cd4_date()
+        self.validate_date_against_report_datetime("hiv_dx_date")
+        self.validate_hiv_dx_date_against_screening_cd4_date()
 
         condition = (
             self.cleaned_data.get("on_art_at_crag")
@@ -113,7 +114,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
         #     "Invalid. Cannot be before HIV diagnosis date.",
         # )
 
-        self.validate_cd4()
+        self.validate_cd4_date()
 
         self.validate_cd4_against_screening_cd4_data()
 
@@ -138,7 +139,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
     #     field_required="other_previous_arv_regimen",
     # )
 
-    def validate_hiv_dx_against_screening_cd4_date(self):
+    def validate_hiv_dx_date_against_screening_cd4_date(self):
         if (
             self.cleaned_data.get("hiv_dx_date")
             and self.cleaned_data.get("hiv_dx_date") > self.subject_screening.cd4_date
@@ -153,7 +154,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
                 INVALID_ERROR,
             )
 
-    def validate_cd4(self):
+    def validate_cd4_date(self):
         self.validate_date_against_report_datetime("cd4_date")
         self.date_not_before(
             "hiv_dx_date",
@@ -163,17 +164,17 @@ class ArvHistoryFormValidator(CrfFormValidator):
         )
 
     def validate_cd4_against_screening_cd4_data(self):
-        arv_history_cd4_result = self.cleaned_data.get("cd4_result")
+        arv_history_cd4_value = self.cleaned_data.get("cd4_value")
         arv_history_cd4_date = self.cleaned_data.get("cd4_date")
         if (
-            arv_history_cd4_result
+            arv_history_cd4_value
             and arv_history_cd4_date
             and arv_history_cd4_date == self.subject_screening.cd4_date
-            and arv_history_cd4_result != self.subject_screening.cd4_value
+            and arv_history_cd4_value != self.subject_screening.cd4_value
         ):
             self.raise_validation_error(
                 {
-                    "cd4_result": (
+                    "cd4_value": (
                         "Invalid. Cannot differ from screening CD4 count "
                         f"({self.subject_screening.cd4_value}) if collected on same date."
                     )
