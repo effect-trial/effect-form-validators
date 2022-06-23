@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.constants import (
+    HEADACHE,
     IN_PERSON,
     NEXT_OF_KIN,
     NO,
@@ -34,6 +35,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
         super().setUp()
         self.sisx_choice_na = MockModel(
             mock_name="SiSx", name=NOT_APPLICABLE, display_name=NOT_APPLICABLE
+        )
+        self.sisx_choice_headache = MockModel(
+            mock_name="SiSx", name=HEADACHE, display_name=HEADACHE
         )
         self.investigations_performed_fields = [
             "xray_performed",
@@ -253,3 +257,49 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                             },
                             cm.exception.message_dict,
                         )
+
+    @patch(is_baseline_import_path)
+    def test_specified_headache_duration_zero_raises(self, mock_is_baseline):
+        mock_is_baseline.return_value = True
+        self.subject_visit.assessment_type = IN_PERSON
+
+        for invalid_duration in ["0d", "0h", "0d0h", "00d", "00h", "000d00h"]:
+            with self.subTest(invalid_duration=invalid_duration):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    any_sx=YES,
+                    cm_sx=NO,
+                    current_sx=MockSet(self.sisx_choice_headache),
+                    current_sx_gte_g3=MockSet(self.sisx_choice_na),
+                    headache_duration=invalid_duration,
+                )
+
+                form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("headache_duration", cm.exception.error_dict)
+                self.assertEqual(
+                    {"headache_duration": ["Invalid. Headache duration cannot be <= 0"]},
+                    cm.exception.message_dict,
+                )
+
+    @patch(is_baseline_import_path)
+    def test_specified_headache_duration_gt_zero_ok(self, mock_is_baseline):
+        mock_is_baseline.return_value = True
+        self.subject_visit.assessment_type = IN_PERSON
+
+        for valid_duration in ["1d", "1h", "1d6h", "03d", "23h", "001d01h"]:
+            with self.subTest(invalid_duration=valid_duration):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    any_sx=YES,
+                    cm_sx=NO,
+                    current_sx=MockSet(self.sisx_choice_headache),
+                    current_sx_gte_g3=MockSet(self.sisx_choice_na),
+                    headache_duration=valid_duration,
+                )
+                form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
