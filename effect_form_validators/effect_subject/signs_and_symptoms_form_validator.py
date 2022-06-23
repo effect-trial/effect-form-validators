@@ -20,9 +20,9 @@ from edc_constants.disease_constants import (
 from edc_constants.utils import get_display
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR, NOT_APPLICABLE_ERROR
+from edc_model.utils import timedelta_from_duration_dh_field
 from edc_visit_schedule.utils import is_baseline
 from edc_visit_tracking.choices import ASSESSMENT_TYPES, ASSESSMENT_WHO_CHOICES
-from effect_subject.utils import timedelta_from_duration_dh_field
 
 
 class SignsAndSymptomsFormValidator(CrfFormValidator):
