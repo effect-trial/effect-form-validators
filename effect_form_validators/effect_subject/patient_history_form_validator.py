@@ -1,4 +1,4 @@
-from edc_constants.constants import NO, OTHER, STEROIDS, YES
+from edc_constants.constants import OTHER, STEROIDS, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 
 
@@ -10,7 +10,9 @@ class PatientHistoryFormValidator(CrfFormValidator):
             YES, field="reported_neuro_abnormality", field_required="neuro_abnormality_details"
         )
 
-        self.validate_tb()
+        self.validate_tb_dx()
+
+        self.validate_tb_tx()
 
         self.validate_previous_oi()
 
@@ -22,13 +24,18 @@ class PatientHistoryFormValidator(CrfFormValidator):
         self.validate_other_specify(field="flucon_dose")
         self.required_if(OTHER, field="flucon_dose", field_required="flucon_dose_other_reason")
 
-    def validate_tb(self):
+    def validate_tb_dx(self):
+        self.required_if(YES, field="tb_prev_dx", field_required="tb_dx_date")
+        self.validate_date_against_report_datetime("tb_dx_date")
+        self.applicable_if(YES, field="tb_prev_dx", field_applicable="tb_dx_date_estimated")
         self.applicable_if(YES, field="tb_prev_dx", field_applicable="tb_site")
-        self.applicable_if(YES, field="tb_prev_dx", field_applicable="on_tb_tx")
-        self.applicable_if(NO, field="on_tb_tx", field_applicable="tb_dx_ago")
-        self.applicable_if(YES, field="on_tb_tx", field_applicable="on_rifampicin")
-        self.required_if(YES, field="on_rifampicin", field_required="rifampicin_start_date")
-        self.validate_date_against_report_datetime("rifampicin_start_date")
+
+    def validate_tb_tx(self):
+        pass
+        # self.applicable_if(YES, field="tb_prev_dx", field_applicable="on_tb_tx")
+        # self.applicable_if(NO, field="on_tb_tx", field_applicable="tb_dx_ago")
+        # self.applicable_if(YES, field="on_tb_tx", field_applicable="on_rifampicin")
+        # self.required_if(YES, field="on_rifampicin", field_required="rifampicin_start_date")
 
     def validate_previous_oi(self):
         self.required_if(YES, field="previous_oi", field_required="previous_oi_name")

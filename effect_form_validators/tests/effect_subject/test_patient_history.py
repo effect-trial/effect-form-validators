@@ -41,11 +41,12 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "reported_neuro_abnormality": NO,
                 "neuro_abnormality_details": "",
                 "tb_prev_dx": NO,
+                "tb_dx_date": None,
+                "tb_dx_date_estimated": NOT_APPLICABLE,
                 "tb_site": NOT_APPLICABLE,
-                "on_tb_tx": NOT_APPLICABLE,
-                "tb_dx_ago": NOT_APPLICABLE,
-                "on_rifampicin": NOT_APPLICABLE,
-                "rifampicin_start_date": None,
+                "on_tb_tx": NO,
+                "tb_tx_type": NOT_APPLICABLE,
+                "tb_tx_active": None,
                 "previous_oi": NO,
                 "previous_oi_name": "",
                 "previous_oi_dx_date": None,
@@ -302,6 +303,146 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         self.assertIn(
             "This field is not required.",
             str(cm.exception.error_dict.get("neuro_abnormality_details")),
+        )
+
+    def test_tb_dx_date_required_if_prev_tb_dx_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": YES,
+                "tb_dx_date": None,
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("tb_dx_date", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required.",
+            str(cm.exception.error_dict.get("tb_dx_date")),
+        )
+
+        cleaned_data.update(
+            {
+                "tb_dx_date": self.consent_datetime.date() - relativedelta(years=1),
+                "tb_dx_date_estimated": NO,
+                "tb_site": "extra_pulmonary",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_tb_dx_date_not_required_if_prev_tb_dx_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": NO,
+                "tb_dx_date": self.consent_datetime.date() - relativedelta(years=1),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("tb_dx_date", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required.",
+            str(cm.exception.error_dict.get("tb_dx_date")),
+        )
+
+    def test_tb_dx_date_estimated_applicable_if_prev_tb_dx_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": YES,
+                "tb_dx_date": self.consent_datetime.date() - relativedelta(years=1),
+                "tb_dx_date_estimated": NOT_APPLICABLE,
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("tb_dx_date_estimated", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable.",
+            str(cm.exception.error_dict.get("tb_dx_date_estimated")),
+        )
+
+        cleaned_data.update(
+            {
+                "tb_dx_date_estimated": YES,
+                "tb_site": "pulmonary",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_tb_dx_date_estimated_not_applicable_if_prev_tb_dx_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": NO,
+                "tb_dx_date": None,
+                "tb_dx_date_estimated": NO,
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("tb_dx_date_estimated", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not applicable.",
+            str(cm.exception.error_dict.get("tb_dx_date_estimated")),
+        )
+
+    def test_tb_site_applicable_if_prev_tb_dx_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": YES,
+                "tb_dx_date": self.consent_datetime.date() - relativedelta(years=1),
+                "tb_dx_date_estimated": NO,
+                "tb_site": NOT_APPLICABLE,
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("tb_site", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable.",
+            str(cm.exception.error_dict.get("tb_site")),
+        )
+
+        cleaned_data.update({"tb_site": "extra_pulmonary"})
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_tb_site_not_required_if_prev_tb_dx_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": NO,
+                "tb_dx_date": None,
+                "tb_dx_date_estimated": NOT_APPLICABLE,
+                "tb_site": "pulmonary",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("tb_site", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not applicable.",
+            str(cm.exception.error_dict.get("tb_site")),
         )
 
     def test_previous_oi_name_required_if_previous_oi_yes(self):
