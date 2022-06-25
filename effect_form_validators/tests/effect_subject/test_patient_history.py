@@ -28,9 +28,6 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         self.medications_choice_other = MockModel(
             mock_name="Medication", name=OTHER, display_name=OTHER
         )
-        self.tb_treatments_choice_na = MockModel(
-            mock_name="TbTreatments", name=NOT_APPLICABLE, display_name=NOT_APPLICABLE
-        )
         self.tb_treatments_choice_hrze = MockModel(
             mock_name="TbTreatments", name="HRZE", display_name="HRZE"
         )
