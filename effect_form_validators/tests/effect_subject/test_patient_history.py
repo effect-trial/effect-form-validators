@@ -28,6 +28,12 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         self.medications_choice_other = MockModel(
             mock_name="Medication", name=OTHER, display_name=OTHER
         )
+        self.tb_treatments_choice_na = MockModel(
+            mock_name="TbTreatments", name=NOT_APPLICABLE, display_name=NOT_APPLICABLE
+        )
+        self.tb_treatments_choice_hrze = MockModel(
+            mock_name="TbTreatments", name="HRZE", display_name="HRZE"
+        )
 
     def get_cleaned_data(self, **kwargs) -> dict:
         cleaned_data = super().get_cleaned_data(**kwargs)
@@ -46,7 +52,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_site": NOT_APPLICABLE,
                 "on_tb_tx": NO,
                 "tb_tx_type": NOT_APPLICABLE,
-                "tb_tx_active": None,
+                "active_tb_tx": None,
                 "previous_oi": NO,
                 "previous_oi_name": "",
                 "previous_oi_dx_date": None,
@@ -444,6 +450,274 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
             "This field is not applicable.",
             str(cm.exception.error_dict.get("tb_site")),
         )
+
+    def test_tb_tx_type_applicable_if_on_tb_tx_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "on_tb_tx": YES,
+                "tb_tx_type": NOT_APPLICABLE,
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("tb_tx_type", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable.",
+            str(cm.exception.error_dict.get("tb_tx_type")),
+        )
+
+        cleaned_data.update({"tb_tx_type": "ipt"})
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_tb_tx_type_not_applicable_if_on_tb_tx_no(self):
+        for tx_type in ["active_tb", "latent_tb", "ipt"]:
+            with self.subTest(tx_type=tx_type):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "on_tb_tx": NO,
+                        "tb_tx_type": tx_type,
+                    }
+                )
+                form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("tb_tx_type", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not applicable.",
+                    str(cm.exception.error_dict.get("tb_tx_type")),
+                )
+
+                cleaned_data.update({"tb_tx_type": NOT_APPLICABLE})
+                form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_active_tb_with_tb_prev_dx_no_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": NO,
+                "tb_dx_date": None,
+                "tb_dx_date_estimated": NOT_APPLICABLE,
+                "tb_site": NOT_APPLICABLE,
+                "on_tb_tx": YES,
+                "tb_tx_type": "active_tb",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("tb_tx_type", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. "
+            "No previous diagnosis of Tuberculosis. "
+            "Expected one of ['IPT', 'Not applicable'].",
+            str(cm.exception.error_dict.get("tb_tx_type")),
+        )
+
+        cleaned_data.update({"tb_tx_type": "ipt"})
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_active_tb_with_tb_prev_dx_yes_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": YES,
+                "tb_dx_date": self.consent_datetime.date() - relativedelta(months=1),
+                "tb_dx_date_estimated": NO,
+                "tb_site": "pulmonary",
+                "on_tb_tx": YES,
+                "tb_tx_type": "active_tb",
+                "active_tb_tx": MockSet(self.tb_treatments_choice_hrze),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_latent_tb_with_tb_prev_dx_no_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": NO,
+                "tb_dx_date": None,
+                "tb_dx_date_estimated": NOT_APPLICABLE,
+                "tb_site": NOT_APPLICABLE,
+                "on_tb_tx": YES,
+                "tb_tx_type": "latent_tb",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("tb_tx_type", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. "
+            "No previous diagnosis of Tuberculosis. "
+            "Expected one of ['IPT', 'Not applicable'].",
+            str(cm.exception.error_dict.get("tb_tx_type")),
+        )
+
+        cleaned_data.update({"tb_tx_type": "ipt"})
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_latent_tb_with_tb_prev_dx_yes_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": YES,
+                "tb_dx_date": self.consent_datetime.date() - relativedelta(months=1),
+                "tb_dx_date_estimated": NO,
+                "tb_site": "pulmonary",
+                "on_tb_tx": YES,
+                "tb_tx_type": "latent_tb",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_ipt_with_tb_prev_dx_yes_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": YES,
+                "tb_dx_date": self.consent_datetime.date() - relativedelta(months=1),
+                "tb_dx_date_estimated": NO,
+                "tb_site": "pulmonary",
+                "on_tb_tx": YES,
+                "tb_tx_type": "ipt",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_ipt_with_tb_prev_dx_no_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": NO,
+                "tb_dx_date": None,
+                "tb_dx_date_estimated": NOT_APPLICABLE,
+                "tb_site": NOT_APPLICABLE,
+                "on_tb_tx": YES,
+                "tb_tx_type": "ipt",
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_active_tb_tx_required_if_tb_tx_type_is_active_tb(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "tb_prev_dx": YES,
+                "tb_dx_date": self.consent_datetime.date() - relativedelta(months=1),
+                "tb_dx_date_estimated": NO,
+                "tb_site": "pulmonary",
+                "on_tb_tx": YES,
+                "tb_tx_type": "active_tb",
+                "active_tb_tx": MockSet(),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("active_tb_tx", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required",
+            str(cm.exception.error_dict.get("active_tb_tx")),
+        )
+
+        cleaned_data.update({"active_tb_tx": MockSet(self.tb_treatments_choice_hrze)})
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_active_tb_tx_not_required_if_tb_tx_type_is_not_active_tb(self):
+        for tx_type in ["latent_tb", "ipt"]:
+            with self.subTest(tx_type=tx_type):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "tb_prev_dx": YES,
+                        "tb_dx_date": self.consent_datetime.date() - relativedelta(months=1),
+                        "tb_dx_date_estimated": NO,
+                        "tb_site": "pulmonary",
+                        "on_tb_tx": YES,
+                        "tb_tx_type": tx_type,
+                        "active_tb_tx": MockSet(self.tb_treatments_choice_hrze),
+                    }
+                )
+                form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("active_tb_tx", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not required",
+                    str(cm.exception.error_dict.get("active_tb_tx")),
+                )
+
+        cleaned_data.update({"active_tb_tx": None})
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_active_tb_tx_not_required_if_on_tb_tx_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "on_tb_tx": NO,
+                "tb_tx_type": NOT_APPLICABLE,
+                "active_tb_tx": MockSet(self.tb_treatments_choice_hrze),
+            }
+        )
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("active_tb_tx", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("active_tb_tx")),
+        )
+
+        cleaned_data.update({"active_tb_tx": None})
+        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_previous_oi_name_required_if_previous_oi_yes(self):
         cleaned_data = self.get_cleaned_data()
