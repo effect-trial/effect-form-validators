@@ -1,6 +1,7 @@
 from edc_constants.constants import NO, NOT_APPLICABLE, NOT_DONE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
+from edc_visit_schedule.constants import WEEK10, WEEK24
 from edc_visit_schedule.utils import is_baseline
 
 
@@ -29,6 +30,19 @@ class MentalStatusFormValidator(CrfFormValidator):
                 {"glasgow_coma_score": "Invalid. GCS cannot be less than 15 at baseline"},
                 INVALID_ERROR,
             )
+
+        scheduled_w10_or_w24 = (
+            self.cleaned_data.get("subject_visit").visit_code in [WEEK10, WEEK24]
+            and self.cleaned_data.get("subject_visit").visit_code_sequence == 0
+        )
+        self.applicable_if_true(
+            condition=scheduled_w10_or_w24,
+            field_applicable="require_help",
+        )
+        self.applicable_if_true(
+            condition=scheduled_w10_or_w24,
+            field_applicable="any_other_problems",
+        )
 
         if baseline:
             self.validate_reporting_fieldset_at_baseline()

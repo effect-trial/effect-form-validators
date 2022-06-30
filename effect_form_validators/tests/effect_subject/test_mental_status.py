@@ -26,6 +26,16 @@ class MentalStatusFormValidator(FormValidatorTestMixin, Base):
 
 class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
     reportable_fields = ["reportable_as_ae", "patient_admitted"]
+    visit_schedule = [
+        DAY01,
+        DAY03,
+        DAY09,
+        DAY14,
+        WEEK04,
+        WEEK10,
+        WEEK16,
+        WEEK24,
+    ]
 
     def setUp(self) -> None:
         super().setUp()
@@ -35,13 +45,28 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
         self.addCleanup(patcher.stop)
         self.mock_is_baseline = patcher.start()
 
-    def get_cleaned_data(self, visit_code: Optional[str] = None, **kwargs) -> dict:
-        cleaned_data = super().get_cleaned_data(visit_code=visit_code, **kwargs)
+    def get_cleaned_data(
+        self,
+        visit_code: Optional[str] = None,
+        visit_code_sequence: Optional[int] = None,
+        **kwargs,
+    ) -> dict:
+        cleaned_data = super().get_cleaned_data(
+            visit_code=visit_code,
+            visit_code_sequence=visit_code_sequence,
+            **kwargs,
+        )
+        scheduled_w10_or_w24 = (
+            cleaned_data.get("subject_visit").visit_code in [WEEK10, WEEK24]
+            and cleaned_data.get("subject_visit").visit_code_sequence == 0
+        )
         cleaned_data.update(
             {
                 "recent_seizure": NO,
                 "behaviour_change": NO,
                 "confusion": NO,
+                "require_help": NO if scheduled_w10_or_w24 else NOT_APPLICABLE,
+                "any_other_problems": NO if scheduled_w10_or_w24 else NOT_APPLICABLE,
                 "modified_rankin_score": "0",
                 "ecog_score": "0",
                 "glasgow_coma_score": 15,
@@ -224,6 +249,166 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                             "patient_admitted": NO,
                         }
                     )
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_require_help_applicable_at_scheduled_w10_and_w24_visits(self):
+        for visit_code in [WEEK10, WEEK24]:
+            with self.subTest(visit_code=visit_code):
+                cleaned_data = self.get_cleaned_data(
+                    visit_code=visit_code,
+                    visit_code_sequence=0,
+                )
+                cleaned_data.update({"require_help": NOT_APPLICABLE})
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("require_help", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is applicable.",
+                    str(cm.exception.error_dict.get("require_help")),
+                )
+
+                cleaned_data.update({"require_help": YES})
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_require_help_not_applicable_at_unscheduled_w10_and_w24_visits(self):
+        for visit_code in [WEEK10, WEEK24]:
+            for visit_code_sequence in [1, 2, 3]:
+                with self.subTest(
+                    visit_code=visit_code,
+                    visit_code_sequence=visit_code_sequence,
+                ):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=visit_code,
+                        visit_code_sequence=visit_code_sequence,
+                    )
+                    cleaned_data.update({"require_help": NO})
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("require_help", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is not applicable.",
+                        str(cm.exception.error_dict.get("require_help")),
+                    )
+
+                    cleaned_data.update({"require_help": NOT_APPLICABLE})
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_require_help_not_applicable_if_not_w10_and_w24(self):
+        for visit_code in [vc for vc in self.visit_schedule if vc not in [WEEK10, WEEK24]]:
+            for visit_code_sequence in [0, 1]:
+                with self.subTest(
+                    visit_code=visit_code,
+                    visit_code_sequence=visit_code_sequence,
+                ):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=visit_code,
+                        visit_code_sequence=visit_code_sequence,
+                    )
+                    cleaned_data.update({"require_help": YES})
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("require_help", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is not applicable.",
+                        str(cm.exception.error_dict.get("require_help")),
+                    )
+
+                    cleaned_data.update({"require_help": NOT_APPLICABLE})
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_any_other_problems_applicable_at_scheduled_w10_and_w24_visits(self):
+        for visit_code in [WEEK10, WEEK24]:
+            with self.subTest(visit_code=visit_code):
+                cleaned_data = self.get_cleaned_data(
+                    visit_code=visit_code,
+                    visit_code_sequence=0,
+                )
+                cleaned_data.update({"any_other_problems": NOT_APPLICABLE})
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("any_other_problems", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is applicable.",
+                    str(cm.exception.error_dict.get("any_other_problems")),
+                )
+
+                cleaned_data.update({"any_other_problems": YES})
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_any_other_problems_not_applicable_at_unscheduled_w10_and_w24_visits(self):
+        for visit_code in [WEEK10, WEEK24]:
+            for visit_code_sequence in [1, 2, 3]:
+                with self.subTest(
+                    visit_code=visit_code,
+                    visit_code_sequence=visit_code_sequence,
+                ):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=visit_code,
+                        visit_code_sequence=visit_code_sequence,
+                    )
+                    cleaned_data.update({"any_other_problems": NO})
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("any_other_problems", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is not applicable.",
+                        str(cm.exception.error_dict.get("any_other_problems")),
+                    )
+
+                    cleaned_data.update({"any_other_problems": NOT_APPLICABLE})
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_any_other_problems_not_applicable_if_not_w10_and_w24(self):
+        for visit_code in [vc for vc in self.visit_schedule if vc not in [WEEK10, WEEK24]]:
+            for visit_code_sequence in [0, 1]:
+                with self.subTest(
+                    visit_code=visit_code,
+                    visit_code_sequence=visit_code_sequence,
+                ):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=visit_code,
+                        visit_code_sequence=visit_code_sequence,
+                    )
+                    cleaned_data.update({"any_other_problems": YES})
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("any_other_problems", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is not applicable.",
+                        str(cm.exception.error_dict.get("any_other_problems")),
+                    )
+
+                    cleaned_data.update({"any_other_problems": NOT_APPLICABLE})
                     form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
                     try:
                         form_validator.validate()
