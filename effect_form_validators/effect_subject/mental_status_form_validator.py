@@ -38,10 +38,16 @@ class MentalStatusFormValidator(CrfFormValidator):
         self.applicable_if_true(
             condition=scheduled_w10_or_w24,
             field_applicable="require_help",
+            not_applicable_msg=(
+                "This field is only applicable at scheduled Week 10 and Month 6 visits."
+            ),
         )
         self.applicable_if_true(
             condition=scheduled_w10_or_w24,
             field_applicable="any_other_problems",
+            not_applicable_msg=(
+                "This field is only applicable at scheduled Week 10 and Month 6 visits."
+            ),
         )
 
         if baseline:

@@ -296,7 +296,8 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         form_validator.validate()
                     self.assertIn("require_help", cm.exception.error_dict)
                     self.assertIn(
-                        "This field is not applicable.",
+                        "This field is only applicable at scheduled "
+                        "Week 10 and Month 6 visits.",
                         str(cm.exception.error_dict.get("require_help")),
                     )
 
@@ -324,7 +325,8 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         form_validator.validate()
                     self.assertIn("require_help", cm.exception.error_dict)
                     self.assertIn(
-                        "This field is not applicable.",
+                        "This field is only applicable at scheduled "
+                        "Week 10 and Month 6 visits.",
                         str(cm.exception.error_dict.get("require_help")),
                     )
 
@@ -376,7 +378,8 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         form_validator.validate()
                     self.assertIn("any_other_problems", cm.exception.error_dict)
                     self.assertIn(
-                        "This field is not applicable.",
+                        "This field is only applicable at scheduled "
+                        "Week 10 and Month 6 visits.",
                         str(cm.exception.error_dict.get("any_other_problems")),
                     )
 
@@ -404,7 +407,8 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         form_validator.validate()
                     self.assertIn("any_other_problems", cm.exception.error_dict)
                     self.assertIn(
-                        "This field is not applicable.",
+                        "This field is only applicable at scheduled "
+                        "Week 10 and Month 6 visits.",
                         str(cm.exception.error_dict.get("any_other_problems")),
                     )
 
