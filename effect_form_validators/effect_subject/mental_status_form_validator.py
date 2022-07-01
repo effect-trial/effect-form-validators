@@ -16,7 +16,7 @@ class MentalStatusFormValidator(CrfFormValidator):
             for sx in ["recent_seizure", "behaviour_change", "confusion"]:
                 if self.cleaned_data.get(sx) == YES:
                     self.raise_validation_error(
-                        {sx: "Invalid. Cannot report positive symptoms at baseline"},
+                        {sx: "Invalid. Cannot report positive symptoms at baseline."},
                         INVALID_ERROR,
                     )
 
@@ -24,14 +24,14 @@ class MentalStatusFormValidator(CrfFormValidator):
                 self.raise_validation_error(
                     {
                         "modified_rankin_score": (
-                            "Invalid. Modified Rankin cannot be > 0 at baseline"
+                            "Invalid. Modified Rankin cannot be > 0 at baseline."
                         )
                     },
                     INVALID_ERROR,
                 )
             elif self.cleaned_data.get("ecog_score") != "0":
                 self.raise_validation_error(
-                    {"ecog_score": "Invalid. ECOG cannot be > 0 at baseline"},
+                    {"ecog_score": "Invalid. ECOG cannot be > 0 at baseline."},
                     INVALID_ERROR,
                 )
             elif (
@@ -39,7 +39,7 @@ class MentalStatusFormValidator(CrfFormValidator):
                 and self.cleaned_data.get("glasgow_coma_score") < 15
             ):
                 self.raise_validation_error(
-                    {"glasgow_coma_score": "Invalid. GCS cannot be < 15 at baseline"},
+                    {"glasgow_coma_score": "Invalid. GCS cannot be < 15 at baseline."},
                     INVALID_ERROR,
                 )
 

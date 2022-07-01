@@ -83,7 +83,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         form_validator.validate()
                     self.assertIn(reporting_field, cm.exception.error_dict)
                     self.assertIn(
-                        "Not applicable at baseline",
+                        "Not applicable at baseline.",
                         str(cm.exception.error_dict.get(reporting_field)),
                     )
 
@@ -144,7 +144,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     form_validator.validate()
                 self.assertIn(sx, cm.exception.error_dict)
                 self.assertIn(
-                    "Invalid. Cannot report positive symptoms at baseline",
+                    "Invalid. Cannot report positive symptoms at baseline.",
                     str(cm.exception.error_dict.get(sx)),
                 )
 
@@ -159,7 +159,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     form_validator.validate()
                 self.assertIn("modified_rankin_score", cm.exception.error_dict)
                 self.assertIn(
-                    "Invalid. Modified Rankin cannot be > 0 at baseline",
+                    "Invalid. Modified Rankin cannot be > 0 at baseline.",
                     str(cm.exception.error_dict.get("modified_rankin_score")),
                 )
 
@@ -174,7 +174,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     form_validator.validate()
                 self.assertIn("ecog_score", cm.exception.error_dict)
                 self.assertIn(
-                    "Invalid. ECOG cannot be > 0 at baseline",
+                    "Invalid. ECOG cannot be > 0 at baseline.",
                     str(cm.exception.error_dict.get("ecog_score")),
                 )
 
@@ -189,7 +189,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     form_validator.validate()
                 self.assertIn("glasgow_coma_score", cm.exception.error_dict)
                 self.assertIn(
-                    "Invalid. GCS cannot be < 15 at baseline",
+                    "Invalid. GCS cannot be < 15 at baseline.",
                     str(cm.exception.error_dict.get("glasgow_coma_score")),
                 )
 
