@@ -12,23 +12,36 @@ class MentalStatusFormValidator(CrfFormValidator):
 
         baseline = is_baseline(instance=self.cleaned_data.get("subject_visit"))
 
-        # Cannot have had a recent seizure at baseline
-        if baseline and self.cleaned_data.get("recent_seizure") == YES:
-            self.raise_validation_error(
-                {"recent_seizure": "Invalid. Cannot have had a recent seizure at baseline"},
-                INVALID_ERROR,
-            )
+        if baseline:
+            for sx in ["recent_seizure", "behaviour_change", "confusion"]:
+                if self.cleaned_data.get(sx) == YES:
+                    self.raise_validation_error(
+                        {sx: "Invalid. Cannot report positive symptoms at baseline"},
+                        INVALID_ERROR,
+                    )
 
-        #  GCS cannot be less than 15 at baseline
-        if (
-            baseline
-            and self.cleaned_data.get("glasgow_coma_score")
-            and self.cleaned_data.get("glasgow_coma_score") < 15
-        ):
-            self.raise_validation_error(
-                {"glasgow_coma_score": "Invalid. GCS cannot be less than 15 at baseline"},
-                INVALID_ERROR,
-            )
+            if self.cleaned_data.get("modified_rankin_score") not in ["0", NOT_DONE]:
+                self.raise_validation_error(
+                    {
+                        "modified_rankin_score": (
+                            "Invalid. Modified Rankin cannot be > 0 at baseline"
+                        )
+                    },
+                    INVALID_ERROR,
+                )
+            elif self.cleaned_data.get("ecog_score") != "0":
+                self.raise_validation_error(
+                    {"ecog_score": "Invalid. ECOG cannot be > 0 at baseline"},
+                    INVALID_ERROR,
+                )
+            elif (
+                self.cleaned_data.get("glasgow_coma_score")
+                and self.cleaned_data.get("glasgow_coma_score") < 15
+            ):
+                self.raise_validation_error(
+                    {"glasgow_coma_score": "Invalid. GCS cannot be < 15 at baseline"},
+                    INVALID_ERROR,
+                )
 
         if baseline:
             self.validate_reporting_fieldset_at_baseline()
