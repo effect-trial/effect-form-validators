@@ -1,6 +1,7 @@
 from edc_constants.constants import NO, NOT_APPLICABLE, NOT_DONE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
+from edc_visit_schedule.constants import WEEK10, WEEK24
 from edc_visit_schedule.utils import is_baseline
 
 
@@ -11,7 +12,6 @@ class MentalStatusFormValidator(CrfFormValidator):
     def clean(self) -> None:
 
         baseline = is_baseline(instance=self.cleaned_data.get("subject_visit"))
-
         if baseline:
             for sx in ["recent_seizure", "behaviour_change", "confusion"]:
                 if self.cleaned_data.get(sx) == YES:
@@ -43,6 +43,25 @@ class MentalStatusFormValidator(CrfFormValidator):
                     INVALID_ERROR,
                 )
 
+        scheduled_w10_or_w24 = (
+            self.cleaned_data.get("subject_visit").visit_code in [WEEK10, WEEK24]
+            and self.cleaned_data.get("subject_visit").visit_code_sequence == 0
+        )
+        self.applicable_if_true(
+            condition=scheduled_w10_or_w24,
+            field_applicable="require_help",
+            not_applicable_msg=(
+                "This field is only applicable at scheduled Week 10 and Month 6 visits."
+            ),
+        )
+        self.applicable_if_true(
+            condition=scheduled_w10_or_w24,
+            field_applicable="any_other_problems",
+            not_applicable_msg=(
+                "This field is only applicable at scheduled Week 10 and Month 6 visits."
+            ),
+        )
+
         self.validate_reporting_fieldset()
 
     def validate_reporting_fieldset(self):  # noqa: C901
@@ -53,6 +72,8 @@ class MentalStatusFormValidator(CrfFormValidator):
                     self.cleaned_data.get("recent_seizure") == NO
                     and self.cleaned_data.get("behaviour_change") == NO
                     and self.cleaned_data.get("confusion") == NO
+                    and self.cleaned_data.get("require_help") in [NOT_APPLICABLE, NO]
+                    and self.cleaned_data.get("any_other_problems") in [NOT_APPLICABLE, NO]
                     and self.cleaned_data.get("modified_rankin_score") in ["0", NOT_DONE]
                     and self.cleaned_data.get("ecog_score") == "0"
                     and self.cleaned_data.get("glasgow_coma_score") == 15
@@ -67,6 +88,12 @@ class MentalStatusFormValidator(CrfFormValidator):
                     self.raise_applicable(field=fld, msg="Behaviour change was reported.")
                 elif self.cleaned_data.get("confusion") == YES:
                     self.raise_applicable(field=fld, msg="Confusion reported.")
+                elif self.cleaned_data.get("require_help") == YES:
+                    self.raise_applicable(
+                        field=fld, msg="Reported help required for activities."
+                    )
+                elif self.cleaned_data.get("any_other_problems") == YES:
+                    self.raise_applicable(field=fld, msg="Other problems reported.")
                 elif self.cleaned_data.get("modified_rankin_score") not in ["0", NOT_DONE]:
                     self.raise_applicable(field=fld, msg="Modified Rankin Score > 0.")
                 elif self.cleaned_data.get("ecog_score") != "0":
