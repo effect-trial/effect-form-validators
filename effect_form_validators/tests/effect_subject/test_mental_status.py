@@ -83,7 +83,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         form_validator.validate()
                     self.assertIn(reporting_field, cm.exception.error_dict)
                     self.assertIn(
-                        "Not applicable at baseline.",
+                        "This field is not applicable. No symptoms were reported.",
                         str(cm.exception.error_dict.get(reporting_field)),
                     )
 

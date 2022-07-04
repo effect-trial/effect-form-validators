@@ -43,21 +43,9 @@ class MentalStatusFormValidator(CrfFormValidator):
                     INVALID_ERROR,
                 )
 
-        if baseline:
-            self.validate_reporting_fieldset_at_baseline()
-        else:
-            self.validate_reporting_fieldset_after_baseline()
+        self.validate_reporting_fieldset()
 
-    def validate_reporting_fieldset_at_baseline(self):
-        # ae and hospitalization not reportable at baseline
-        for fld in self.reportable_fields:
-            if self.cleaned_data.get(fld) != NOT_APPLICABLE:
-                self.raise_not_applicable(
-                    field=fld,
-                    not_applicable_msg="Not applicable at baseline.",
-                )
-
-    def validate_reporting_fieldset_after_baseline(self):  # noqa: C901
+    def validate_reporting_fieldset(self):  # noqa: C901
         for fld in self.reportable_fields:
             if self.cleaned_data.get(fld) in [YES, NO]:
                 # ae and hospitalization NOT reportable if no symptoms
@@ -67,7 +55,7 @@ class MentalStatusFormValidator(CrfFormValidator):
                     and self.cleaned_data.get("confusion") == NO
                     and self.cleaned_data.get("modified_rankin_score") in ["0", NOT_DONE]
                     and self.cleaned_data.get("ecog_score") == "0"
-                    and self.cleaned_data.get("glasgow_coma_score") in [15]
+                    and self.cleaned_data.get("glasgow_coma_score") == 15
                 ):
                     self.raise_not_applicable(field=fld, msg="No symptoms were reported.")
 
