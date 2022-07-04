@@ -87,7 +87,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_cleaned_data_at_subsequent_visits_ok(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in self.visit_schedule:
             with self.subTest(visit_code=visit_code):
                 cleaned_data = self.get_cleaned_data(
                     visit_code=visit_code,
@@ -117,7 +117,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_reporting_fieldset_can_be_not_applicable_after_baseline(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in self.visit_schedule:
             with self.subTest(visit_code=visit_code):
                 cleaned_data = self.get_cleaned_data(
                     visit_code=visit_code,
@@ -143,7 +143,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_reporting_fieldset_can_be_answered_after_baseline(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in self.visit_schedule:
             with self.subTest(visit_code=visit_code):
                 cleaned_data = self.get_cleaned_data(
                     visit_code=visit_code,
@@ -312,7 +312,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
     def test_positive_yn_sx_after_baseline_ok(self):
         self.mock_is_baseline.return_value = False
         for sx in ["recent_seizure", "behaviour_change", "confusion"]:
-            for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+            for visit_code in self.visit_schedule:
                 with self.subTest(sx=sx, visit_code=visit_code):
                     cleaned_data = self.get_cleaned_data(
                         visit_code=visit_code,
@@ -333,7 +333,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_modified_rankin_score_gt_0_after_baseline_ok(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in self.visit_schedule:
             for modified_rankin_score in [1, 6]:
                 with self.subTest(
                     visit_code=visit_code, modified_rankin_score=modified_rankin_score
@@ -357,7 +357,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_ecog_score_gt_0_after_baseline_ok(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in self.visit_schedule:
             for ecog_score in [1, 5]:
                 with self.subTest(visit_code=visit_code, ecog_score=ecog_score):
                     cleaned_data = self.get_cleaned_data(
@@ -379,7 +379,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_gcs_lt_15_after_baseline_ok(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in self.visit_schedule:
             for gcs in [3, 14]:
                 with self.subTest(visit_code=visit_code, gcs=gcs):
                     cleaned_data = self.get_cleaned_data(
