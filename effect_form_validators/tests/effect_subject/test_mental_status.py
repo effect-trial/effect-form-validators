@@ -87,14 +87,17 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_cleaned_data_at_subsequent_visits_ok(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
             with self.subTest(visit_code=visit_code):
-                cleaned_data = self.get_cleaned_data(visit_code=visit_code)
-            form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
-            try:
-                form_validator.validate()
-            except ValidationError as e:
-                self.fail(f"ValidationError unexpectedly raised. Got {e}")
+                cleaned_data = self.get_cleaned_data(
+                    visit_code=visit_code,
+                    visit_code_sequence=1 if visit_code == DAY01 else 0,
+                )
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_reportable_fieldset_not_applicable_at_baseline(self):
         self.mock_is_baseline.return_value = True
@@ -108,47 +111,18 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         form_validator.validate()
                     self.assertIn(reporting_field, cm.exception.error_dict)
                     self.assertIn(
-                        "Not applicable at baseline",
+                        "This field is not applicable. No symptoms were reported.",
                         str(cm.exception.error_dict.get(reporting_field)),
                     )
-
-                    # check not reportable even with sx
-                    cleaned_data.update(
-                        {
-                            "ecog_score": "1",
-                            reporting_field: response,
-                        }
-                    )
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
-                    with self.assertRaises(ValidationError) as cm:
-                        form_validator.validate()
-                    self.assertIn(reporting_field, cm.exception.error_dict)
-                    self.assertIn(
-                        "Not applicable at baseline",
-                        str(cm.exception.error_dict.get(reporting_field)),
-                    )
-
-    def test_sx_can_be_reported_at_baseline_without_raising(self):
-        self.mock_is_baseline.return_value = True
-        cleaned_data = self.get_cleaned_data(visit_code=DAY01)
-        cleaned_data.update(
-            {
-                "ecog_score": "1",
-                "reportable_as_ae": NOT_APPLICABLE,
-                "patient_admitted": NOT_APPLICABLE,
-            }
-        )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
-        try:
-            form_validator.validate()
-        except ValidationError as e:
-            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_reporting_fieldset_can_be_not_applicable_after_baseline(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
             with self.subTest(visit_code=visit_code):
-                cleaned_data = self.get_cleaned_data(visit_code=visit_code)
+                cleaned_data = self.get_cleaned_data(
+                    visit_code=visit_code,
+                    visit_code_sequence=1 if visit_code == DAY01 else 0,
+                )
                 cleaned_data.update(
                     {
                         "recent_seizure": NO,
@@ -169,9 +143,12 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_reporting_fieldset_can_be_answered_after_baseline(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
             with self.subTest(visit_code=visit_code):
-                cleaned_data = self.get_cleaned_data(visit_code=visit_code)
+                cleaned_data = self.get_cleaned_data(
+                    visit_code=visit_code,
+                    visit_code_sequence=1 if visit_code == DAY01 else 0,
+                )
                 cleaned_data.update(
                     {
                         "recent_seizure": NO,
@@ -190,18 +167,50 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_seizures_at_baseline_raises_error(self):
+    def test_positive_yn_sx_at_baseline_raises_error(self):
+        self.mock_is_baseline.return_value = True
+        for sx in ["recent_seizure", "behaviour_change", "confusion"]:
+            with self.subTest(sx=sx):
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01)
+                cleaned_data.update({sx: YES})
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn(sx, cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. Cannot report positive symptoms at baseline.",
+                    str(cm.exception.error_dict.get(sx)),
+                )
+
+    def test_modified_rankin_score_gt_0_at_baseline_raises_error(self):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01)
-        cleaned_data.update({"recent_seizure": YES})
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
-        with self.assertRaises(ValidationError) as cm:
-            form_validator.validate()
-        self.assertIn("recent_seizure", cm.exception.error_dict)
-        self.assertIn(
-            "Invalid. Cannot have had a recent seizure at baseline",
-            str(cm.exception.error_dict.get("recent_seizure")),
-        )
+        for modified_rankin_score in [1, 6]:
+            with self.subTest(modified_rankin_score=modified_rankin_score):
+                cleaned_data.update({"modified_rankin_score": modified_rankin_score})
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("modified_rankin_score", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. Modified Rankin cannot be > 0 at baseline.",
+                    str(cm.exception.error_dict.get("modified_rankin_score")),
+                )
+
+    def test_ecog_score_gt_0_at_baseline_raises_error(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(visit_code=DAY01)
+        for ecog_score in [1, 5]:
+            with self.subTest(ecog_score=ecog_score):
+                cleaned_data.update({"ecog_score": ecog_score})
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("ecog_score", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. ECOG cannot be > 0 at baseline.",
+                    str(cm.exception.error_dict.get("ecog_score")),
+                )
 
     def test_gcs_lt_15_at_baseline_raises_error(self):
         self.mock_is_baseline.return_value = True
@@ -214,20 +223,20 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     form_validator.validate()
                 self.assertIn("glasgow_coma_score", cm.exception.error_dict)
                 self.assertIn(
-                    "Invalid. GCS cannot be less than 15 at baseline",
+                    "Invalid. GCS cannot be < 15 at baseline.",
                     str(cm.exception.error_dict.get("glasgow_coma_score")),
                 )
 
-    def test_seizures_after_baseline_ok(self):
-        self.mock_is_baseline.return_value = False
-        for visit_code in [DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
-            with self.subTest(visit_code=visit_code):
-                cleaned_data = self.get_cleaned_data(visit_code=visit_code)
+    def test_negative_yn_sx_at_baseline_ok(self):
+        self.mock_is_baseline.return_value = True
+        for sx in ["recent_seizure", "behaviour_change", "confusion"]:
+            with self.subTest(sx=sx):
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01)
                 cleaned_data.update(
                     {
-                        "recent_seizure": YES,
-                        "reportable_as_ae": NO,
-                        "patient_admitted": NO,
+                        sx: NO,
+                        "reportable_as_ae": NOT_APPLICABLE,
+                        "patient_admitted": NOT_APPLICABLE,
                     }
                 )
                 form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
@@ -236,12 +245,147 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
+    def test_modified_rankin_score_0_at_baseline_ok(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(visit_code=DAY01)
+        cleaned_data.update(
+            {
+                "modified_rankin_score": "0",
+                "reportable_as_ae": NOT_APPLICABLE,
+                "patient_admitted": NOT_APPLICABLE,
+            }
+        )
+        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_modified_rankin_score_not_done_at_baseline_ok(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(visit_code=DAY01)
+        cleaned_data.update(
+            {
+                "modified_rankin_score": NOT_DONE,
+                "reportable_as_ae": NOT_APPLICABLE,
+                "patient_admitted": NOT_APPLICABLE,
+            }
+        )
+        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_ecog_score_0_at_baseline_ok(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(visit_code=DAY01)
+        cleaned_data.update(
+            {
+                "ecog_score": "0",
+                "reportable_as_ae": NOT_APPLICABLE,
+                "patient_admitted": NOT_APPLICABLE,
+            }
+        )
+        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_gcs_15_at_baseline_ok(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(visit_code=DAY01)
+        cleaned_data.update(
+            {
+                "gcs": 15,
+                "reportable_as_ae": NOT_APPLICABLE,
+                "patient_admitted": NOT_APPLICABLE,
+            }
+        )
+        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_positive_yn_sx_after_baseline_ok(self):
+        self.mock_is_baseline.return_value = False
+        for sx in ["recent_seizure", "behaviour_change", "confusion"]:
+            for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+                with self.subTest(sx=sx, visit_code=visit_code):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=visit_code,
+                        visit_code_sequence=1 if visit_code == DAY01 else 0,
+                    )
+                    cleaned_data.update(
+                        {
+                            sx: YES,
+                            "reportable_as_ae": NO,
+                            "patient_admitted": NO,
+                        }
+                    )
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_modified_rankin_score_gt_0_after_baseline_ok(self):
+        self.mock_is_baseline.return_value = False
+        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+            for modified_rankin_score in [1, 6]:
+                with self.subTest(
+                    visit_code=visit_code, modified_rankin_score=modified_rankin_score
+                ):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=visit_code,
+                        visit_code_sequence=1 if visit_code == DAY01 else 0,
+                    )
+                    cleaned_data.update(
+                        {
+                            "modified_rankin_score": modified_rankin_score,
+                            "reportable_as_ae": NO,
+                            "patient_admitted": NO,
+                        }
+                    )
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_ecog_score_gt_0_after_baseline_ok(self):
+        self.mock_is_baseline.return_value = False
+        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+            for ecog_score in [1, 5]:
+                with self.subTest(visit_code=visit_code, ecog_score=ecog_score):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=visit_code,
+                        visit_code_sequence=1 if visit_code == DAY01 else 0,
+                    )
+                    cleaned_data.update(
+                        {
+                            "ecog_score": ecog_score,
+                            "reportable_as_ae": NO,
+                            "patient_admitted": NO,
+                        }
+                    )
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
     def test_gcs_lt_15_after_baseline_ok(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
             for gcs in [3, 14]:
                 with self.subTest(visit_code=visit_code, gcs=gcs):
-                    cleaned_data = self.get_cleaned_data(visit_code=visit_code)
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=visit_code,
+                        visit_code_sequence=1 if visit_code == DAY01 else 0,
+                    )
                     cleaned_data.update(
                         {
                             "glasgow_coma_score": gcs,
