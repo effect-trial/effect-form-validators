@@ -68,11 +68,11 @@ class MentalStatusFormValidator(CrfFormValidator):
                 elif self.cleaned_data.get("confusion") == YES:
                     self.raise_applicable(field=fld, msg="Confusion reported.")
                 elif self.cleaned_data.get("modified_rankin_score") not in ["0", NOT_DONE]:
-                    self.raise_applicable(field=fld, msg="Modified Rankin Score >0.")
+                    self.raise_applicable(field=fld, msg="Modified Rankin Score > 0.")
                 elif self.cleaned_data.get("ecog_score") != "0":
-                    self.raise_applicable(field=fld, msg="ECOG score >0.")
+                    self.raise_applicable(field=fld, msg="ECOG score > 0.")
                 elif (
                     self.cleaned_data.get("glasgow_coma_score")
                     and self.cleaned_data.get("glasgow_coma_score") < 15
                 ):
-                    self.raise_applicable(field=fld, msg="GCS <15.")
+                    self.raise_applicable(field=fld, msg="GCS < 15.")
