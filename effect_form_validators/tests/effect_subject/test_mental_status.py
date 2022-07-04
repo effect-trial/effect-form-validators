@@ -62,14 +62,17 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_cleaned_data_at_subsequent_visits_ok(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
             with self.subTest(visit_code=visit_code):
-                cleaned_data = self.get_cleaned_data(visit_code=visit_code)
-            form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
-            try:
-                form_validator.validate()
-            except ValidationError as e:
-                self.fail(f"ValidationError unexpectedly raised. Got {e}")
+                cleaned_data = self.get_cleaned_data(
+                    visit_code=visit_code,
+                    visit_code_sequence=1 if visit_code == DAY01 else 0,
+                )
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_reportable_fieldset_not_applicable_at_baseline(self):
         self.mock_is_baseline.return_value = True
@@ -89,9 +92,12 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_reporting_fieldset_can_be_not_applicable_after_baseline(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
             with self.subTest(visit_code=visit_code):
-                cleaned_data = self.get_cleaned_data(visit_code=visit_code)
+                cleaned_data = self.get_cleaned_data(
+                    visit_code=visit_code,
+                    visit_code_sequence=1 if visit_code == DAY01 else 0,
+                )
                 cleaned_data.update(
                     {
                         "recent_seizure": NO,
@@ -112,9 +118,12 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_reporting_fieldset_can_be_answered_after_baseline(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
             with self.subTest(visit_code=visit_code):
-                cleaned_data = self.get_cleaned_data(visit_code=visit_code)
+                cleaned_data = self.get_cleaned_data(
+                    visit_code=visit_code,
+                    visit_code_sequence=1 if visit_code == DAY01 else 0,
+                )
                 cleaned_data.update(
                     {
                         "recent_seizure": NO,
@@ -345,10 +354,13 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
 
     def test_gcs_lt_15_after_baseline_ok(self):
         self.mock_is_baseline.return_value = False
-        for visit_code in [DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
+        for visit_code in [DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16, WEEK24]:
             for gcs in [3, 14]:
                 with self.subTest(visit_code=visit_code, gcs=gcs):
-                    cleaned_data = self.get_cleaned_data(visit_code=visit_code)
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=visit_code,
+                        visit_code_sequence=1 if visit_code == DAY01 else 0,
+                    )
                     cleaned_data.update(
                         {
                             "glasgow_coma_score": gcs,
