@@ -416,7 +416,13 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     str(cm.exception.error_dict.get("require_help")),
                 )
 
-                cleaned_data.update({"require_help": YES})
+                cleaned_data.update(
+                    {
+                        "require_help": YES,
+                        "reportable_as_ae": NO,
+                        "patient_admitted": NO,
+                    }
+                )
                 form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
                 try:
                     form_validator.validate()
@@ -498,7 +504,13 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     str(cm.exception.error_dict.get("any_other_problems")),
                 )
 
-                cleaned_data.update({"any_other_problems": YES})
+                cleaned_data.update(
+                    {
+                        "any_other_problems": YES,
+                        "reportable_as_ae": NO,
+                        "patient_admitted": NO,
+                    }
+                )
                 form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
                 try:
                     form_validator.validate()
@@ -600,6 +612,45 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     form_validator.validate()
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_reporting_fieldset_applicable_if_w10_or_w24_symptom_reported(self):
+        self.mock_is_baseline.return_value = False
+        for visit_code in [WEEK10, WEEK24]:
+            for symptom_fld in ["require_help", "any_other_problems"]:
+                with self.subTest(visit_code, symptom_fld=symptom_fld):
+                    cleaned_data = self.get_cleaned_data(visit_code=visit_code)
+                    cleaned_data.update(
+                        {
+                            symptom_fld: YES,
+                            "reportable_as_ae": NOT_APPLICABLE,
+                            "patient_admitted": NOT_APPLICABLE,
+                        }
+                    )
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("reportable_as_ae", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is applicable.",
+                        str(cm.exception.error_dict.get("reportable_as_ae")),
+                    )
+
+                    cleaned_data.update({"reportable_as_ae": NO})
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("patient_admitted", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is applicable.",
+                        str(cm.exception.error_dict.get("patient_admitted")),
+                    )
+
+                    cleaned_data.update({"patient_admitted": NO})
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_reporting_fieldset_applicable_if_modified_rankin_score_1_to_5(self):
         self.mock_is_baseline.return_value = False
@@ -752,10 +803,12 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
     def test_reporting_fieldset_not_applicable_if_no_symptoms_reported(self):
         self.mock_is_baseline.return_value = False
         for reporting_fld in self.reportable_fields:
-            for answer in [YES, NO]:
+            for reporting_fld_answer in [YES, NO]:
                 for mrs_response in ["0", NOT_DONE]:
                     with self.subTest(
-                        reporting_fld=reporting_fld, answer=answer, mrs_response=mrs_response
+                        reporting_fld=reporting_fld,
+                        reporting_fld_answer=reporting_fld_answer,
+                        mrs_response=mrs_response,
                     ):
                         cleaned_data = self.get_cleaned_data(visit_code=DAY14)
                         cleaned_data.update(
@@ -763,6 +816,8 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                                 "recent_seizure": NO,
                                 "behaviour_change": NO,
                                 "confusion": NO,
+                                "require_help": NOT_APPLICABLE,
+                                "any_other_problems": NOT_APPLICABLE,
                                 "modified_rankin_score": mrs_response,
                                 "ecog_score": "0",
                                 "glasgow_coma_score": 15,
@@ -777,7 +832,43 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         except ValidationError as e:
                             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-                        cleaned_data.update({reporting_fld: answer})
+                        cleaned_data.update({reporting_fld: reporting_fld_answer})
+                        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                        with self.assertRaises(ValidationError) as cm:
+                            form_validator.validate()
+                        self.assertIn(reporting_fld, cm.exception.error_dict)
+                        self.assertIn(
+                            "This field is not applicable. No symptoms were reported.",
+                            str(cm.exception.error_dict.get(reporting_fld)),
+                        )
+
+    def test_reporting_fieldset_not_applicable_if_no_w10_or_w24_symptoms_reported(self):
+        self.mock_is_baseline.return_value = False
+        for visit_code in [WEEK10, WEEK24]:
+            for reporting_fld in self.reportable_fields:
+                for reporting_fld_answer in [YES, NO]:
+                    with self.subTest(
+                        visit_code=visit_code,
+                        reporting_fld=reporting_fld,
+                        reporting_fld_answer=reporting_fld_answer,
+                    ):
+                        cleaned_data = self.get_cleaned_data(visit_code=visit_code)
+                        cleaned_data.update(
+                            {
+                                "require_help": NO,
+                                "any_other_problems": NO,
+                                "reportable_as_ae": NOT_APPLICABLE,
+                                "patient_admitted": NOT_APPLICABLE,
+                            }
+                        )
+
+                        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                        try:
+                            form_validator.validate()
+                        except ValidationError as e:
+                            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+                        cleaned_data.update({reporting_fld: reporting_fld_answer})
                         form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
                         with self.assertRaises(ValidationError) as cm:
                             form_validator.validate()

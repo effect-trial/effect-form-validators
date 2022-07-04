@@ -12,7 +12,6 @@ class MentalStatusFormValidator(CrfFormValidator):
     def clean(self) -> None:
 
         baseline = is_baseline(instance=self.cleaned_data.get("subject_visit"))
-
         if baseline:
             for sx in ["recent_seizure", "behaviour_change", "confusion"]:
                 if self.cleaned_data.get(sx) == YES:
@@ -73,6 +72,8 @@ class MentalStatusFormValidator(CrfFormValidator):
                     self.cleaned_data.get("recent_seizure") == NO
                     and self.cleaned_data.get("behaviour_change") == NO
                     and self.cleaned_data.get("confusion") == NO
+                    and self.cleaned_data.get("require_help") in [NOT_APPLICABLE, NO]
+                    and self.cleaned_data.get("any_other_problems") in [NOT_APPLICABLE, NO]
                     and self.cleaned_data.get("modified_rankin_score") in ["0", NOT_DONE]
                     and self.cleaned_data.get("ecog_score") == "0"
                     and self.cleaned_data.get("glasgow_coma_score") == 15
@@ -87,6 +88,12 @@ class MentalStatusFormValidator(CrfFormValidator):
                     self.raise_applicable(field=fld, msg="Behaviour change was reported.")
                 elif self.cleaned_data.get("confusion") == YES:
                     self.raise_applicable(field=fld, msg="Confusion reported.")
+                elif self.cleaned_data.get("require_help") == YES:
+                    self.raise_applicable(
+                        field=fld, msg="Reported help required for activities."
+                    )
+                elif self.cleaned_data.get("any_other_problems") == YES:
+                    self.raise_applicable(field=fld, msg="Other problems reported.")
                 elif self.cleaned_data.get("modified_rankin_score") not in ["0", NOT_DONE]:
                     self.raise_applicable(field=fld, msg="Modified Rankin Score > 0.")
                 elif self.cleaned_data.get("ecog_score") != "0":
