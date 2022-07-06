@@ -4,16 +4,7 @@ from unittest.mock import patch
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from edc_constants.constants import NO, NOT_APPLICABLE, NOT_DONE, YES
-from edc_visit_schedule.constants import (
-    DAY01,
-    DAY03,
-    DAY09,
-    DAY14,
-    WEEK04,
-    WEEK10,
-    WEEK16,
-    WEEK24,
-)
+from edc_visit_schedule.constants import DAY01, DAY14, WEEK10, WEEK24
 
 from effect_form_validators.effect_subject import MentalStatusFormValidator as Base
 
@@ -26,16 +17,6 @@ class MentalStatusFormValidator(FormValidatorTestMixin, Base):
 
 class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
     reportable_fields = ["reportable_as_ae", "patient_admitted"]
-    visit_schedule = [
-        DAY01,
-        DAY03,
-        DAY09,
-        DAY14,
-        WEEK04,
-        WEEK10,
-        WEEK16,
-        WEEK24,
-    ]
 
     def setUp(self) -> None:
         super().setUp()
