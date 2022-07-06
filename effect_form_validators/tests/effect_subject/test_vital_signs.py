@@ -104,54 +104,58 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     str(cm.exception.error_dict.get("patient_admitted")),
                 )
 
-    def test_reportable_as_ae_is_applicable_if_not_baseline(self):
+    def test_reportable_as_ae_is_applicable_after_baseline(self):
         self.mock_is_baseline.return_value = False
-        cleaned_data = self.get_cleaned_data(
-            visit_code=DAY14,
-            report_datetime=self.consent_datetime + relativedelta(days=14),
-        )
-        cleaned_data.update(reportable_as_ae=NOT_APPLICABLE)
+        for visit_code in self.visit_schedule:
+            with self.subTest(visit_code=visit_code):
+                cleaned_data = self.get_cleaned_data(
+                    visit_code=visit_code,
+                    visit_code_sequence=1 if visit_code == DAY01 else 0,
+                )
+                cleaned_data.update(reportable_as_ae=NOT_APPLICABLE)
 
-        form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
-        with self.assertRaises(ValidationError) as cm:
-            form_validator.validate()
-        self.assertIn("reportable_as_ae", cm.exception.error_dict)
-        self.assertIn(
-            "This field is applicable",
-            str(cm.exception.error_dict.get("reportable_as_ae")),
-        )
-
-        for response in [YES, NO]:
-            with self.subTest(reportable_as_ae=response):
-                cleaned_data.update(reportable_as_ae=response)
                 form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
-                try:
+                with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
-                except ValidationError as e:
-                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+                self.assertIn("reportable_as_ae", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is applicable",
+                    str(cm.exception.error_dict.get("reportable_as_ae")),
+                )
 
-    def test_patient_admitted_is_applicable_if_not_baseline(self):
+                for response in [YES, NO]:
+                    with self.subTest(reportable_as_ae=response):
+                        cleaned_data.update(reportable_as_ae=response)
+                        form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                        try:
+                            form_validator.validate()
+                        except ValidationError as e:
+                            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_patient_admitted_is_applicable_after_baseline(self):
         self.mock_is_baseline.return_value = False
-        cleaned_data = self.get_cleaned_data(
-            visit_code=DAY14,
-            report_datetime=self.consent_datetime + relativedelta(days=14),
-        )
-        cleaned_data.update(patient_admitted=NOT_APPLICABLE)
+        for visit_code in self.visit_schedule:
+            with self.subTest(visit_code=visit_code):
+                cleaned_data = self.get_cleaned_data(
+                    visit_code=visit_code,
+                    visit_code_sequence=1 if visit_code == DAY01 else 0,
+                )
+                cleaned_data.update(patient_admitted=NOT_APPLICABLE)
 
-        form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
-        with self.assertRaises(ValidationError) as cm:
-            form_validator.validate()
-        self.assertIn("patient_admitted", cm.exception.error_dict)
-        self.assertIn(
-            "This field is applicable",
-            str(cm.exception.error_dict.get("patient_admitted")),
-        )
-
-        for response in [YES, NO]:
-            with self.subTest(patient_admitted=response):
-                cleaned_data.update(patient_admitted=response)
                 form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
-                try:
+                with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
-                except ValidationError as e:
-                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+                self.assertIn("patient_admitted", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is applicable",
+                    str(cm.exception.error_dict.get("patient_admitted")),
+                )
+
+                for response in [YES, NO]:
+                    with self.subTest(patient_admitted=response):
+                        cleaned_data.update(patient_admitted=response)
+                        form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                        try:
+                            form_validator.validate()
+                        except ValidationError as e:
+                            self.fail(f"ValidationError unexpectedly raised. Got {e}")
