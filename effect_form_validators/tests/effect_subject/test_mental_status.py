@@ -381,6 +381,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_require_help_applicable_at_scheduled_w10_and_w24_visits(self):
+        self.mock_is_baseline.return_value = False
         for visit_code in [WEEK10, WEEK24]:
             with self.subTest(visit_code=visit_code):
                 cleaned_data = self.get_cleaned_data(
@@ -411,6 +412,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_require_help_not_applicable_at_unscheduled_w10_and_w24_visits(self):
+        self.mock_is_baseline.return_value = False
         for visit_code in [WEEK10, WEEK24]:
             for visit_code_sequence in [1, 2, 3]:
                 with self.subTest(
@@ -446,6 +448,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     visit_code=visit_code,
                     visit_code_sequence=visit_code_sequence,
                 ):
+                    self.mock_is_baseline.return_value = (
+                        visit_code == DAY01 and visit_code_sequence == 0
+                    )
                     cleaned_data = self.get_cleaned_data(
                         visit_code=visit_code,
                         visit_code_sequence=visit_code_sequence,
@@ -469,6 +474,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_any_other_problems_applicable_at_scheduled_w10_and_w24_visits(self):
+        self.mock_is_baseline.return_value = False
         for visit_code in [WEEK10, WEEK24]:
             with self.subTest(visit_code=visit_code):
                 cleaned_data = self.get_cleaned_data(
@@ -499,6 +505,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_any_other_problems_not_applicable_at_unscheduled_w10_and_w24_visits(self):
+        self.mock_is_baseline.return_value = False
         for visit_code in [WEEK10, WEEK24]:
             for visit_code_sequence in [1, 2, 3]:
                 with self.subTest(
@@ -534,6 +541,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     visit_code=visit_code,
                     visit_code_sequence=visit_code_sequence,
                 ):
+                    self.mock_is_baseline.return_value = (
+                        visit_code == DAY01 and visit_code_sequence == 0
+                    )
                     cleaned_data = self.get_cleaned_data(
                         visit_code=visit_code,
                         visit_code_sequence=visit_code_sequence,
