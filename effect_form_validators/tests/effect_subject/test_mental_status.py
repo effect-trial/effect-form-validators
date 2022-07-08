@@ -330,6 +330,14 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                             "patient_admitted": NO,
                         }
                     )
+                    if visit_code in [WEEK10, WEEK24]:
+                        # appease w10/w24 validation
+                        cleaned_data.update(
+                            {
+                                "require_help": YES,
+                                "ecog_score": "1",
+                            }
+                        )
                     form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
                     try:
                         form_validator.validate()
@@ -352,6 +360,15 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                             "patient_admitted": NO,
                         }
                     )
+                    if visit_code in [WEEK10, WEEK24]:
+                        # appease w10/w24 validation
+                        cleaned_data.update(
+                            {
+                                "require_help": YES,
+                                "modified_rankin_score": "1",
+                            }
+                        )
+
                     form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
                     try:
                         form_validator.validate()
@@ -381,6 +398,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_require_help_applicable_at_scheduled_w10_and_w24_visits(self):
+        self.mock_is_baseline.return_value = False
         for visit_code in [WEEK10, WEEK24]:
             with self.subTest(visit_code=visit_code):
                 cleaned_data = self.get_cleaned_data(
@@ -400,6 +418,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 cleaned_data.update(
                     {
                         "require_help": YES,
+                        # appease w10/w24 validation
+                        "modified_rankin_score": "1",
+                        "ecog_score": "1",
                         "reportable_as_ae": NO,
                         "patient_admitted": NO,
                     }
@@ -411,6 +432,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_require_help_not_applicable_at_unscheduled_w10_and_w24_visits(self):
+        self.mock_is_baseline.return_value = False
         for visit_code in [WEEK10, WEEK24]:
             for visit_code_sequence in [1, 2, 3]:
                 with self.subTest(
@@ -446,6 +468,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     visit_code=visit_code,
                     visit_code_sequence=visit_code_sequence,
                 ):
+                    self.mock_is_baseline.return_value = (
+                        visit_code == DAY01 and visit_code_sequence == 0
+                    )
                     cleaned_data = self.get_cleaned_data(
                         visit_code=visit_code,
                         visit_code_sequence=visit_code_sequence,
@@ -469,6 +494,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_any_other_problems_applicable_at_scheduled_w10_and_w24_visits(self):
+        self.mock_is_baseline.return_value = False
         for visit_code in [WEEK10, WEEK24]:
             with self.subTest(visit_code=visit_code):
                 cleaned_data = self.get_cleaned_data(
@@ -488,6 +514,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 cleaned_data.update(
                     {
                         "any_other_problems": YES,
+                        # appease w10/w24 validation
+                        "modified_rankin_score": "1",
+                        "ecog_score": "1",
                         "reportable_as_ae": NO,
                         "patient_admitted": NO,
                     }
@@ -499,6 +528,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_any_other_problems_not_applicable_at_unscheduled_w10_and_w24_visits(self):
+        self.mock_is_baseline.return_value = False
         for visit_code in [WEEK10, WEEK24]:
             for visit_code_sequence in [1, 2, 3]:
                 with self.subTest(
@@ -534,6 +564,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     visit_code=visit_code,
                     visit_code_sequence=visit_code_sequence,
                 ):
+                    self.mock_is_baseline.return_value = (
+                        visit_code == DAY01 and visit_code_sequence == 0
+                    )
                     cleaned_data = self.get_cleaned_data(
                         visit_code=visit_code,
                         visit_code_sequence=visit_code_sequence,
@@ -555,6 +588,255 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         form_validator.validate()
                     except ValidationError as e:
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_raises_if_positive_w10_or_w24_answer_and_ecog_or_modified_rankin_0(
+        self,
+    ):
+        self.mock_is_baseline.return_value = False
+        for requires_help_response, any_other_problems_response in [
+            (YES, NO),
+            (NO, YES),
+            (YES, YES),
+        ]:
+            with self.subTest(
+                require_help=requires_help_response,
+                any_other_problems=any_other_problems_response,
+            ):
+                # Test both ECOG and Modified Rankin 0
+                cleaned_data = self.get_cleaned_data(visit_code=WEEK10)
+                cleaned_data.update(
+                    {
+                        "require_help": requires_help_response,
+                        "any_other_problems": any_other_problems_response,
+                        "modified_rankin_score": "0",
+                        "ecog_score": "0",
+                        "reportable_as_ae": NO,
+                        "patient_admitted": NO,
+                    }
+                )
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("modified_rankin_score", cm.exception.error_dict)
+                expected_modified_rankin_error_message = (
+                    "Invalid. "
+                    "Expected to be > '0' or 'Not done' "
+                    "if participant requires help or has any other problems."
+                )
+                self.assertIn(
+                    expected_modified_rankin_error_message,
+                    str(cm.exception.error_dict.get("modified_rankin_score")),
+                )
+
+                self.assertIn("ecog_score", cm.exception.error_dict)
+                expected_ecog_error_message = (
+                    "Invalid. "
+                    "Expected to be > '0' "
+                    "if participant requires help or has any other problems."
+                )
+                self.assertIn(
+                    expected_ecog_error_message,
+                    str(cm.exception.error_dict.get("ecog_score")),
+                )
+
+                # Test only ECOG 0
+                cleaned_data.update(
+                    {
+                        "modified_rankin_score": "1",
+                        "ecog_score": "0",
+                    }
+                )
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("ecog_score", cm.exception.error_dict)
+                self.assertIn(
+                    expected_ecog_error_message,
+                    str(cm.exception.error_dict.get("ecog_score")),
+                )
+
+                # Test only Modified Rankin 0
+                cleaned_data.update(
+                    {
+                        "modified_rankin_score": "0",
+                        "ecog_score": "1",
+                    }
+                )
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("modified_rankin_score", cm.exception.error_dict)
+                self.assertIn(
+                    expected_modified_rankin_error_message,
+                    str(cm.exception.error_dict.get("modified_rankin_score")),
+                )
+
+                # Test ECOG 0 and Modified Rankin not done
+                cleaned_data.update(
+                    {
+                        "modified_rankin_score": NOT_DONE,
+                        "ecog_score": "0",
+                    }
+                )
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("ecog_score", cm.exception.error_dict)
+                self.assertIn(
+                    expected_ecog_error_message,
+                    str(cm.exception.error_dict.get("ecog_score")),
+                )
+
+    def test_ok_if_positive_w10_or_w24_answer_and_neither_ecog_or_modified_rankin_score_0(
+        self,
+    ):
+        self.mock_is_baseline.return_value = False
+        for requires_help_response, any_other_problems_response in [
+            (YES, NO),
+            (NO, YES),
+            (YES, YES),
+        ]:
+            for mrs_score, ecog_score in [
+                ("1", "1"),
+                ("2", "3"),
+                ("6", "5"),
+                (NOT_DONE, "1"),
+            ]:
+                with self.subTest(
+                    require_help=requires_help_response,
+                    any_other_problems=any_other_problems_response,
+                    mrs_score=mrs_score,
+                    ecog_score=ecog_score,
+                ):
+                    cleaned_data = self.get_cleaned_data(visit_code=WEEK10)
+                    cleaned_data.update(
+                        {
+                            "require_help": requires_help_response,
+                            "any_other_problems": any_other_problems_response,
+                            "modified_rankin_score": mrs_score,
+                            "ecog_score": ecog_score,
+                            "reportable_as_ae": NO,
+                            "patient_admitted": NO,
+                        }
+                    )
+
+                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_raises_if_both_w10_or_w24_answers_negative_and_ecog_or_modified_rankin_not_0(
+        self,
+    ):
+        self.mock_is_baseline.return_value = False
+        # Test neither ECOG nor Modified Rankin 0
+        cleaned_data = self.get_cleaned_data(visit_code=WEEK10)
+        cleaned_data.update(
+            {
+                "require_help": NO,
+                "any_other_problems": NO,
+                "modified_rankin_score": "1",
+                "ecog_score": "2",
+                "reportable_as_ae": NO,
+                "patient_admitted": NO,
+            }
+        )
+        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("modified_rankin_score", cm.exception.error_dict)
+        expected_modified_rankin_error_message = (
+            "Invalid. "
+            "Expected to be '0' or 'Not done' "
+            "if participant does not require help or have any other problems."
+        )
+        self.assertIn(
+            expected_modified_rankin_error_message,
+            str(cm.exception.error_dict.get("modified_rankin_score")),
+        )
+
+        self.assertIn("ecog_score", cm.exception.error_dict)
+        expected_ecog_error_message = (
+            "Invalid. "
+            "Expected to be '0' "
+            "if participant does not require help or have any other problems."
+        )
+        self.assertIn(
+            expected_ecog_error_message,
+            str(cm.exception.error_dict.get("ecog_score")),
+        )
+
+        # Test Modified Rankin not 0
+        cleaned_data.update(
+            {
+                "modified_rankin_score": "1",
+                "ecog_score": "0",
+            }
+        )
+        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("modified_rankin_score", cm.exception.error_dict)
+        self.assertIn(
+            expected_modified_rankin_error_message,
+            str(cm.exception.error_dict.get("modified_rankin_score")),
+        )
+
+        # Test ECOG not 0
+        cleaned_data.update(
+            {
+                "modified_rankin_score": "0",
+                "ecog_score": "1",
+            }
+        )
+        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("ecog_score", cm.exception.error_dict)
+        self.assertIn(
+            expected_ecog_error_message,
+            str(cm.exception.error_dict.get("ecog_score")),
+        )
+
+        # Test ECOG not 0 and Modified Rankin not done
+        cleaned_data.update(
+            {
+                "modified_rankin_score": NOT_DONE,
+                "ecog_score": "1",
+            }
+        )
+        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("ecog_score", cm.exception.error_dict)
+        self.assertIn(
+            expected_ecog_error_message,
+            str(cm.exception.error_dict.get("ecog_score")),
+        )
+
+    def test_ok_if_both_w10_or_w24_answers_negative_and_ecog_and_modified_rankin_score_0(
+        self,
+    ):
+        self.mock_is_baseline.return_value = False
+        for modified_rankin_response in ["0", NOT_DONE]:
+            with self.subTest(modified_rankin_response=modified_rankin_response):
+                cleaned_data = self.get_cleaned_data(visit_code=WEEK10)
+                cleaned_data.update(
+                    {
+                        "require_help": NO,
+                        "any_other_problems": NO,
+                        "modified_rankin_score": modified_rankin_response,
+                        "ecog_score": "0",
+                        "reportable_as_ae": NOT_APPLICABLE,
+                        "patient_admitted": NOT_APPLICABLE,
+                    }
+                )
+                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_reporting_fieldset_applicable_if_symptom_reported(self):
         self.mock_is_baseline.return_value = False
@@ -603,6 +885,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     cleaned_data.update(
                         {
                             symptom_fld: YES,
+                            # appease w10/w24 validation
+                            "modified_rankin_score": "1",
+                            "ecog_score": "1",
                             "reportable_as_ae": NOT_APPLICABLE,
                             "patient_admitted": NOT_APPLICABLE,
                         }
