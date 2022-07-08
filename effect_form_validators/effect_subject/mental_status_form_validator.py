@@ -98,7 +98,8 @@ class MentalStatusFormValidator(CrfFormValidator):
                             ),
                         }
                     )
-            else:
+
+            elif require_help_response == NO and any_other_problems_response == NO:
                 if modified_rankin_score_response not in ["0", NOT_DONE]:
                     error_msg.update(
                         {
