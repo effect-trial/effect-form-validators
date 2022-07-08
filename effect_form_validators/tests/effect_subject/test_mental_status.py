@@ -331,7 +331,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         }
                     )
                     if visit_code in [WEEK10, WEEK24]:
-                        # appease w10/we24 validation
+                        # appease w10/w24 validation
                         cleaned_data.update(
                             {
                                 "require_help": YES,
@@ -361,7 +361,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         }
                     )
                     if visit_code in [WEEK10, WEEK24]:
-                        # appease w10/we24 validation
+                        # appease w10/w24 validation
                         cleaned_data.update(
                             {
                                 "require_help": YES,
@@ -418,10 +418,11 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 cleaned_data.update(
                     {
                         "require_help": YES,
-                        "reportable_as_ae": NO,
-                        "patient_admitted": NO,
+                        # appease w10/w24 validation
                         "modified_rankin_score": "1",
                         "ecog_score": "1",
+                        "reportable_as_ae": NO,
+                        "patient_admitted": NO,
                     }
                 )
                 form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
@@ -513,6 +514,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 cleaned_data.update(
                     {
                         "any_other_problems": YES,
+                        # appease w10/w24 validation
                         "modified_rankin_score": "1",
                         "ecog_score": "1",
                         "reportable_as_ae": NO,
@@ -883,6 +885,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     cleaned_data.update(
                         {
                             symptom_fld: YES,
+                            # appease w10/w24 validation
                             "modified_rankin_score": "1",
                             "ecog_score": "1",
                             "reportable_as_ae": NOT_APPLICABLE,
