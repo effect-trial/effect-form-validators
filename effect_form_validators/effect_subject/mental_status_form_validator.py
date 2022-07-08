@@ -11,6 +11,14 @@ class MentalStatusFormValidator(CrfFormValidator):
 
     def clean(self) -> None:
 
+        self.validate_if_baseline()
+
+        self.validate_if_scheduled_w10_or_w24()
+
+        self.validate_reporting_fieldset()
+
+    def validate_if_baseline(self):
+        """Validate criteria that only holds at baseline."""
         baseline = is_baseline(instance=self.cleaned_data.get("subject_visit"))
         if baseline:
             for sx in ["recent_seizure", "behaviour_change", "confusion"]:
@@ -43,6 +51,8 @@ class MentalStatusFormValidator(CrfFormValidator):
                     INVALID_ERROR,
                 )
 
+    def validate_if_scheduled_w10_or_w24(self):
+        """Validate criteria that only holds in w10 or w24 visits."""
         scheduled_w10_or_w24 = (
             self.cleaned_data.get("subject_visit").visit_code in [WEEK10, WEEK24]
             and self.cleaned_data.get("subject_visit").visit_code_sequence == 0
@@ -61,19 +71,20 @@ class MentalStatusFormValidator(CrfFormValidator):
                 "This field is only applicable at scheduled Week 10 and Month 6 visits."
             ),
         )
+
         if scheduled_w10_or_w24:
             require_help_response = self.cleaned_data.get("require_help")
             any_other_problems_response = self.cleaned_data.get("any_other_problems")
             modified_rankin_score_response = self.cleaned_data.get("modified_rankin_score")
             ecog_score_response = self.cleaned_data.get("ecog_score")
             error_msg = {}
+
             if require_help_response == YES or any_other_problems_response == YES:
                 if modified_rankin_score_response == "0":
                     error_msg.update(
                         {
                             "modified_rankin_score": (
-                                "Invalid. "
-                                "Expected to be > 0 or 'Not done' "
+                                "Invalid. Expected to be > 0 or 'Not done' "
                                 "if participant requires help or has any other problems."
                             ),
                         }
@@ -82,8 +93,7 @@ class MentalStatusFormValidator(CrfFormValidator):
                     error_msg.update(
                         {
                             "ecog_score": (
-                                "Invalid. "
-                                "Expected to be > 0 "
+                                "Invalid. Expected to be > 0 "
                                 "if participant requires help or has any other problems."
                             ),
                         }
@@ -93,8 +103,7 @@ class MentalStatusFormValidator(CrfFormValidator):
                     error_msg.update(
                         {
                             "modified_rankin_score": (
-                                "Invalid. "
-                                "Expected to be '0' or 'Not done' if participant "
+                                "Invalid. Expected to be '0' or 'Not done' if participant "
                                 "does not require help or have any other problems."
                             ),
                         }
@@ -103,16 +112,13 @@ class MentalStatusFormValidator(CrfFormValidator):
                     error_msg.update(
                         {
                             "ecog_score": (
-                                "Invalid. "
-                                "Expected to be '0' if participant "
+                                "Invalid. Expected to be '0' if participant "
                                 "does not require help or have any other problems."
                             ),
                         }
                     )
             if error_msg:
                 self.raise_validation_error(error_msg, INVALID_ERROR)
-
-        self.validate_reporting_fieldset()
 
     def validate_reporting_fieldset(self):  # noqa: C901
         for fld in self.reportable_fields:
