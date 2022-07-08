@@ -618,7 +618,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 self.assertIn("modified_rankin_score", cm.exception.error_dict)
                 expected_modified_rankin_error_message = (
                     "Invalid. "
-                    "Expected to be > 0 or 'Not done' "
+                    "Expected to be > '0' or 'Not done' "
                     "if participant requires help or has any other problems."
                 )
                 self.assertIn(
@@ -629,7 +629,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 self.assertIn("ecog_score", cm.exception.error_dict)
                 expected_ecog_error_message = (
                     "Invalid. "
-                    "Expected to be > 0 "
+                    "Expected to be > '0' "
                     "if participant requires help or has any other problems."
                 )
                 self.assertIn(

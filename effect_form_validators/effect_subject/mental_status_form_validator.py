@@ -84,7 +84,7 @@ class MentalStatusFormValidator(CrfFormValidator):
                     error_msg.update(
                         {
                             "modified_rankin_score": (
-                                "Invalid. Expected to be > 0 or 'Not done' "
+                                "Invalid. Expected to be > '0' or 'Not done' "
                                 "if participant requires help or has any other problems."
                             ),
                         }
@@ -93,7 +93,7 @@ class MentalStatusFormValidator(CrfFormValidator):
                     error_msg.update(
                         {
                             "ecog_score": (
-                                "Invalid. Expected to be > 0 "
+                                "Invalid. Expected to be > '0' "
                                 "if participant requires help or has any other problems."
                             ),
                         }
