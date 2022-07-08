@@ -135,7 +135,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_hiv_dx_date_after_screening_cd4_date_raises(self):
-        screening_cd4_date = self.hiv_dx_date - relativedelta(day=1)
+        screening_cd4_date = self.hiv_dx_date - relativedelta(days=1)
 
         class OverriddenArvHistoryFormValidator(FormValidatorTestMixin, Base):
             @property
