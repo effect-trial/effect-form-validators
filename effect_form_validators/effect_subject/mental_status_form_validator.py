@@ -61,6 +61,56 @@ class MentalStatusFormValidator(CrfFormValidator):
                 "This field is only applicable at scheduled Week 10 and Month 6 visits."
             ),
         )
+        if scheduled_w10_or_w24:
+            require_help_response = self.cleaned_data.get("require_help")
+            any_other_problems_response = self.cleaned_data.get("any_other_problems")
+            modified_rankin_score_response = self.cleaned_data.get("modified_rankin_score")
+            ecog_score_response = self.cleaned_data.get("ecog_score")
+            error_msg = {}
+            if require_help_response == YES or any_other_problems_response == YES:
+                if modified_rankin_score_response == "0":
+                    error_msg.update(
+                        {
+                            "modified_rankin_score": (
+                                "Invalid. "
+                                "Expected to be > 0 or 'Not done' "
+                                "if participant requires help or has any other problems."
+                            ),
+                        }
+                    )
+                if ecog_score_response == "0":
+                    error_msg.update(
+                        {
+                            "ecog_score": (
+                                "Invalid. "
+                                "Expected to be > 0 "
+                                "if participant requires help or has any other problems."
+                            ),
+                        }
+                    )
+            else:
+                if modified_rankin_score_response not in ["0", NOT_DONE]:
+                    error_msg.update(
+                        {
+                            "modified_rankin_score": (
+                                "Invalid. "
+                                "Expected to be '0' or 'Not done' if participant "
+                                "does not require help or have any other problems."
+                            ),
+                        }
+                    )
+                if ecog_score_response != "0":
+                    error_msg.update(
+                        {
+                            "ecog_score": (
+                                "Invalid. "
+                                "Expected to be '0' if participant "
+                                "does not require help or have any other problems."
+                            ),
+                        }
+                    )
+            if error_msg:
+                self.raise_validation_error(error_msg, INVALID_ERROR)
 
         self.validate_reporting_fieldset()
 
