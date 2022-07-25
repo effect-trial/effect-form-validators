@@ -58,8 +58,9 @@ deps =
     djdev: https://github.com/django/django/tarball/main
 
 commands =
-    pip install -U pip edc-csf edc-microbiology
+    pip install -U pip
     pip --version
+    pip install -U edc-csf edc-microbiology
     pip freeze
     coverage run -a runtests.py
     coverage report
