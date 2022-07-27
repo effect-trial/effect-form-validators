@@ -3,11 +3,14 @@ from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_visit_schedule.utils import is_baseline
 from edc_vitals import has_severe_htn
-from edc_vitals.utils import get_dia_upper, get_sys_upper
-
-# TODO: Switch to edc-vitals after next edc release (>=0.3.94)
-from ..utils import get_g3_fever_lower, has_g3_fever, has_g4_fever
-from .mixins import BloodPressureFormValidatorMixin
+from edc_vitals.form_validators import BloodPressureFormValidatorMixin
+from edc_vitals.utils import (
+    get_dia_upper,
+    get_g3_fever_lower,
+    get_sys_upper,
+    has_g3_fever,
+    has_g4_fever,
+)
 
 
 class VitalSignsFormValidator(BloodPressureFormValidatorMixin, CrfFormValidator):
