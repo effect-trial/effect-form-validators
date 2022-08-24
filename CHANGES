@@ -1,10 +1,13 @@
 Changes
 =======
 
-unreleased
-----------
+0.1.19
+------
 - vitals
-- update import path for EstimatedDateFromAgoFormMixin
+- update import path for EstimatedDateFromAgoFormMixin (edc 0.4.16 support)
+- add MANIFEST.in file
+- add pre-commit
+- expand test matrix to include Py: 3.9, 3.10 and Dj: 3.2, 4.0, 4.1 and dev
 
 0.1.0
 -----
