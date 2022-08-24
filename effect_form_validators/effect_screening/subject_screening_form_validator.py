@@ -2,7 +2,7 @@ from django import forms
 from edc_consent.form_validators import ConsentFormValidatorMixin
 from edc_constants.constants import FEMALE, MALE, NO, OTHER, PENDING, POS, YES
 from edc_form_validators import FormValidator
-from edc_utils.forms import EstimatedDateFromAgoFormMixin
+from edc_model_form.mixins import EstimatedDateFromAgoFormMixin
 
 
 class SubjectScreeningFormValidator(
