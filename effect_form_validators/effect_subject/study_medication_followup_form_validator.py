@@ -1,4 +1,4 @@
-from edc_constants.constants import OTHER, YES
+from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_utils.text import formatted_date
@@ -43,7 +43,12 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
             )
 
     def validate_flucon(self):
-        self.applicable_if(YES, field="modifications", field_applicable="flucon_modified")
+        self.not_applicable_if(
+            NO,
+            field="modifications",
+            field_applicable="flucon_modified",
+            inverse=False,
+        )
 
         self.required_if(YES, field="flucon_modified", field_required="flucon_dose_datetime")
         if self.cleaned_data.get("report_datetime") and self.cleaned_data.get(
@@ -65,12 +70,22 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
         )
         # TODO: Validate dose against visit/protocol, if differs, require flucon_notes
         #   - differs could be not modified, or modified to value not expected
-        # TODO: 'flucon_notes' NA if 'flucon_modified' == NA
+        self.not_required_if(
+            NOT_APPLICABLE,
+            field="flucon_modified",
+            field_not_required="flucon_notes",
+            inverse=False,
+        )
 
     def validate_flucyt(self):
         # TODO: 'flucyt_modified' should be NA if on control arm
         # TODO: 'flucyt_modified' should be NA > 15 days if on intervention arm
-        self.applicable_if(YES, field="modifications", field_applicable="flucyt_modified")
+        self.not_applicable_if(
+            NO,
+            field="modifications",
+            field_applicable="flucyt_modified",
+            inverse=False,
+        )
 
         self.required_if(YES, field="flucyt_modified", field_required="flucyt_dose_datetime")
         if self.cleaned_data.get("report_datetime") and self.cleaned_data.get(
@@ -119,4 +134,9 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
 
         # TODO: Validate dose against visit/protocol, if differs, require flucyt_notes
         #   - differs could be not modified, or modified to value not expected
-        # TODO: 'flucyt_notes' NA if 'flucyt_modified' == NA
+        self.not_required_if(
+            NOT_APPLICABLE,
+            field="flucyt_modified",
+            field_not_required="flucyt_notes",
+            inverse=False,
+        )

@@ -1,4 +1,3 @@
-import unittest
 from typing import Optional
 from unittest.mock import patch
 
@@ -527,6 +526,26 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
             str(cm.exception.error_dict.get("flucon_dose_rx")),
         )
 
+    def test_flucon_notes_not_required_if_flucon_modified_na(self):
+        self.mock_is_baseline.return_value = False
+        cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
+        cleaned_data.update(
+            {
+                "flucon_modified": NOT_APPLICABLE,
+                "flucon_dose_datetime": None,
+                "flucon_dose_rx": None,
+                "flucon_notes": "Some flucon notes here",
+            }
+        )
+        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("flucon_notes", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required.",
+            str(cm.exception.error_dict.get("flucon_notes")),
+        )
+
     # def test_flucon_notes_required_baseline_flucon_dose_rx_not_1200(self):
     #     self.mock_is_baseline.return_value = False
     #     cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
@@ -605,8 +624,6 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     str(cm.exception.error_dict.get("flucyt_modified")),
                 )
 
-    # FIXME: remove skip
-    @unittest.skip("Skip until validating against arm, and protocol dose >D14")
     def test_flucyt_modified_can_be_not_applicable(self):
         self.mock_is_baseline.return_value = False
         cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
@@ -656,12 +673,6 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         for answer in [NO, NOT_APPLICABLE]:
             with self.subTest(flucyt_modified=answer):
-                # FIXME: remove skip
-                if answer == NOT_APPLICABLE:
-                    raise unittest.SkipTest(
-                        "Skip until validating against arm, and protocol dose >D14"
-                    )
-
                 cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update(
                     {
@@ -737,12 +748,6 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         for answer in [NO, NOT_APPLICABLE]:
             with self.subTest(flucyt_modified=answer):
-                # FIXME: remove skip
-                if answer == NOT_APPLICABLE:
-                    raise unittest.SkipTest(
-                        "Skip until validating against arm, and protocol dose >D14"
-                    )
-
                 cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update(
                     {
@@ -784,12 +789,6 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         for answer in [NO, NOT_APPLICABLE]:
             for dose_field in self.flucyt_individual_dose_fields:
                 with self.subTest(answer=answer, dose_field=dose_field):
-                    # FIXME: remove skip
-                    if answer == NOT_APPLICABLE:
-                        raise unittest.SkipTest(
-                            "Skip until validating against arm, and protocol dose >D14"
-                        )
-
                     cleaned_data = self.get_cleaned_data(
                         visit_code=DAY01, visit_code_sequence=0
                     )
@@ -914,6 +913,30 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 self.assertIn(
                     expected_msg, str(cm.exception.error_dict.get("flucyt_dose_2200"))
                 )
+
+    def test_flucyt_notes_not_required_if_flucyt_modified_na(self):
+        self.mock_is_baseline.return_value = False
+        cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
+        cleaned_data.update(
+            {
+                "flucyt_modified": NOT_APPLICABLE,
+                "flucyt_dose_datetime": None,
+                "flucyt_dose_rx": None,
+                "flucyt_dose_0400": None,
+                "flucyt_dose_1000": None,
+                "flucyt_dose_1600": None,
+                "flucyt_dose_2200": None,
+                "flucyt_notes": "Some flucyt notes here",
+            }
+        )
+        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("flucyt_notes", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required.",
+            str(cm.exception.error_dict.get("flucyt_notes")),
+        )
 
     def test_flucyt_notes_with_d14_flucyt_dose_0_ok(self):
         self.mock_is_baseline.return_value = False
