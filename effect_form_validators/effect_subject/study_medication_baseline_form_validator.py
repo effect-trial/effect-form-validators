@@ -1,4 +1,4 @@
-from edc_constants.constants import NO, YES
+from edc_constants.constants import NO, NOT_APPLICABLE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_utils.text import formatted_date
@@ -105,6 +105,13 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
                     {fld: error_msg for fld in dose_fields}, INVALID_ERROR
                 )
 
+        self.not_required_if(
+            NOT_APPLICABLE,
+            field="flucyt_initiated",
+            field_not_required="flucyt_notes",
+            inverse=False,
+        )
+
         self.required_if_true(
             condition=(
                 self.cleaned_data.get("flucyt_dose_expected") is not None
@@ -116,4 +123,3 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
             required_msg="Flucytosine expected and prescribed doses differ.",
             inverse=False,
         )
-        # TODO: 'flucyt_notes' NA if 'flucyt_initiated' == NA

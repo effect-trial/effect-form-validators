@@ -331,16 +331,16 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
         cleaned_data.update(
             {
+                "flucyt_initiated": NOT_APPLICABLE,
+                "flucyt_not_initiated_reason": "",
                 "flucyt_dose_datetime": None,
+                "flucyt_dose_expected": None,
                 "flucyt_dose_rx": None,
                 "flucyt_dose_0400": None,
                 "flucyt_dose_1000": None,
                 "flucyt_dose_1600": None,
                 "flucyt_dose_2200": None,
                 "flucyt_notes": "",
-                "flucyt_initiated": NOT_APPLICABLE,
-                "flucyt_not_initiated_reason": "",
-                "flucyt_dose_expected": None,
             }
         )
         form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
@@ -727,6 +727,31 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 self.assertIn(
                     expected_msg, str(cm.exception.error_dict.get("flucyt_dose_2200"))
                 )
+
+    def test_flucyt_notes_not_required_if_flucyt_initiated_na(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
+        cleaned_data.update(
+            {
+                "flucyt_initiated": NOT_APPLICABLE,
+                "flucyt_dose_datetime": None,
+                "flucyt_dose_expected": None,
+                "flucyt_dose_rx": None,
+                "flucyt_dose_0400": None,
+                "flucyt_dose_1000": None,
+                "flucyt_dose_1600": None,
+                "flucyt_dose_2200": None,
+                "flucyt_notes": "Some flucyt notes here",
+            }
+        )
+        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("flucyt_notes", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required.",
+            str(cm.exception.error_dict.get("flucyt_notes")),
+        )
 
     def test_flucyt_notes_required_if_flucyt_expected_and_rx_differ(self):
         self.mock_is_baseline.return_value = True
