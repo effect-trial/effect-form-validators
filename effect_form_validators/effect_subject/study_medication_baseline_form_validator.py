@@ -38,14 +38,14 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
         self.required_if(
             YES,
             field="flucon_initiated",
-            field_required="flucon_dose_rx",
+            field_required="flucon_dose",
             field_required_evaluate_as_int=True,
         )
 
         self.required_if_true(
             condition=(
-                self.cleaned_data.get("flucon_dose_rx") is not None
-                and self.cleaned_data.get("flucon_dose_rx") != 1200
+                self.cleaned_data.get("flucon_dose") is not None
+                and self.cleaned_data.get("flucon_dose") != 1200
             ),
             field_required="flucon_notes",
             required_msg="Fluconazole dose not 1200 mg/d.",

@@ -80,7 +80,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 # Flucon
                 "flucon_modified": YES,
                 "flucon_dose_datetime": get_utcnow() + relativedelta(minutes=1),
-                "flucon_dose_rx": 800,
+                "flucon_dose": 800,
                 "flucon_notes": "",
                 # Flucyt
                 "flucyt_modified": YES,
@@ -358,7 +358,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 # Flucon
                 "flucon_modified": NO,
                 "flucon_dose_datetime": None,
-                "flucon_dose_rx": None,
+                "flucon_dose": None,
                 # Flucyt
                 "flucyt_modified": YES,
             }
@@ -489,41 +489,41 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #         str(cm.exception.error_dict.get("flucon_dose_datetime")),
     #     )
     #
-    def test_flucon_dose_rx_required_if_flucon_modified_yes(self):
+    def test_flucon_dose_required_if_flucon_modified_yes(self):
         self.mock_is_baseline.return_value = False
         cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
         cleaned_data.update(
             {
                 "flucon_modified": YES,
-                "flucon_dose_rx": None,
+                "flucon_dose": None,
             }
         )
         form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
-        self.assertIn("flucon_dose_rx", cm.exception.error_dict)
+        self.assertIn("flucon_dose", cm.exception.error_dict)
         self.assertIn(
             "This field is required.",
-            str(cm.exception.error_dict.get("flucon_dose_rx")),
+            str(cm.exception.error_dict.get("flucon_dose")),
         )
 
-    def test_flucon_dose_rx_not_required_if_flucon_modified_no(self):
+    def test_flucon_dose_not_required_if_flucon_modified_no(self):
         self.mock_is_baseline.return_value = False
         cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
         cleaned_data.update(
             {
                 "flucon_modified": NO,
                 "flucon_dose_datetime": None,
-                "flucon_dose_rx": 1200,
+                "flucon_dose": 1200,
             }
         )
         form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
-        self.assertIn("flucon_dose_rx", cm.exception.error_dict)
+        self.assertIn("flucon_dose", cm.exception.error_dict)
         self.assertIn(
             "This field is not required.",
-            str(cm.exception.error_dict.get("flucon_dose_rx")),
+            str(cm.exception.error_dict.get("flucon_dose")),
         )
 
     def test_flucon_notes_not_required_if_flucon_modified_na(self):
@@ -533,7 +533,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
             {
                 "flucon_modified": NOT_APPLICABLE,
                 "flucon_dose_datetime": None,
-                "flucon_dose_rx": None,
+                "flucon_dose": None,
                 "flucon_notes": "Some flucon notes here",
             }
         )
@@ -546,13 +546,13 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
             str(cm.exception.error_dict.get("flucon_notes")),
         )
 
-    # def test_flucon_notes_required_baseline_flucon_dose_rx_not_1200(self):
+    # def test_flucon_notes_required_baseline_flucon_dose_not_1200(self):
     #     self.mock_is_baseline.return_value = False
     #     cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
     #     cleaned_data.update(
     #         {
     #             "flucon_modified": YES,
-    #             "flucon_dose_rx": 800,
+    #             "flucon_dose": 800,
     #             "flucon_notes": "",
     #         }
     #     )
@@ -565,13 +565,13 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #         str(cm.exception.error_dict.get("flucon_notes")),
     #     )
     #
-    def test_flucon_notes_with_d14_flucon_dose_rx_800_ok(self):
+    def test_flucon_notes_with_d14_flucon_dose_800_ok(self):
         self.mock_is_baseline.return_value = False
         cleaned_data = self.get_cleaned_data(visit_code=DAY14, visit_code_sequence=0)
         cleaned_data.update(
             {
                 "flucon_modified": YES,
-                "flucon_dose_rx": 800,
+                "flucon_dose": 800,
                 "flucon_notes": "Some other flucon notes here",
             }
         )
@@ -581,13 +581,13 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_flucon_notes_with_w10_flucon_dose_rx_200_ok(self):
+    def test_flucon_notes_with_w10_flucon_dose_200_ok(self):
         self.mock_is_baseline.return_value = False
         cleaned_data = self.get_cleaned_data(visit_code=WEEK10, visit_code_sequence=0)
         cleaned_data.update(
             {
                 "flucon_modified": YES,
-                "flucon_dose_rx": 200,
+                "flucon_dose": 200,
                 "flucon_notes": "Some other flucon notes here",
             }
         )
@@ -609,7 +609,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                         "modifications_reason": MockSet(),
                         "flucon_modified": NOT_APPLICABLE,
                         "flucon_dose_datetime": None,
-                        "flucon_dose_rx": None,
+                        "flucon_dose": None,
                         "flucyt_modified": answer,
                     }
                 )

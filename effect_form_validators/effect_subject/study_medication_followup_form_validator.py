@@ -65,7 +65,7 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
         self.required_if(
             YES,
             field="flucon_modified",
-            field_required="flucon_dose_rx",
+            field_required="flucon_dose",
             field_required_evaluate_as_int=True,
         )
         # TODO: Validate dose against visit/protocol, if differs, require flucon_notes
