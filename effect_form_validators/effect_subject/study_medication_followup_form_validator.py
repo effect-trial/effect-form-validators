@@ -104,7 +104,7 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
         self.required_if(
             YES,
             field="flucyt_modified",
-            field_required="flucyt_dose_rx",
+            field_required="flucyt_dose",
             field_required_evaluate_as_int=True,
         )
 
@@ -117,16 +117,16 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
                 field_required_evaluate_as_int=True,
             )
 
-        if self.cleaned_data.get("flucyt_dose_rx") is not None:
+        if self.cleaned_data.get("flucyt_dose") is not None:
             if sum(
                 self.cleaned_data.get(fld)
                 for fld in dose_fields
                 if self.cleaned_data.get(fld) is not None
-            ) != self.cleaned_data.get("flucyt_dose_rx"):
+            ) != self.cleaned_data.get("flucyt_dose"):
                 error_msg = (
                     "Invalid. "
                     "Expected sum of individual doses to match prescribed flucytosine "
-                    f"dose ({self.cleaned_data.get('flucyt_dose_rx')} mg/d)."
+                    f"dose ({self.cleaned_data.get('flucyt_dose')} mg/d)."
                 )
                 self.raise_validation_error(
                     {fld: error_msg for fld in dose_fields}, INVALID_ERROR

@@ -59,7 +59,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_not_initiated_reason": "",
                 "flucyt_dose_datetime": get_utcnow() + relativedelta(minutes=1),
                 "flucyt_dose_expected": 4500,
-                "flucyt_dose_rx": 4500,
+                "flucyt_dose": 4500,
                 "flucyt_dose_0400": 1200,
                 "flucyt_dose_1000": 1100,
                 "flucyt_dose_1600": 1100,
@@ -335,7 +335,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_not_initiated_reason": "",
                 "flucyt_dose_datetime": None,
                 "flucyt_dose_expected": None,
-                "flucyt_dose_rx": None,
+                "flucyt_dose": None,
                 "flucyt_dose_0400": None,
                 "flucyt_dose_1000": None,
                 "flucyt_dose_1600": None,
@@ -375,7 +375,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_initiated": NO,
                 "flucyt_not_initiated_reason": "Reason flucon not initiated",
                 "flucyt_dose_datetime": None,
-                "flucyt_dose_rx": None,
+                "flucyt_dose": None,
                 "flucyt_dose_0400": None,
                 "flucyt_dose_1000": None,
                 "flucyt_dose_1600": None,
@@ -488,20 +488,20 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             str(cm.exception.error_dict.get("flucyt_dose_datetime")),
         )
 
-    def test_flucyt_dose_rx_required_if_flucyt_initiated_yes(self):
+    def test_flucyt_dose_required_if_flucyt_initiated_yes(self):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
-        cleaned_data.update({"flucyt_dose_rx": None})
+        cleaned_data.update({"flucyt_dose": None})
         form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
-        self.assertIn("flucyt_dose_rx", cm.exception.error_dict)
+        self.assertIn("flucyt_dose", cm.exception.error_dict)
         self.assertIn(
             "This field is required.",
-            str(cm.exception.error_dict.get("flucyt_dose_rx")),
+            str(cm.exception.error_dict.get("flucyt_dose")),
         )
 
-    def test_flucyt_dose_rx_not_required_if_flucyt_initiated_not_yes(self):
+    def test_flucyt_dose_not_required_if_flucyt_initiated_not_yes(self):
         self.mock_is_baseline.return_value = True
         for answer in [NO, NOT_APPLICABLE]:
             with self.subTest(flucyt_initiated=answer):
@@ -511,7 +511,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                         "flucyt_initiated": answer,
                         "flucyt_not_initiated_reason": "Some reason" if answer == NO else "",
                         "flucyt_dose_datetime": None,
-                        "flucyt_dose_rx": 100,
+                        "flucyt_dose": 100,
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
@@ -519,10 +519,10 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
-                self.assertIn("flucyt_dose_rx", cm.exception.error_dict)
+                self.assertIn("flucyt_dose", cm.exception.error_dict)
                 self.assertIn(
                     "This field is not required.",
-                    str(cm.exception.error_dict.get("flucyt_dose_rx")),
+                    str(cm.exception.error_dict.get("flucyt_dose")),
                 )
 
     def test_individual_flucyt_doses_required_if_flucyt_initiated_yes(self):
@@ -557,7 +557,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                             if answer == NO
                             else "",
                             "flucyt_dose_datetime": None,
-                            "flucyt_dose_rx": None,
+                            "flucyt_dose": None,
                             # Reset all individual doses to None
                             "flucyt_dose_0400": None,
                             "flucyt_dose_1000": None,
@@ -598,7 +598,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 cleaned_data.update(
                     {
                         "flucyt_dose_expected": 4000,
-                        "flucyt_dose_rx": 4000,
+                        "flucyt_dose": 4000,
                         "flucyt_dose_0400": dose_0400,
                         "flucyt_dose_1000": dose_1000,
                         "flucyt_dose_1600": dose_1600,
@@ -628,7 +628,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                             if answer == NO
                             else "",
                             "flucyt_dose_datetime": None,
-                            "flucyt_dose_rx": None,
+                            "flucyt_dose": None,
                             # Reset all individual doses to None
                             "flucyt_dose_0400": None,
                             "flucyt_dose_1000": None,
@@ -649,7 +649,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                         str(cm.exception.error_dict.get(dose_field)),
                     )
 
-    def test_sum_individual_flucyt_doses_eq_flucyt_dose_rx_ok(self):
+    def test_sum_individual_flucyt_doses_eq_flucyt_dose_ok(self):
         self.mock_is_baseline.return_value = True
         dose_schedules = (
             (1000, 1000, 1000, 1000),
@@ -664,7 +664,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 cleaned_data.update(
                     {
                         "flucyt_dose_expected": 4000,
-                        "flucyt_dose_rx": 4000,
+                        "flucyt_dose": 4000,
                         "flucyt_dose_0400": dose_0400,
                         "flucyt_dose_1000": dose_1000,
                         "flucyt_dose_1600": dose_1600,
@@ -679,7 +679,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_sum_individual_flucyt_doses_not_eq_flucyt_dose_rx_raises(self):
+    def test_sum_individual_flucyt_doses_not_eq_flucyt_dose_raises(self):
         self.mock_is_baseline.return_value = True
         dose_schedules = (
             (0, 0, 0, 0),
@@ -694,7 +694,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
-                        "flucyt_dose_rx": 4000,
+                        "flucyt_dose": 4000,
                         "flucyt_dose_0400": dose_0400,
                         "flucyt_dose_1000": dose_1000,
                         "flucyt_dose_1600": dose_1600,
@@ -736,7 +736,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_initiated": NOT_APPLICABLE,
                 "flucyt_dose_datetime": None,
                 "flucyt_dose_expected": None,
-                "flucyt_dose_rx": None,
+                "flucyt_dose": None,
                 "flucyt_dose_0400": None,
                 "flucyt_dose_1000": None,
                 "flucyt_dose_1600": None,
@@ -760,7 +760,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             {
                 "flucyt_initiated": YES,
                 "flucyt_dose_expected": 4000,
-                "flucyt_dose_rx": 4500,
+                "flucyt_dose": 4500,
                 "flucyt_dose_0400": 1200,
                 "flucyt_dose_1000": 1100,
                 "flucyt_dose_1600": 1100,
@@ -784,7 +784,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             {
                 "flucyt_initiated": YES,
                 "flucyt_dose_expected": 4500,
-                "flucyt_dose_rx": 4500,
+                "flucyt_dose": 4500,
                 "flucyt_dose_0400": 1200,
                 "flucyt_dose_1000": 1100,
                 "flucyt_dose_1600": 1100,

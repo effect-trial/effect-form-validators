@@ -85,7 +85,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 # Flucyt
                 "flucyt_modified": YES,
                 "flucyt_dose_datetime": get_utcnow() + relativedelta(minutes=1),
-                "flucyt_dose_rx": 0,
+                "flucyt_dose": 0,
                 "flucyt_dose_0400": 0,
                 "flucyt_dose_1000": 0,
                 "flucyt_dose_1600": 0,
@@ -333,7 +333,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 # Flucyt
                 "flucyt_modified": NO,
                 "flucyt_dose_datetime": None,
-                "flucyt_dose_rx": None,
+                "flucyt_dose": None,
                 "flucyt_dose_0400": None,
                 "flucyt_dose_1000": None,
                 "flucyt_dose_1600": None,
@@ -638,7 +638,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 # Flucyt
                 "flucyt_modified": NOT_APPLICABLE,
                 "flucyt_dose_datetime": None,
-                "flucyt_dose_rx": None,
+                "flucyt_dose": None,
                 "flucyt_dose_0400": None,
                 "flucyt_dose_1000": None,
                 "flucyt_dose_1600": None,
@@ -731,20 +731,20 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #         str(cm.exception.error_dict.get("flucyt_dose_datetime")),
     #     )
     #
-    def test_flucyt_dose_rx_required_if_flucyt_modified_yes(self):
+    def test_flucyt_dose_required_if_flucyt_modified_yes(self):
         self.mock_is_baseline.return_value = False
         cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
-        cleaned_data.update({"flucyt_dose_rx": None})
+        cleaned_data.update({"flucyt_dose": None})
         form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
-        self.assertIn("flucyt_dose_rx", cm.exception.error_dict)
+        self.assertIn("flucyt_dose", cm.exception.error_dict)
         self.assertIn(
             "This field is required.",
-            str(cm.exception.error_dict.get("flucyt_dose_rx")),
+            str(cm.exception.error_dict.get("flucyt_dose")),
         )
 
-    def test_flucyt_dose_rx_not_required_if_flucyt_modified_not_yes(self):
+    def test_flucyt_dose_not_required_if_flucyt_modified_not_yes(self):
         self.mock_is_baseline.return_value = False
         for answer in [NO, NOT_APPLICABLE]:
             with self.subTest(flucyt_modified=answer):
@@ -753,7 +753,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     {
                         "flucyt_modified": answer,
                         "flucyt_dose_datetime": None,
-                        "flucyt_dose_rx": 100,
+                        "flucyt_dose": 100,
                     }
                 )
                 form_validator = StudyMedicationFollowupFormValidator(
@@ -761,10 +761,10 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
-                self.assertIn("flucyt_dose_rx", cm.exception.error_dict)
+                self.assertIn("flucyt_dose", cm.exception.error_dict)
                 self.assertIn(
                     "This field is not required.",
-                    str(cm.exception.error_dict.get("flucyt_dose_rx")),
+                    str(cm.exception.error_dict.get("flucyt_dose")),
                 )
 
     def test_individual_flucyt_doses_required_if_flucyt_modified_yes(self):
@@ -796,7 +796,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                         {
                             "flucyt_modified": answer,
                             "flucyt_dose_datetime": None,
-                            "flucyt_dose_rx": None,
+                            "flucyt_dose": None,
                             # Reset all individual doses to None
                             "flucyt_dose_0400": None,
                             "flucyt_dose_1000": None,
@@ -822,7 +822,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         cleaned_data = self.get_cleaned_data(visit_code=DAY14, visit_code_sequence=0)
         cleaned_data.update(
             {
-                "flucyt_dose_rx": 0,
+                "flucyt_dose": 0,
                 "flucyt_dose_0400": 0,
                 "flucyt_dose_1000": 0,
                 "flucyt_dose_1600": 0,
@@ -835,7 +835,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_sum_individual_flucyt_doses_eq_flucyt_dose_rx_ok(self):
+    def test_sum_individual_flucyt_doses_eq_flucyt_dose_ok(self):
         self.mock_is_baseline.return_value = False
         dose_schedules = (
             (1000, 1000, 1000, 1000),
@@ -849,7 +849,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update(
                     {
-                        "flucyt_dose_rx": 4000,
+                        "flucyt_dose": 4000,
                         "flucyt_dose_0400": dose_0400,
                         "flucyt_dose_1000": dose_1000,
                         "flucyt_dose_1600": dose_1600,
@@ -865,7 +865,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     #
-    def test_sum_individual_flucyt_doses_not_eq_flucyt_dose_rx_raises(self):
+    def test_sum_individual_flucyt_doses_not_eq_flucyt_dose_raises(self):
         self.mock_is_baseline.return_value = False
         dose_schedules = (
             (0, 0, 0, 0),
@@ -880,7 +880,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update(
                     {
-                        "flucyt_dose_rx": 4000,
+                        "flucyt_dose": 4000,
                         "flucyt_dose_0400": dose_0400,
                         "flucyt_dose_1000": dose_1000,
                         "flucyt_dose_1600": dose_1600,
@@ -921,7 +921,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
             {
                 "flucyt_modified": NOT_APPLICABLE,
                 "flucyt_dose_datetime": None,
-                "flucyt_dose_rx": None,
+                "flucyt_dose": None,
                 "flucyt_dose_0400": None,
                 "flucyt_dose_1000": None,
                 "flucyt_dose_1600": None,
@@ -944,7 +944,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 "flucyt_modified": YES,
-                "flucyt_dose_rx": 0,
+                "flucyt_dose": 0,
                 "flucyt_dose_0400": 0,
                 "flucyt_dose_1000": 0,
                 "flucyt_dose_1600": 0,
