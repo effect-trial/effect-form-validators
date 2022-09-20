@@ -70,6 +70,9 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
         )
         # TODO: Validate dose against visit/protocol, if differs, require flucon_notes
         #   - differs could be not modified, or modified to value not expected
+
+        self.applicable_if(YES, field="flucon_modified", field_applicable="flucon_next_dose")
+
         self.not_required_if(
             NOT_APPLICABLE,
             field="flucon_modified",
@@ -134,6 +137,9 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
 
         # TODO: Validate dose against visit/protocol, if differs, require flucyt_notes
         #   - differs could be not modified, or modified to value not expected
+
+        self.applicable_if(YES, field="flucyt_modified", field_applicable="flucyt_next_dose")
+
         self.not_required_if(
             NOT_APPLICABLE,
             field="flucyt_modified",

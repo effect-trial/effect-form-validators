@@ -5,6 +5,7 @@ from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 from django_mock_queries.query import MockModel, MockSet
+from edc_appointment.constants import TODAY, TOMORROW
 from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
 from edc_utils import get_utcnow
 from edc_visit_schedule.constants import DAY01, DAY03, DAY14, WEEK10
@@ -526,6 +527,46 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
             str(cm.exception.error_dict.get("flucon_dose")),
         )
 
+    def test_flucon_next_dose_not_applicable_if_flucon_initiated_no(self):
+        self.mock_is_baseline.return_value = False
+        for answer in [NO, NOT_APPLICABLE]:
+            for next_dose in [TODAY, TOMORROW]:
+                with self.subTest(flucon_modified=answer, next_dose=next_dose):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=DAY03, visit_code_sequence=0
+                    )
+                    cleaned_data.update(
+                        {
+                            "flucon_modified": answer,
+                            "flucon_dose_datetime": None,
+                            "flucon_dose": None,
+                            "flucon_next_dose": next_dose,
+                        }
+                    )
+                    form_validator = StudyMedicationFollowupFormValidator(
+                        cleaned_data=cleaned_data
+                    )
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("flucon_next_dose", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is not applicable.",
+                        str(cm.exception.error_dict.get("flucon_next_dose")),
+                    )
+
+    def test_flucon_next_dose_applicable_if_flucon_initiated_yes(self):
+        self.mock_is_baseline.return_value = False
+        cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
+        cleaned_data.update({"flucon_next_dose": NOT_APPLICABLE})
+        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("flucon_next_dose", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable.",
+            str(cm.exception.error_dict.get("flucon_next_dose")),
+        )
+
     def test_flucon_notes_not_required_if_flucon_modified_na(self):
         self.mock_is_baseline.return_value = False
         cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
@@ -913,6 +954,50 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 self.assertIn(
                     expected_msg, str(cm.exception.error_dict.get("flucyt_dose_2200"))
                 )
+
+    def test_flucyt_next_dose_not_applicable_if_flucyt_initiated_not_yes(self):
+        self.mock_is_baseline.return_value = False
+        for next_dose in ["0400", "1000", "1600", "2200"]:
+            for answer in [NO, NOT_APPLICABLE]:
+                with self.subTest(next_dose=next_dose, flucyt_modified=answer):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=DAY03, visit_code_sequence=0
+                    )
+                    cleaned_data.update(
+                        {
+                            "flucyt_modified": answer,
+                            "flucyt_dose_datetime": None,
+                            "flucyt_dose": None,
+                            "flucyt_dose_0400": None,
+                            "flucyt_dose_1000": None,
+                            "flucyt_dose_1600": None,
+                            "flucyt_dose_2200": None,
+                            "flucyt_next_dose": next_dose,
+                        }
+                    )
+                    form_validator = StudyMedicationFollowupFormValidator(
+                        cleaned_data=cleaned_data
+                    )
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("flucyt_next_dose", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is not applicable.",
+                        str(cm.exception.error_dict.get("flucyt_next_dose")),
+                    )
+
+    def test_flucyt_next_dose_applicable_if_flucyt_initiated_yes(self):
+        self.mock_is_baseline.return_value = False
+        cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
+        cleaned_data.update({"flucyt_next_dose": NOT_APPLICABLE})
+        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("flucyt_next_dose", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable.",
+            str(cm.exception.error_dict.get("flucyt_next_dose")),
+        )
 
     def test_flucyt_notes_not_required_if_flucyt_modified_na(self):
         self.mock_is_baseline.return_value = False

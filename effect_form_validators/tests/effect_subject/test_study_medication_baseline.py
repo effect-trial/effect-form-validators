@@ -4,6 +4,7 @@ from unittest.mock import patch
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
+from edc_appointment.constants import TODAY, TOMORROW
 from edc_constants.constants import NO, NOT_APPLICABLE, YES
 from edc_utils import formatted_date, get_utcnow
 from edc_visit_schedule.constants import DAY01
@@ -44,26 +45,30 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         cleaned_data = super().get_cleaned_data(
             visit_code=visit_code,
             visit_code_sequence=visit_code_sequence,
-            report_datetime=kwargs.get("report_datetime", get_utcnow()),
+            report_datetime=kwargs.get("report_datetime", get_utcnow().replace(hour=14)),
         )
         cleaned_data.update(
             {
                 # Flucon
                 "flucon_initiated": YES,
                 "flucon_not_initiated_reason": "",
-                "flucon_dose_datetime": get_utcnow() + relativedelta(minutes=1),
+                "flucon_dose_datetime": cleaned_data.get("report_datetime")
+                + relativedelta(minutes=1),
                 "flucon_dose": 1200,
+                "flucon_next_dose": TODAY,
                 "flucon_notes": "",
                 # Flucyt
                 "flucyt_initiated": YES,
                 "flucyt_not_initiated_reason": "",
-                "flucyt_dose_datetime": get_utcnow() + relativedelta(minutes=1),
+                "flucyt_dose_datetime": cleaned_data.get("report_datetime")
+                + relativedelta(minutes=1),
                 "flucyt_dose_expected": 4500,
                 "flucyt_dose": 4500,
                 "flucyt_dose_0400": 1200,
                 "flucyt_dose_1000": 1100,
                 "flucyt_dose_1600": 1100,
                 "flucyt_dose_2200": 1100,
+                "flucyt_next_dose": "1600",
                 "flucyt_notes": "",
             }
         )
@@ -129,6 +134,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_not_initiated_reason": "Reason flucon not initiated",
                 "flucon_dose_datetime": None,
                 "flucon_dose": None,
+                "flucon_next_dose": NOT_APPLICABLE,
                 "flucon_notes": "",
             }
         )
@@ -197,7 +203,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
 
     def test_flucon_flucyt_dose_datetime_equal_report_datetime_ok(self):
         self.mock_is_baseline.return_value = True
-        report_datetime = get_utcnow() - relativedelta(days=14)
+        report_datetime = get_utcnow().replace(hour=15) - relativedelta(days=14)
         cleaned_data = self.get_cleaned_data(
             visit_code=DAY01,
             visit_code_sequence=0,
@@ -290,6 +296,73 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             str(cm.exception.error_dict.get("flucon_dose")),
         )
 
+    def test_flucon_next_dose_not_applicable_if_flucon_initiated_no(self):
+        self.mock_is_baseline.return_value = True
+        for next_dose in [TODAY, TOMORROW]:
+            with self.subTest(next_dose=next_dose):
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
+                cleaned_data.update(
+                    {
+                        "flucon_initiated": NO,
+                        "flucon_not_initiated_reason": "Some reason",
+                        "flucon_dose_datetime": None,
+                        "flucon_dose": None,
+                        "flucon_next_dose": next_dose,
+                    }
+                )
+                form_validator = StudyMedicationBaselineFormValidator(
+                    cleaned_data=cleaned_data
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("flucon_next_dose", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not applicable.",
+                    str(cm.exception.error_dict.get("flucon_next_dose")),
+                )
+
+    def test_flucon_next_dose_applicable_if_flucon_initiated_yes(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
+        cleaned_data.update({"flucon_next_dose": NOT_APPLICABLE})
+        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("flucon_next_dose", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable.",
+            str(cm.exception.error_dict.get("flucon_next_dose")),
+        )
+
+    def test_baseline_flucon_next_dose_not_today_raises(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
+        cleaned_data.update(
+            {
+                "flucon_initiated": YES,
+                "flucon_next_dose": TOMORROW,
+            }
+        )
+        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("flucon_next_dose", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. Expected first dose at baseline to be administered today.",
+            str(cm.exception.error_dict.get("flucon_next_dose")),
+        )
+
+        cleaned_data.update(
+            {
+                "flucon_next_dose": TODAY,
+            }
+        )
+        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
     def test_flucon_notes_required_baseline_flucon_dose_not_1200(self):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
@@ -340,6 +413,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_dose_1000": None,
                 "flucyt_dose_1600": None,
                 "flucyt_dose_2200": None,
+                "flucyt_next_dose": NOT_APPLICABLE,
                 "flucyt_notes": "",
             }
         )
@@ -380,6 +454,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_dose_1000": None,
                 "flucyt_dose_1600": None,
                 "flucyt_dose_2200": None,
+                "flucyt_next_dose": NOT_APPLICABLE,
                 "flucyt_notes": "",
             }
         )
@@ -728,6 +803,228 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     expected_msg, str(cm.exception.error_dict.get("flucyt_dose_2200"))
                 )
 
+    def test_flucyt_next_dose_not_applicable_if_flucyt_initiated_not_yes(self):
+        self.mock_is_baseline.return_value = True
+        for next_dose in ["0400", "1000", "1600", "2200"]:
+            for answer in [NO, NOT_APPLICABLE]:
+                with self.subTest(next_dose=next_dose, flucyt_initated=answer):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=DAY01, visit_code_sequence=0
+                    )
+                    cleaned_data.update(
+                        {
+                            "flucyt_initiated": answer,
+                            "flucyt_not_initiated_reason": "Some reason"
+                            if answer == NO
+                            else "",
+                            "flucyt_dose_datetime": None,
+                            "flucyt_dose": None,
+                            "flucyt_dose_0400": None,
+                            "flucyt_dose_1000": None,
+                            "flucyt_dose_1600": None,
+                            "flucyt_dose_2200": None,
+                            "flucyt_next_dose": next_dose,
+                        }
+                    )
+                    form_validator = StudyMedicationBaselineFormValidator(
+                        cleaned_data=cleaned_data
+                    )
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("flucyt_next_dose", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is not applicable.",
+                        str(cm.exception.error_dict.get("flucyt_next_dose")),
+                    )
+
+    def test_flucyt_next_dose_applicable_if_flucyt_initiated_yes(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
+        cleaned_data.update({"flucyt_next_dose": NOT_APPLICABLE})
+        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("flucyt_next_dose", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable.",
+            str(cm.exception.error_dict.get("flucyt_next_dose")),
+        )
+
+    def test_baseline_flucyt_next_dose_0400_or_2200_always_raises(self):
+        self.mock_is_baseline.return_value = True
+        for next_dose in ["0400", "2200"]:
+            for hour, minute in [
+                (0, 0),
+                (0, 1),
+                (1, 1),
+                (3, 59),
+                (4, 0),
+                (4, 1),
+                (9, 59),
+                (10, 0),
+                (10, 1),
+                (15, 59),
+                (16, 0),
+                (16, 1),
+                (21, 59),
+                (22, 0),
+                (22, 1),
+                (23, 1),
+                (23, 59),
+            ]:
+                with self.subTest(flucyt_next_dose=next_dose, hour=hour, min=minute):
+                    cleaned_data = self.get_cleaned_data(
+                        visit_code=DAY01, visit_code_sequence=0
+                    )
+                    cleaned_data.update(
+                        {
+                            "flucyt_dose_datetime": cleaned_data.get(
+                                "report_datetime"
+                            ).replace(
+                                hour=hour,
+                                minute=minute,
+                                second=0,
+                                microsecond=0,
+                            ),
+                            "flucyt_next_dose": next_dose,
+                        }
+                    )
+                    form_validator = StudyMedicationBaselineFormValidator(
+                        cleaned_data=cleaned_data
+                    )
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("flucyt_next_dose", cm.exception.error_dict)
+
+    def test_baseline_flucyt_next_dose_1000_flucyt_dose_datetime_on_after_1300_raises(
+        self,
+    ):
+        self.mock_is_baseline.return_value = True
+        for hour, minute in [(13, 0), (13, 1), (15, 59), (16, 0), (16, 1), (17, 5)]:
+            with self.subTest(hour=hour, min=minute):
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
+                cleaned_data.update(
+                    {
+                        "flucyt_dose_datetime": cleaned_data.get("report_datetime").replace(
+                            hour=hour,
+                            minute=minute,
+                            second=0,
+                            microsecond=0,
+                        ),
+                        "flucyt_next_dose": "1000",
+                    }
+                )
+                form_validator = StudyMedicationBaselineFormValidator(
+                    cleaned_data=cleaned_data
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("flucyt_next_dose", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. Expected 'at 16:00' if first dose on or after 13:00.",
+                    str(cm.exception.error_dict.get("flucyt_next_dose")),
+                )
+
+    def test_baseline_flucyt_next_dose_1000_flucyt_dose_datetime_before_1300_ok(
+        self,
+    ):
+        self.mock_is_baseline.return_value = True
+        for hour, minute in [(7, 0), (9, 59), (10, 0), (10, 1), (12, 0), (12, 59)]:
+            with self.subTest(hour=hour, min=minute):
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
+                cleaned_data.update(
+                    {
+                        "flucyt_dose_datetime": cleaned_data.get("report_datetime").replace(
+                            hour=hour,
+                            minute=minute,
+                            second=0,
+                            microsecond=0,
+                        ),
+                        "flucyt_next_dose": "1000",
+                    }
+                )
+                form_validator = StudyMedicationBaselineFormValidator(
+                    cleaned_data=cleaned_data
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_baseline_flucyt_next_dose_1600_flucyt_dose_datetime_before_1300_raises(
+        self,
+    ):
+        self.mock_is_baseline.return_value = True
+        for hour, minute in [
+            (0, 0),
+            (7, 0),
+            (9, 59),
+            (10, 0),
+            (10, 1),
+            (12, 0),
+            (12, 59),
+        ]:
+            with self.subTest(hour=hour, min=minute):
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
+                cleaned_data.update(
+                    {
+                        "flucyt_dose_datetime": cleaned_data.get("report_datetime").replace(
+                            hour=hour,
+                            minute=minute,
+                            second=0,
+                            microsecond=0,
+                        ),
+                        "flucyt_next_dose": "1600",
+                    }
+                )
+                form_validator = StudyMedicationBaselineFormValidator(
+                    cleaned_data=cleaned_data
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("flucyt_next_dose", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. Expected 'at 10:00' if first dose before 13:00.",
+                    str(cm.exception.error_dict.get("flucyt_next_dose")),
+                )
+
+    def test_baseline_flucyt_next_dose_1600_flucyt_dose_datetime_on_after_1300_ok(
+        self,
+    ):
+        self.mock_is_baseline.return_value = True
+        for hour, minute in [
+            (13, 0),
+            (13, 1),
+            (15, 59),
+            (16, 0),
+            (16, 1),
+            (17, 0),
+            (21, 59),
+            (22, 0),
+            (22, 1),
+            (23, 59),
+        ]:
+            with self.subTest(hour=hour, min=minute):
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
+                cleaned_data.update(
+                    {
+                        "flucyt_dose_datetime": cleaned_data.get("report_datetime").replace(
+                            hour=hour,
+                            minute=minute,
+                            second=0,
+                            microsecond=0,
+                        ),
+                        "flucyt_next_dose": "1600",
+                    }
+                )
+                form_validator = StudyMedicationBaselineFormValidator(
+                    cleaned_data=cleaned_data
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
     def test_flucyt_notes_not_required_if_flucyt_initiated_na(self):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
@@ -741,6 +1038,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_dose_1000": None,
                 "flucyt_dose_1600": None,
                 "flucyt_dose_2200": None,
+                "flucyt_next_dose": NOT_APPLICABLE,
                 "flucyt_notes": "Some flucyt notes here",
             }
         )

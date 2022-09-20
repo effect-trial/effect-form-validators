@@ -1,3 +1,4 @@
+from edc_appointment.constants import TODAY
 from edc_constants.constants import NO, NOT_APPLICABLE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
@@ -41,6 +42,21 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
             field_required="flucon_dose",
             field_required_evaluate_as_int=True,
         )
+
+        self.applicable_if(YES, field="flucon_initiated", field_applicable="flucon_next_dose")
+
+        if (
+            self.cleaned_data.get("flucon_initiated") == YES
+            and self.cleaned_data.get("flucon_next_dose") != TODAY
+        ):
+            self.raise_validation_error(
+                {
+                    "flucon_next_dose": (
+                        "Invalid. Expected first dose at baseline to be administered today."
+                    )
+                },
+                INVALID_ERROR,
+            )
 
         self.required_if_true(
             condition=(
@@ -103,6 +119,39 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
                 )
                 self.raise_validation_error(
                     {fld: error_msg for fld in dose_fields}, INVALID_ERROR
+                )
+
+        self.applicable_if(YES, field="flucyt_initiated", field_applicable="flucyt_next_dose")
+
+        if self.cleaned_data.get("flucyt_dose_datetime"):
+            if (
+                self.cleaned_data.get("flucyt_dose_datetime")
+                < self.cleaned_data.get("flucyt_dose_datetime").replace(
+                    hour=13, minute=0, second=0, microsecond=0
+                )
+                and self.cleaned_data.get("flucyt_next_dose") != "1000"
+            ):
+                self.raise_validation_error(
+                    {
+                        "flucyt_next_dose": (
+                            "Invalid. Expected 'at 10:00' if first dose before 13:00."
+                        ),
+                    },
+                    INVALID_ERROR,
+                )
+            elif (
+                self.cleaned_data.get("flucyt_dose_datetime")
+                >= self.cleaned_data.get("flucyt_dose_datetime").replace(
+                    hour=13, minute=0, second=0, microsecond=0
+                )
+            ) and self.cleaned_data.get("flucyt_next_dose") != "1600":
+                self.raise_validation_error(
+                    {
+                        "flucyt_next_dose": (
+                            "Invalid. Expected 'at 16:00' if first dose on or after 13:00."
+                        ),
+                    },
+                    INVALID_ERROR,
                 )
 
         self.not_required_if(
