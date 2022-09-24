@@ -23,7 +23,7 @@ class VitalSignsFormValidator(BloodPressureFormValidatorMixin, CrfFormValidator)
 
         for fld in ["reportable_as_ae", "patient_admitted"]:
             self.applicable_if_true(
-                condition=not is_baseline(instance=self.cleaned_data.get("subject_visit")),
+                condition=not is_baseline(instance=self.related_visit),
                 field_applicable=fld,
                 not_applicable_msg="Not applicable at baseline",
             )

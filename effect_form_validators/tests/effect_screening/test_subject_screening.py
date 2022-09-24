@@ -18,7 +18,7 @@ class SubjectScreeningFormValidator(FormValidatorTestMixin, Base):
 
 class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCase):
 
-    form_validator_default_form_cls = SubjectScreeningFormValidator
+    form_validator_cls = SubjectScreeningFormValidator
     ELIGIBLE_CD4_VALUE = 99
 
     def get_cleaned_data(self, **kwargs) -> dict:

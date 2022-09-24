@@ -3,12 +3,19 @@ from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django_mock_queries.query import MockModel
 from edc_constants.constants import NO, NOT_APPLICABLE, NOT_DONE, YES
 from edc_visit_schedule.constants import DAY01, DAY14, WEEK10, WEEK24
 
 from effect_form_validators.effect_subject import MentalStatusFormValidator as Base
 
 from ..mixins import FormValidatorTestMixin, TestCaseMixin
+
+
+class MentalStatusMockModel(MockModel):
+    @classmethod
+    def related_visit_model_attr(cls):
+        return "subject_visit"
 
 
 class MentalStatusFormValidator(FormValidatorTestMixin, Base):
@@ -60,7 +67,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
     def test_cleaned_data_at_baseline_ok(self):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01)
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -74,7 +83,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     visit_code=visit_code,
                     visit_code_sequence=1 if visit_code == DAY01 else 0,
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -87,7 +98,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 with self.subTest(reporting_field=reporting_field, response=response):
                     cleaned_data = self.get_cleaned_data(visit_code=DAY01)
                     cleaned_data.update({reporting_field: response})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn(reporting_field, cm.exception.error_dict)
@@ -116,7 +129,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": NOT_APPLICABLE,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -142,7 +157,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": YES,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -154,7 +171,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
             with self.subTest(sx=sx):
                 cleaned_data = self.get_cleaned_data(visit_code=DAY01)
                 cleaned_data.update({sx: YES})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn(sx, cm.exception.error_dict)
@@ -169,7 +188,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
         for modified_rankin_score in [1, 6]:
             with self.subTest(modified_rankin_score=modified_rankin_score):
                 cleaned_data.update({"modified_rankin_score": modified_rankin_score})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("modified_rankin_score", cm.exception.error_dict)
@@ -184,7 +205,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
         for ecog_score in [1, 5]:
             with self.subTest(ecog_score=ecog_score):
                 cleaned_data.update({"ecog_score": ecog_score})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("ecog_score", cm.exception.error_dict)
@@ -199,7 +222,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
         for gcs in [3, 14]:
             with self.subTest(gcs=gcs):
                 cleaned_data.update({"glasgow_coma_score": gcs})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("glasgow_coma_score", cm.exception.error_dict)
@@ -220,7 +245,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": NOT_APPLICABLE,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -236,7 +263,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 "patient_admitted": NOT_APPLICABLE,
             }
         )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -252,7 +281,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 "patient_admitted": NOT_APPLICABLE,
             }
         )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -268,7 +299,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 "patient_admitted": NOT_APPLICABLE,
             }
         )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -284,7 +317,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 "patient_admitted": NOT_APPLICABLE,
             }
         )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -306,7 +341,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                             "patient_admitted": NO,
                         }
                     )
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -338,7 +375,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                                 "ecog_score": "1",
                             }
                         )
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -369,7 +408,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                             }
                         )
 
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -391,7 +432,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                             "patient_admitted": NO,
                         }
                     )
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -406,7 +449,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     visit_code_sequence=0,
                 )
                 cleaned_data.update({"require_help": NOT_APPLICABLE})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("require_help", cm.exception.error_dict)
@@ -425,7 +470,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": NO,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -444,7 +491,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         visit_code_sequence=visit_code_sequence,
                     )
                     cleaned_data.update({"require_help": NO})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("require_help", cm.exception.error_dict)
@@ -455,7 +504,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     )
 
                     cleaned_data.update({"require_help": NOT_APPLICABLE})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -476,7 +527,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         visit_code_sequence=visit_code_sequence,
                     )
                     cleaned_data.update({"require_help": YES})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("require_help", cm.exception.error_dict)
@@ -487,7 +540,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     )
 
                     cleaned_data.update({"require_help": NOT_APPLICABLE})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -502,7 +557,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     visit_code_sequence=0,
                 )
                 cleaned_data.update({"any_other_problems": NOT_APPLICABLE})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("any_other_problems", cm.exception.error_dict)
@@ -521,7 +578,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": NO,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -540,7 +599,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         visit_code_sequence=visit_code_sequence,
                     )
                     cleaned_data.update({"any_other_problems": NO})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("any_other_problems", cm.exception.error_dict)
@@ -551,7 +612,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     )
 
                     cleaned_data.update({"any_other_problems": NOT_APPLICABLE})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -572,7 +635,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         visit_code_sequence=visit_code_sequence,
                     )
                     cleaned_data.update({"any_other_problems": YES})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("any_other_problems", cm.exception.error_dict)
@@ -583,7 +648,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     )
 
                     cleaned_data.update({"any_other_problems": NOT_APPLICABLE})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -614,7 +681,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": NO,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("modified_rankin_score", cm.exception.error_dict)
@@ -646,7 +715,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "ecog_score": "0",
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("ecog_score", cm.exception.error_dict)
@@ -662,7 +733,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "ecog_score": "1",
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("modified_rankin_score", cm.exception.error_dict)
@@ -678,7 +751,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "ecog_score": "0",
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("ecog_score", cm.exception.error_dict)
@@ -720,7 +795,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         }
                     )
 
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -742,7 +819,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 "patient_admitted": NO,
             }
         )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("modified_rankin_score", cm.exception.error_dict)
@@ -774,7 +853,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 "ecog_score": "0",
             }
         )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("modified_rankin_score", cm.exception.error_dict)
@@ -790,7 +871,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 "ecog_score": "1",
             }
         )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("ecog_score", cm.exception.error_dict)
@@ -806,7 +889,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 "ecog_score": "1",
             }
         )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("ecog_score", cm.exception.error_dict)
@@ -832,7 +917,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": NOT_APPLICABLE,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -850,7 +937,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": NOT_APPLICABLE,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -860,7 +949,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update({"reportable_as_ae": NO})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("patient_admitted", cm.exception.error_dict)
@@ -870,7 +961,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update({"patient_admitted": NO})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -892,7 +985,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                             "patient_admitted": NOT_APPLICABLE,
                         }
                     )
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -902,7 +997,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     )
 
                     cleaned_data.update({"reportable_as_ae": NO})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("patient_admitted", cm.exception.error_dict)
@@ -912,7 +1009,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                     )
 
                     cleaned_data.update({"patient_admitted": NO})
-                    form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -930,7 +1029,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": NOT_APPLICABLE,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -940,7 +1041,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update({"reportable_as_ae": NO})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("patient_admitted", cm.exception.error_dict)
@@ -950,7 +1053,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update({"patient_admitted": NO})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -968,7 +1073,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": NOT_APPLICABLE,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -978,7 +1085,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update({"reportable_as_ae": NO})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("patient_admitted", cm.exception.error_dict)
@@ -988,7 +1097,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update({"patient_admitted": NO})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -1006,7 +1117,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "patient_admitted": NOT_APPLICABLE,
                     }
                 )
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -1016,7 +1129,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update({"reportable_as_ae": NO})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("patient_admitted", cm.exception.error_dict)
@@ -1026,7 +1141,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update({"patient_admitted": NO})
-                form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                form_validator = MentalStatusFormValidator(
+                    cleaned_data=cleaned_data, model=MentalStatusMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -1042,7 +1159,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 "patient_admitted": NOT_APPLICABLE,
             }
         )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         try:
             form_validator.validate()
         except TypeError as e:
@@ -1060,7 +1179,9 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 "patient_admitted": NO,
             }
         )
-        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -1092,14 +1213,18 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                             }
                         )
 
-                        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                        form_validator = MentalStatusFormValidator(
+                            cleaned_data=cleaned_data, model=MentalStatusMockModel
+                        )
                         try:
                             form_validator.validate()
                         except ValidationError as e:
                             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
                         cleaned_data.update({reporting_fld: reporting_fld_answer})
-                        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                        form_validator = MentalStatusFormValidator(
+                            cleaned_data=cleaned_data, model=MentalStatusMockModel
+                        )
                         with self.assertRaises(ValidationError) as cm:
                             form_validator.validate()
                         self.assertIn(reporting_fld, cm.exception.error_dict)
@@ -1128,14 +1253,18 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                             }
                         )
 
-                        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                        form_validator = MentalStatusFormValidator(
+                            cleaned_data=cleaned_data, model=MentalStatusMockModel
+                        )
                         try:
                             form_validator.validate()
                         except ValidationError as e:
                             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
                         cleaned_data.update({reporting_fld: reporting_fld_answer})
-                        form_validator = MentalStatusFormValidator(cleaned_data=cleaned_data)
+                        form_validator = MentalStatusFormValidator(
+                            cleaned_data=cleaned_data, model=MentalStatusMockModel
+                        )
                         with self.assertRaises(ValidationError) as cm:
                             form_validator.validate()
                         self.assertIn(reporting_fld, cm.exception.error_dict)

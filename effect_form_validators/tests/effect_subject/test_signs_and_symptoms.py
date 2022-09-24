@@ -21,6 +21,12 @@ from effect_form_validators.effect_subject import SignsAndSymptomsFormValidator 
 from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
 
+class SignsAndSymptomsMockModel(MockModel):
+    @classmethod
+    def related_visit_model_attr(cls):
+        return "subject_visit"
+
+
 class SignsAndSymptomsFormValidator(FormValidatorTestMixin, Base):
     pass
 
@@ -102,7 +108,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
             patient_admitted=NOT_APPLICABLE,
         )
 
-        form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+        form_validator = SignsAndSymptomsFormValidator(
+            cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -115,7 +123,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(any_sx=UNKNOWN)
 
-        form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+        form_validator = SignsAndSymptomsFormValidator(
+            cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("any_sx", cm.exception.error_dict)
@@ -132,7 +142,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(any_sx=UNKNOWN)
 
-        form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+        form_validator = SignsAndSymptomsFormValidator(
+            cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("any_sx", cm.exception.error_dict)
@@ -151,14 +163,18 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
             any_sx=UNKNOWN,
         )
 
-        form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+        form_validator = SignsAndSymptomsFormValidator(
+            cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertNotIn("any_sx", cm.exception.error_dict)
 
         self.subject_visit.assessment_type = OTHER
         self.subject_visit.assessment_who = OTHER
-        form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+        form_validator = SignsAndSymptomsFormValidator(
+            cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertNotIn("any_sx", cm.exception.error_dict)
@@ -182,7 +198,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                         lp_performed=NO,
                         urinary_lam_performed=NO,
                     )
-                    form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+                    form_validator = SignsAndSymptomsFormValidator(
+                        cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -190,7 +208,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
 
                     # Try with NA, where form validator expects answer
                     cleaned_data.update({fld: NOT_APPLICABLE})
-                    form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+                    form_validator = SignsAndSymptomsFormValidator(
+                        cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn(fld, cm.exception.error_dict)
@@ -200,7 +220,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     )
 
                     cleaned_data.update({fld: answer})
-                    form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+                    form_validator = SignsAndSymptomsFormValidator(
+                        cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:
@@ -274,7 +296,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     headache_duration=invalid_duration,
                 )
 
-                form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+                form_validator = SignsAndSymptomsFormValidator(
+                    cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("headache_duration", cm.exception.error_dict)
@@ -298,7 +322,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     current_sx_gte_g3=MockSet(self.sisx_choice_na),
                     headache_duration=valid_duration,
                 )
-                form_validator = SignsAndSymptomsFormValidator(cleaned_data=cleaned_data)
+                form_validator = SignsAndSymptomsFormValidator(
+                    cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:

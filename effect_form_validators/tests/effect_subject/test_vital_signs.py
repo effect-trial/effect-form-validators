@@ -3,12 +3,19 @@ from unittest.mock import patch
 
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django_mock_queries.query import MockModel
 from edc_constants.constants import NO, NOT_APPLICABLE, YES
 from edc_visit_schedule.constants import DAY01, DAY14
 
 from effect_form_validators.effect_subject import VitalSignsFormValidator as Base
 
 from ..mixins import FormValidatorTestMixin, TestCaseMixin
+
+
+class VitalSignsMockModel(MockModel):
+    @classmethod
+    def related_visit_model_attr(cls):
+        return "subject_visit"
 
 
 class VitalSignsFormValidator(FormValidatorTestMixin, Base):
@@ -55,7 +62,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
     def test_cleaned_data_at_baseline_ok(self):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01)
-        form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+        form_validator = VitalSignsFormValidator(
+            cleaned_data=cleaned_data, model=VitalSignsMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -69,7 +78,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     visit_code=visit_code,
                     visit_code_sequence=1 if visit_code == DAY01 else 0,
                 )
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -82,7 +93,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
             sys_blood_pressure=None,
             dia_blood_pressure=80,
         )
-        form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+        form_validator = VitalSignsFormValidator(
+            cleaned_data=cleaned_data, model=VitalSignsMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("sys_blood_pressure", cm.exception.error_dict)
@@ -98,7 +111,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
             sys_blood_pressure=120,
             dia_blood_pressure=None,
         )
-        form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+        form_validator = VitalSignsFormValidator(
+            cleaned_data=cleaned_data, model=VitalSignsMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("dia_blood_pressure", cm.exception.error_dict)
@@ -122,7 +137,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     reportable_as_ae=NO,
                 )
 
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -147,7 +164,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     reportable_as_ae=YES,
                 )
 
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("dia_blood_pressure", cm.exception.error_dict)
@@ -167,7 +186,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     reportable_as_ae=response,
                 )
 
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -182,7 +203,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     reportable_as_ae=response,
                 )
 
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -205,7 +228,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     reportable_as_ae=NO,
                 )
 
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -218,7 +243,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update(reportable_as_ae=YES)
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -235,7 +262,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     reportable_as_ae=response,
                 )
 
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -251,7 +280,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     reportable_as_ae=NO,
                 )
 
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -264,7 +295,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update(reportable_as_ae=YES)
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -280,7 +313,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                     reportable_as_ae=response,
                 )
 
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -292,7 +327,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
         for response in [YES, NO]:
             with self.subTest(reportable_as_ae=response):
                 cleaned_data.update(reportable_as_ae=response)
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -307,7 +344,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
         for response in [YES, NO]:
             with self.subTest(patient_admitted=response):
                 cleaned_data.update(patient_admitted=response)
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("patient_admitted", cm.exception.error_dict)
@@ -326,7 +365,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                 )
                 cleaned_data.update(reportable_as_ae=NOT_APPLICABLE)
 
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("reportable_as_ae", cm.exception.error_dict)
@@ -338,7 +379,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                 for response in [YES, NO]:
                     with self.subTest(reportable_as_ae=response):
                         cleaned_data.update(reportable_as_ae=response)
-                        form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                        form_validator = VitalSignsFormValidator(
+                            cleaned_data=cleaned_data, model=VitalSignsMockModel
+                        )
                         try:
                             form_validator.validate()
                         except ValidationError as e:
@@ -354,7 +397,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                 )
                 cleaned_data.update(patient_admitted=NOT_APPLICABLE)
 
-                form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                form_validator = VitalSignsFormValidator(
+                    cleaned_data=cleaned_data, model=VitalSignsMockModel
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("patient_admitted", cm.exception.error_dict)
@@ -366,7 +411,9 @@ class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
                 for response in [YES, NO]:
                     with self.subTest(patient_admitted=response):
                         cleaned_data.update(patient_admitted=response)
-                        form_validator = VitalSignsFormValidator(cleaned_data=cleaned_data)
+                        form_validator = VitalSignsFormValidator(
+                            cleaned_data=cleaned_data, model=VitalSignsMockModel
+                        )
                         try:
                             form_validator.validate()
                         except ValidationError as e:
