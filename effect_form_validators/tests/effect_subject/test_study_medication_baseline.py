@@ -4,6 +4,7 @@ from unittest.mock import patch
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
+from django_mock_queries.query import MockModel
 from edc_appointment.constants import TODAY, TOMORROW
 from edc_constants.constants import NO, NOT_APPLICABLE, YES
 from edc_utils import formatted_date, get_utcnow
@@ -14,6 +15,12 @@ from effect_form_validators.effect_subject import (
 )
 
 from ..mixins import FormValidatorTestMixin, TestCaseMixin
+
+
+class StudyMedicationMockModel(MockModel):
+    @classmethod
+    def related_visit_model_attr(cls):
+        return "subject_visit"
 
 
 class StudyMedicationBaselineFormValidator(FormValidatorTestMixin, Base):
@@ -78,7 +85,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
     def test_cleaned_data_at_baseline_ok(self):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -96,7 +105,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                         visit_code=visit_code, visit_code_sequence=seq
                     )
                     form_validator = StudyMedicationBaselineFormValidator(
-                        cleaned_data=cleaned_data
+                        cleaned_data=cleaned_data, model=StudyMedicationMockModel
                     )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
@@ -116,7 +125,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_not_initiated_reason": "",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_not_initiated_reason", cm.exception.error_dict)
@@ -138,7 +149,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_notes": "",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -153,7 +166,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_not_initiated_reason": "Some reason",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_not_initiated_reason", cm.exception.error_dict)
@@ -171,7 +186,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_dose_datetime": None,
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose_datetime", cm.exception.error_dict)
@@ -192,7 +209,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_notes": "",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose_datetime", cm.exception.error_dict)
@@ -215,7 +234,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_dose_datetime": report_datetime,
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -230,7 +251,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             report_datetime=report_datetime,
         )
         cleaned_data.update({"flucon_dose_datetime": report_datetime - relativedelta(days=1)})
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose_datetime", cm.exception.error_dict)
@@ -248,7 +271,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             report_datetime=report_datetime,
         )
         cleaned_data.update({"flucon_dose_datetime": report_datetime + relativedelta(days=1)})
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose_datetime", cm.exception.error_dict)
@@ -266,7 +291,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_dose": None,
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose", cm.exception.error_dict)
@@ -287,7 +314,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_notes": "",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose", cm.exception.error_dict)
@@ -311,7 +340,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -325,7 +354,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
         cleaned_data.update({"flucon_next_dose": NOT_APPLICABLE})
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_next_dose", cm.exception.error_dict)
@@ -343,7 +374,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_next_dose": TOMORROW,
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_next_dose", cm.exception.error_dict)
@@ -357,7 +390,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_next_dose": TODAY,
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -373,7 +408,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_notes": "",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_notes", cm.exception.error_dict)
@@ -392,7 +429,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucon_notes": "Some other flucon notes here",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -417,7 +456,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_notes": "",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -432,7 +473,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_not_initiated_reason": "",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_not_initiated_reason", cm.exception.error_dict)
@@ -458,7 +501,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_notes": "",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -476,7 +521,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -495,7 +540,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_dose_datetime": None,
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_dose_datetime", cm.exception.error_dict)
@@ -517,7 +564,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -536,7 +583,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             report_datetime=report_datetime,
         )
         cleaned_data.update({"flucyt_dose_datetime": report_datetime - relativedelta(days=1)})
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_dose_datetime", cm.exception.error_dict)
@@ -554,7 +603,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             report_datetime=report_datetime,
         )
         cleaned_data.update({"flucyt_dose_datetime": report_datetime + relativedelta(days=1)})
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_dose_datetime", cm.exception.error_dict)
@@ -567,7 +618,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
         cleaned_data.update({"flucyt_dose": None})
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_dose", cm.exception.error_dict)
@@ -590,7 +643,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -607,7 +660,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update({dose_field: None})
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -643,7 +696,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     # Update individual dose being tested
                     cleaned_data.update({dose_field: 1000})
                     form_validator = StudyMedicationBaselineFormValidator(
-                        cleaned_data=cleaned_data
+                        cleaned_data=cleaned_data, model=StudyMedicationMockModel
                     )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
@@ -681,7 +734,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 try:
                     form_validator.validate()
@@ -714,7 +767,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     # Update individual dose being tested
                     cleaned_data.update({dose_field: 0})
                     form_validator = StudyMedicationBaselineFormValidator(
-                        cleaned_data=cleaned_data
+                        cleaned_data=cleaned_data, model=StudyMedicationMockModel
                     )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
@@ -747,7 +800,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 try:
                     form_validator.validate()
@@ -777,7 +830,8 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data,
+                    model=StudyMedicationMockModel,
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -827,7 +881,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                         }
                     )
                     form_validator = StudyMedicationBaselineFormValidator(
-                        cleaned_data=cleaned_data
+                        cleaned_data=cleaned_data, model=StudyMedicationMockModel
                     )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
@@ -841,7 +895,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
         cleaned_data.update({"flucyt_next_dose": NOT_APPLICABLE})
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_next_dose", cm.exception.error_dict)
@@ -890,7 +946,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                         }
                     )
                     form_validator = StudyMedicationBaselineFormValidator(
-                        cleaned_data=cleaned_data
+                        cleaned_data=cleaned_data, model=StudyMedicationMockModel
                     )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
@@ -915,7 +971,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -944,7 +1000,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 try:
                     form_validator.validate()
@@ -978,7 +1034,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -1018,7 +1074,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 try:
                     form_validator.validate()
@@ -1042,7 +1098,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_notes": "Some flucyt notes here",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_notes", cm.exception.error_dict)
@@ -1066,7 +1124,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_notes": "",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_notes", cm.exception.error_dict)
@@ -1090,7 +1150,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                 "flucyt_notes": "Some other flucyt notes here",
             }
         )
-        form_validator = StudyMedicationBaselineFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationBaselineFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:

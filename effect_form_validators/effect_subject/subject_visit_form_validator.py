@@ -85,7 +85,7 @@ class SubjectVisitFormValidator(VisitFormValidator):
 
     def applicable_if_not_missed(self, field_applicable: str) -> bool:
         if (
-            self.cleaned_data.get("appointment").appt_timing == MISSED_APPT
+            self.appointment.appt_timing == MISSED_APPT
             and self.cleaned_data.get("assessment_type") != NOT_APPLICABLE
         ):
             self.raise_validation_error(

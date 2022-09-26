@@ -8,7 +8,7 @@ from edc_visit_schedule.utils import is_baseline
 
 class StudyMedicationBaselineFormValidator(CrfFormValidator):
     def clean(self) -> None:
-        if not is_baseline(instance=self.subject_visit):
+        if not is_baseline(instance=self.related_visit):
             self.raise_validation_error(
                 {"__all__": "This form may only be completed at baseline"}, INVALID_ERROR
             )
@@ -24,14 +24,12 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
         )
         self.required_if(YES, field="flucon_initiated", field_required="flucon_dose_datetime")
 
-        if self.cleaned_data.get("report_datetime") and self.cleaned_data.get(
-            "flucon_dose_datetime"
-        ):
+        if self.report_datetime and self.cleaned_data.get("flucon_dose_datetime"):
             if (
-                self.cleaned_data.get("report_datetime").date()
+                self.report_datetime.date()
                 != self.cleaned_data.get("flucon_dose_datetime").date()
             ):
-                dte_as_str = formatted_date(self.cleaned_data.get("report_datetime").date())
+                dte_as_str = formatted_date(self.report_datetime.date())
                 self.raise_validation_error(
                     {"flucon_dose_datetime": f"Expected {dte_as_str}"}, INVALID_ERROR
                 )
@@ -76,14 +74,12 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
         )
 
         self.required_if(YES, field="flucyt_initiated", field_required="flucyt_dose_datetime")
-        if self.cleaned_data.get("report_datetime") and self.cleaned_data.get(
-            "flucyt_dose_datetime"
-        ):
+        if self.report_datetime and self.cleaned_data.get("flucyt_dose_datetime"):
             if (
-                self.cleaned_data.get("report_datetime").date()
+                self.report_datetime.date()
                 != self.cleaned_data.get("flucyt_dose_datetime").date()
             ):
-                dte_as_str = formatted_date(self.cleaned_data.get("report_datetime").date())
+                dte_as_str = formatted_date(self.report_datetime.date())
                 self.raise_validation_error(
                     {"flucyt_dose_datetime": f"Expected {dte_as_str}"}, INVALID_ERROR
                 )

@@ -11,6 +11,13 @@ from effect_form_validators.effect_subject import PatientTreatmentFormValidator 
 
 from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
+
+class PatientTreatmentMockModel(MockModel):
+    @classmethod
+    def related_visit_model_attr(cls):
+        return "subject_visit"
+
+
 MyInstance = namedtuple("MyList", ["name", "display_name"])
 
 
@@ -32,7 +39,8 @@ class PatientTreatmentFormValidator(FormValidatorTestMixin, Base):
 
 class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMixin, TestCase):
 
-    form_validator_default_form_cls = PatientTreatmentFormValidator
+    form_validator_cls = PatientTreatmentFormValidator
+    form_validator_model_cls = PatientTreatmentMockModel
 
     def setUp(self):
         self.antibiotics_obj = MockModel(
@@ -135,7 +143,9 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
 
     def test_cleaned_data_patient_no_cm_no_tx_ok(self):
         cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = PatientTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=PatientTreatmentMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:
@@ -144,7 +154,9 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
     def test_cleaned_data_patient_with_cm_with_all_tx_ok(self):
         cleaned_data = self.get_cleaned_data_patient_with_cm_with_all_tx()
 
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = PatientTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=PatientTreatmentMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:
@@ -158,7 +170,9 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
                 "cm_confirmed": NO,
             }
         )
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = PatientTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=PatientTreatmentMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cm_confirmed", cm.exception.error_dict)
@@ -175,7 +189,9 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
                 "cm_confirmed": NOT_APPLICABLE,
             }
         )
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = PatientTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=PatientTreatmentMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cm_confirmed", cm.exception.error_dict)
@@ -193,7 +209,9 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
                 "on_cm_tx": NO,
             }
         )
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = PatientTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=PatientTreatmentMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("on_cm_tx", cm.exception.error_dict)
@@ -212,7 +230,9 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             }
         )
 
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = PatientTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=PatientTreatmentMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("on_cm_tx", cm.exception.error_dict)
@@ -231,7 +251,9 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
                 "cm_tx_given": "1w_amb_5fc",
             }
         )
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = PatientTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=PatientTreatmentMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cm_tx_given", cm.exception.error_dict)

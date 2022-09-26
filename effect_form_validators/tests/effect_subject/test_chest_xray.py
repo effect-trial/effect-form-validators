@@ -12,6 +12,12 @@ from effect_form_validators.effect_subject import ChestXrayFormValidator as Base
 from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
 
+class ChestXrayMockModel(MockModel):
+    @classmethod
+    def related_visit_model_attr(cls):
+        return "subject_visit"
+
+
 class ChestXrayFormValidator(FormValidatorTestMixin, Base):
     @property
     def consent_datetime(self) -> datetime:
@@ -53,7 +59,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
 
     def test_chest_xray_ok(self):
         self.subject_visit.signsandsymptoms.xray_performed = YES
-        form_validator = ChestXrayFormValidator(cleaned_data=self.get_cleaned_data())
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=self.get_cleaned_data(), model=ChestXrayMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -61,7 +69,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
 
     def test_no_chest_xray_raises(self):
         self.subject_visit.signsandsymptoms.xray_performed = NO
-        form_validator = ChestXrayFormValidator(cleaned_data=self.get_cleaned_data())
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=self.get_cleaned_data(), model=ChestXrayMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("chest_xray", cm.exception.error_dict)
@@ -75,7 +85,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             chest_xray_results=None,
             chest_xray_results_other=None,
         )
-        form_validator = ChestXrayFormValidator(cleaned_data=cleaned_data)
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -90,7 +102,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             chest_xray_results=MockSet(self.xray_result_normal),
             chest_xray_results_other="blah",
         )
-        form_validator = ChestXrayFormValidator(cleaned_data=cleaned_data)
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("chest_xray_results_other", cm.exception.error_dict)
@@ -104,7 +118,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             chest_xray_results=MockSet(self.xray_result_other),
             chest_xray_results_other=None,
         )
-        form_validator = ChestXrayFormValidator(cleaned_data=cleaned_data)
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("chest_xray_results_other", cm.exception.error_dict)
@@ -118,7 +134,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             chest_xray_results=MockSet(self.xray_result_other),
             chest_xray_results_other="blah",
         )
-        form_validator = ChestXrayFormValidator(cleaned_data=cleaned_data)
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -133,7 +151,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             chest_xray_results=None,
             chest_xray_results_other=None,
         )
-        form_validator = ChestXrayFormValidator(cleaned_data=cleaned_data)
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("chest_xray_date", cm.exception.error_dict)
@@ -147,7 +167,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             chest_xray_results=None,
             chest_xray_results_other=None,
         )
-        form_validator = ChestXrayFormValidator(cleaned_data=cleaned_data)
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("chest_xray_results", cm.exception.error_dict)
@@ -161,7 +183,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             chest_xray_results=None,
             chest_xray_results_other=None,
         )
-        form_validator = ChestXrayFormValidator(cleaned_data=cleaned_data)
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("chest_xray", cm.exception.error_dict)
@@ -175,7 +199,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             chest_xray_results=None,
             chest_xray_results_other=None,
         )
-        form_validator = ChestXrayFormValidator(cleaned_data=cleaned_data)
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("chest_xray_date", cm.exception.error_dict)
@@ -190,7 +216,9 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             chest_xray_results=xray_results,
             chest_xray_results_other=None,
         )
-        form_validator = ChestXrayFormValidator(cleaned_data=cleaned_data)
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("chest_xray_results", cm.exception.error_dict)

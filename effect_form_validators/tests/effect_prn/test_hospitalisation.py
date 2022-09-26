@@ -16,7 +16,7 @@ class HospitalizationFormValidator(FormValidatorTestMixin, Base):
 
 class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixin, TestCase):
 
-    form_validator_default_form_cls = HospitalizationFormValidator
+    form_validator_cls = HospitalizationFormValidator
 
     def get_cleaned_data(self, **kwargs) -> dict:
         return {
