@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 from django_mock_queries.query import MockModel, MockSet
 from edc_appointment.constants import TODAY, TOMORROW
-from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
+from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, PER_PROTOCOL, YES
 from edc_utils import get_utcnow
 from edc_visit_schedule.constants import DAY01, DAY03, DAY14, WEEK10
 
@@ -45,8 +45,8 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
 
         self.modifications_choice_per_protocol = MockModel(
             mock_name="DoseModificationReasons",
-            name="per_protocol",
-            display_name="per_protocol",
+            name=PER_PROTOCOL,
+            display_name=PER_PROTOCOL,
         )
 
         self.modifications_choice_renal_adjustment = MockModel(

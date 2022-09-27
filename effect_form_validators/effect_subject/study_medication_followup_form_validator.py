@@ -1,4 +1,4 @@
-from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
+from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, PER_PROTOCOL, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_utils.text import formatted_date
@@ -19,8 +19,7 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
     def validate_modifications(self) -> None:
         self.m2m_required_if(YES, field="modifications", m2m_field="modifications_reason")
 
-        # TODO: Make per_protocol constant
-        self.m2m_single_selection_if("per_protocol", m2m_field="modifications_reason")
+        self.m2m_single_selection_if(PER_PROTOCOL, m2m_field="modifications_reason")
 
         self.m2m_other_specify(
             OTHER,
