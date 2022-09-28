@@ -1,4 +1,4 @@
-from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
+from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, PER_PROTOCOL, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_utils.text import formatted_date
@@ -7,7 +7,7 @@ from edc_visit_schedule.utils import is_baseline
 
 class StudyMedicationFollowupFormValidator(CrfFormValidator):
     def clean(self) -> None:
-        if is_baseline(instance=self.subject_visit):
+        if is_baseline(instance=self.related_visit):
             self.raise_validation_error(
                 {"__all__": "This form may not be completed at baseline"}, INVALID_ERROR
             )
@@ -19,8 +19,7 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
     def validate_modifications(self) -> None:
         self.m2m_required_if(YES, field="modifications", m2m_field="modifications_reason")
 
-        # TODO: Make per_protocol constant
-        self.m2m_single_selection_if("per_protocol", m2m_field="modifications_reason")
+        self.m2m_single_selection_if(PER_PROTOCOL, m2m_field="modifications_reason")
 
         self.m2m_other_specify(
             OTHER,
@@ -51,13 +50,9 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
         )
 
         self.required_if(YES, field="flucon_modified", field_required="flucon_dose_datetime")
-        if self.cleaned_data.get("report_datetime") and self.cleaned_data.get(
-            "flucon_dose_datetime"
-        ):
+        if self.report_datetime and self.cleaned_data.get("flucon_dose_datetime"):
             # TODO: what are we trying to check/prevent here? Is this right?
-            if self.cleaned_data.get("report_datetime") > self.cleaned_data.get(
-                "flucon_dose_datetime"
-            ):
+            if self.report_datetime > self.cleaned_data.get("flucon_dose_datetime"):
                 self.raise_validation_error(
                     {"flucon_dose_datetime": "Cannot be after report datetime"}, INVALID_ERROR
                 )
@@ -91,15 +86,13 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
         )
 
         self.required_if(YES, field="flucyt_modified", field_required="flucyt_dose_datetime")
-        if self.cleaned_data.get("report_datetime") and self.cleaned_data.get(
-            "flucyt_dose_datetime"
-        ):
+        if self.report_datetime and self.cleaned_data.get("flucyt_dose_datetime"):
             # TODO: what are we trying to check/prevent here? Is this right?
             if (
-                self.cleaned_data.get("report_datetime").date()
+                self.report_datetime.date()
                 > self.cleaned_data.get("flucyt_dose_datetime").date()
             ):
-                dte_as_str = formatted_date(self.cleaned_data.get("report_datetime").date())
+                dte_as_str = formatted_date(self.report_datetime.date())
                 self.raise_validation_error(
                     {"flucyt_dose_datetime": f"Expected {dte_as_str}"}, INVALID_ERROR
                 )

@@ -30,10 +30,10 @@ class ChestXrayFormValidator(CrfFormValidator):
 
     def validate_against_ssx(self):
         try:
-            xray_performed = self.cleaned_data.get(
-                "subject_visit"
-            ).signsandsymptoms.xray_performed
-        except AttributeError:
+            xray_performed = self.related_visit.signsandsymptoms.xray_performed
+        except AttributeError as e:
+            if "signsandsymptoms" not in str(e):
+                raise
             xray_performed = None
 
         if xray_performed and self.cleaned_data.get("chest_xray"):
@@ -58,9 +58,7 @@ class ChestXrayFormValidator(CrfFormValidator):
                 )
 
     def validate_chest_xray_date(self):
-        if self.cleaned_data.get("report_datetime") and self.cleaned_data.get(
-            "chest_xray_date"
-        ):
+        if self.report_datetime and self.cleaned_data.get("chest_xray_date"):
             if self.cleaned_data.get("chest_xray_date") < self.consent_datetime.date():
                 self.raise_validation_error(
                     {"chest_xray_date": "Invalid. Cannot be before consent date"},
@@ -87,13 +85,22 @@ class ChestXrayFormValidator(CrfFormValidator):
             exclude_opts = dict(id=self.instance.id)
         except AttributeError:
             exclude_opts = {}
+        exclude_opts.update(
+            {
+                f"{self.related_visit_model_attr}__appointment__timepoint__lt": (
+                    self.related_visit.appointment.timepoint
+                )
+            }
+        )
         qs = (
-            self.instance.__class__.objects.filter(subject_visit=self.subject_visit)
-            .exclude(
-                subject_visit__appointment__timepoint__lt=self.subject_visit.appointment.timepoint,  # noqa
-                **exclude_opts,
+            self.instance.__class__.objects.filter(
+                **{f"{self.related_visit_model_attr}": self.related_visit}
             )
-            .order_by("subject_visit__visit_code", "subject_visit__visit_code_sequence")
+            .exclude(**exclude_opts)
+            .order_by(
+                f"{self.related_visit_model_attr}__visit_code",
+                f"{self.related_visit_model_attr}__visit_code_sequence",
+            )
         )
         try:
             return qs.last().chest_xray_date

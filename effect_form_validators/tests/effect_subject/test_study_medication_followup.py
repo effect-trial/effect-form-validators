@@ -6,7 +6,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 from django_mock_queries.query import MockModel, MockSet
 from edc_appointment.constants import TODAY, TOMORROW
-from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
+from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, PER_PROTOCOL, YES
 from edc_utils import get_utcnow
 from edc_visit_schedule.constants import DAY01, DAY03, DAY14, WEEK10
 
@@ -15,6 +15,12 @@ from effect_form_validators.effect_subject import (
 )
 
 from ..mixins import FormValidatorTestMixin, TestCaseMixin
+
+
+class StudyMedicationMockModel(MockModel):
+    @classmethod
+    def related_visit_model_attr(cls):
+        return "subject_visit"
 
 
 class StudyMedicationFollowupFormValidator(FormValidatorTestMixin, Base):
@@ -39,8 +45,8 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
 
         self.modifications_choice_per_protocol = MockModel(
             mock_name="DoseModificationReasons",
-            name="per_protocol",
-            display_name="per_protocol",
+            name=PER_PROTOCOL,
+            display_name=PER_PROTOCOL,
         )
 
         self.modifications_choice_renal_adjustment = MockModel(
@@ -110,7 +116,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                         visit_code_sequence=seq,
                     )
                     form_validator = StudyMedicationFollowupFormValidator(
-                        cleaned_data=cleaned_data
+                        cleaned_data=cleaned_data, model=StudyMedicationMockModel
                     )
                     try:
                         form_validator.validate()
@@ -120,7 +126,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     def test_at_baseline_raises(self):
         self.mock_is_baseline.return_value = True
         cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("__all__", cm.exception.error_dict)
@@ -139,7 +147,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "modifications_reason": MockSet(),
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("modifications_reason", cm.exception.error_dict)
@@ -157,7 +167,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "modifications_reason": MockSet(self.modifications_choice_per_protocol),
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("modifications_reason", cm.exception.error_dict)
@@ -179,7 +191,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 ),
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("modifications_reason", cm.exception.error_dict)
@@ -197,7 +211,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 ),
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("modifications_reason", cm.exception.error_dict)
@@ -215,7 +231,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "modifications_reason": MockSet(self.modifications_choice_per_protocol),
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -235,7 +253,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "modifications_reason_other": "Some other reason...",
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -251,7 +271,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "modifications_reason_other": "",
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("modifications_reason_other", cm.exception.error_dict)
@@ -270,7 +292,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "modifications_reason_other": "Some other reason",
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("modifications_reason_other", cm.exception.error_dict)
@@ -302,7 +326,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                         }
                     )
                     form_validator = StudyMedicationFollowupFormValidator(
-                        cleaned_data=cleaned_data
+                        cleaned_data=cleaned_data, model=StudyMedicationMockModel
                     )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
@@ -341,7 +365,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucyt_dose_2200": None,
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -364,7 +390,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucyt_modified": YES,
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -384,7 +412,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationFollowupFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -403,7 +431,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucon_dose_datetime": None,
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose_datetime", cm.exception.error_dict)
@@ -421,7 +451,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucon_dose_datetime": get_utcnow() + relativedelta(minutes=1),
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose_datetime", cm.exception.error_dict)
@@ -444,7 +476,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #             "flucyt_dose_datetime": report_datetime,
     #         }
     #     )
-    #     form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+    #     form_validator = StudyMedicationFollowupFormValidator(
+    #         cleaned_data=cleaned_data, model=StudyMedicationMockModel
+    #     )
     #     try:
     #         form_validator.validate()
     #     except ValidationError as e:
@@ -461,7 +495,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #     cleaned_data.update(
     #         {"flucon_dose_datetime": report_datetime - relativedelta(days=1)}
     #     )
-    #     form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+    #     form_validator = StudyMedicationFollowupFormValidator(
+    #         cleaned_data=cleaned_data, model=StudyMedicationMockModel
+    #     )
     #     with self.assertRaises(ValidationError) as cm:
     #         form_validator.validate()
     #     self.assertIn("flucon_dose_datetime", cm.exception.error_dict)
@@ -481,7 +517,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #     cleaned_data.update(
     #         {"flucon_dose_datetime": report_datetime + relativedelta(days=1)}
     #     )
-    #     form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+    # form_validator = StudyMedicationFollowupFormValidator(
+    #     cleaned_data=cleaned_data, model=StudyMedicationMockModel
+    # )
     #     with self.assertRaises(ValidationError) as cm:
     #         form_validator.validate()
     #     self.assertIn("flucon_dose_datetime", cm.exception.error_dict)
@@ -499,7 +537,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucon_dose": None,
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose", cm.exception.error_dict)
@@ -518,7 +558,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucon_dose": 1200,
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose", cm.exception.error_dict)
@@ -544,7 +586,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                         }
                     )
                     form_validator = StudyMedicationFollowupFormValidator(
-                        cleaned_data=cleaned_data
+                        cleaned_data=cleaned_data, model=StudyMedicationMockModel
                     )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
@@ -558,7 +600,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
         cleaned_data.update({"flucon_next_dose": NOT_APPLICABLE})
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_next_dose", cm.exception.error_dict)
@@ -578,7 +622,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucon_notes": "Some flucon notes here",
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_notes", cm.exception.error_dict)
@@ -597,7 +643,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #             "flucon_notes": "",
     #         }
     #     )
-    #     form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+    # form_validator = StudyMedicationFollowupFormValidator(
+    #     cleaned_data=cleaned_data, model=StudyMedicationMockModel
+    # )
     #     with self.assertRaises(ValidationError) as cm:
     #         form_validator.validate()
     #     self.assertIn("flucon_notes", cm.exception.error_dict)
@@ -616,7 +664,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucon_notes": "Some other flucon notes here",
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -632,7 +682,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucon_notes": "Some other flucon notes here",
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -655,7 +707,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationFollowupFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -686,7 +738,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucyt_dose_2200": None,
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -701,7 +755,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucyt_dose_datetime": None,
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_dose_datetime", cm.exception.error_dict)
@@ -722,7 +778,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationFollowupFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -743,7 +799,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #     cleaned_data.update(
     #         {"flucyt_dose_datetime": report_datetime - relativedelta(days=1)}
     #     )
-    #     form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+    # form_validator = StudyMedicationFollowupFormValidator(
+    #     cleaned_data=cleaned_data, model=StudyMedicationMockModel
+    # )
     #     with self.assertRaises(ValidationError) as cm:
     #         form_validator.validate()
     #     self.assertIn("flucyt_dose_datetime", cm.exception.error_dict)
@@ -763,7 +821,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #     cleaned_data.update(
     #         {"flucyt_dose_datetime": report_datetime + relativedelta(days=1)}
     #     )
-    #     form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+    # form_validator = StudyMedicationFollowupFormValidator(
+    #     cleaned_data=cleaned_data, model=StudyMedicationMockModel
+    # )
     #     with self.assertRaises(ValidationError) as cm:
     #         form_validator.validate()
     #     self.assertIn("flucyt_dose_datetime", cm.exception.error_dict)
@@ -776,7 +836,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
         cleaned_data.update({"flucyt_dose": None})
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_dose", cm.exception.error_dict)
@@ -798,7 +860,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationFollowupFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -815,7 +877,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update({dose_field: None})
                 form_validator = StudyMedicationFollowupFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -848,7 +910,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     # Update individual dose being tested
                     cleaned_data.update({dose_field: 1000})
                     form_validator = StudyMedicationFollowupFormValidator(
-                        cleaned_data=cleaned_data
+                        cleaned_data=cleaned_data, model=StudyMedicationMockModel
                     )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
@@ -870,7 +932,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucyt_dose_2200": 0,
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -898,7 +962,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationFollowupFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 try:
                     form_validator.validate()
@@ -906,7 +970,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     #
-    def test_sum_individual_flucyt_doses_not_eq_flucyt_dose_raises(self):
+    def test_sum_individual_flucyt_doses_not_eq_flucyt_dose_raises2(self):
         self.mock_is_baseline.return_value = False
         dose_schedules = (
             (0, 0, 0, 0),
@@ -929,7 +993,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                     }
                 )
                 form_validator = StudyMedicationFollowupFormValidator(
-                    cleaned_data=cleaned_data
+                    cleaned_data=cleaned_data, model=StudyMedicationMockModel
                 )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
@@ -976,7 +1040,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                         }
                     )
                     form_validator = StudyMedicationFollowupFormValidator(
-                        cleaned_data=cleaned_data
+                        cleaned_data=cleaned_data, model=StudyMedicationMockModel
                     )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
@@ -990,7 +1054,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
         cleaned_data.update({"flucyt_next_dose": NOT_APPLICABLE})
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_next_dose", cm.exception.error_dict)
@@ -1014,7 +1080,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucyt_notes": "Some flucyt notes here",
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucyt_notes", cm.exception.error_dict)
@@ -1037,7 +1105,9 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "flucyt_notes": "Some other flucyt notes here",
             }
         )
-        form_validator = StudyMedicationFollowupFormValidator(cleaned_data=cleaned_data)
+        form_validator = StudyMedicationFollowupFormValidator(
+            cleaned_data=cleaned_data, model=StudyMedicationMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:

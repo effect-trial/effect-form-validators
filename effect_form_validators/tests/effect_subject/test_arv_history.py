@@ -10,6 +10,12 @@ from effect_form_validators.effect_subject import ArvHistoryFormValidator as Bas
 from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
 
+class ArvHistoryMockModel(MockModel):
+    @classmethod
+    def related_visit_model_attr(cls):
+        return "subject_visit"
+
+
 class ArvHistoryFormValidator(FormValidatorTestMixin, Base):
     @property
     def subject_screening(self):
@@ -76,7 +82,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
 
     def test_cleaned_data_ok(self):
         cleaned_data = self.get_cleaned_data()
-        form_validator = ArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:
@@ -102,7 +110,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "hiv_dx_date_estimated": NO,
             }
         )
-        form_validator = OverriddenArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = OverriddenArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:
@@ -128,7 +138,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "hiv_dx_date_estimated": NO,
             }
         )
-        form_validator = OverriddenArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = OverriddenArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:
@@ -154,7 +166,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "hiv_dx_date_estimated": NO,
             }
         )
-        form_validator = OverriddenArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = OverriddenArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("hiv_dx_date", cm.exception.error_dict)
@@ -177,7 +191,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "cd4_date_estimated": NO,
             }
         )
-        form_validator = ArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:
@@ -197,7 +213,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "cd4_date_estimated": NO,
             }
         )
-        form_validator = ArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:
@@ -216,7 +234,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "cd4_date_estimated": NO,
             }
         )
-        form_validator = ArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cd4_date", cm.exception.error_dict)
@@ -247,7 +267,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "cd4_date_estimated": NO,
             }
         )
-        form_validator = OverriddenArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = OverriddenArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:
@@ -277,7 +299,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "cd4_date_estimated": NO,
             }
         )
-        form_validator = OverriddenArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = OverriddenArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cd4_value", cm.exception.error_dict)
@@ -309,7 +333,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "cd4_date_estimated": NO,
             }
         )
-        form_validator = OverriddenArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = OverriddenArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cd4_date", cm.exception.error_dict)
@@ -340,7 +366,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "cd4_date_estimated": NO,
             }
         )
-        form_validator = OverriddenArvHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = OverriddenArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:

@@ -7,7 +7,7 @@ from edc_screening.utils import get_subject_screening_model_cls
 class ArvHistoryFormValidator(CrfFormValidator):
     @property
     def subject_screening(self):
-        subject_identifier = self.cleaned_data.get("subject_visit").subject_identifier
+        subject_identifier = self.related_visit.subject_identifier
         subject_screening_model_cls = get_subject_screening_model_cls()
         return subject_screening_model_cls.objects.get(subject_identifier=subject_identifier)
 

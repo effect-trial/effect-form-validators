@@ -19,7 +19,7 @@ class MentalStatusFormValidator(CrfFormValidator):
 
     def validate_if_baseline(self):
         """Validate criteria that only holds at baseline."""
-        baseline = is_baseline(instance=self.cleaned_data.get("subject_visit"))
+        baseline = is_baseline(instance=self.related_visit)
         if baseline:
             for sx in ["recent_seizure", "behaviour_change", "confusion"]:
                 if self.cleaned_data.get(sx) == YES:
@@ -54,8 +54,8 @@ class MentalStatusFormValidator(CrfFormValidator):
     def validate_if_scheduled_w10_or_w24(self):
         """Validate criteria that only holds in w10 or w24 visits."""
         scheduled_w10_or_w24 = (
-            self.cleaned_data.get("subject_visit").visit_code in [WEEK10, WEEK24]
-            and self.cleaned_data.get("subject_visit").visit_code_sequence == 0
+            self.related_visit.visit_code in [WEEK10, WEEK24]
+            and self.related_visit.visit_code_sequence == 0
         )
         self.applicable_if_true(
             condition=scheduled_w10_or_w24,

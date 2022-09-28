@@ -6,7 +6,7 @@ from edc_csf.form_validators import (
     LpFormValidatorMixin,
     QuantitativeCsfFormValidatorMixin,
 )
-from edc_lab import CrfRequisitionFormValidatorMixin
+from edc_lab.form_validators import CrfRequisitionFormValidatorMixin
 
 
 class LpCsfFormValidator(

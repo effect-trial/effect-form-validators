@@ -9,6 +9,12 @@ from effect_form_validators.effect_subject import PatientHistoryFormValidator as
 from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
 
+class PatientHistoryMockModel(MockModel):
+    @classmethod
+    def related_visit_model_attr(cls):
+        return "subject_visit"
+
+
 class PatientHistoryFormValidator(FormValidatorTestMixin, Base):
     pass
 
