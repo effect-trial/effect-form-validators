@@ -9,7 +9,7 @@ from .lp_csf_form_validator import LpCsfFormValidator
 from .medication_adherence_form_validator import MedicationAdherenceFormValidator
 from .mental_status_form_validator import MentalStatusFormValidator
 from .participant_history_form_validator import ParticipantHistoryFormValidator
-from .patient_treatment_form_validator import PatientTreatmentFormValidator
+from .participant_treatment_form_validator import ParticipantTreatmentFormValidator
 from .signs_and_symptoms_form_validator import SignsAndSymptomsFormValidator
 from .study_medication_baseline_form_validator import (
     StudyMedicationBaselineFormValidator,
