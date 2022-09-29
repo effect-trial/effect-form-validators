@@ -4,22 +4,24 @@ from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
 
-from effect_form_validators.effect_subject import PatientHistoryFormValidator as Base
+from effect_form_validators.effect_subject import (
+    ParticipantHistoryFormValidator as Base,
+)
 
 from ..mixins import FormValidatorTestMixin, TestCaseMixin
 
 
-class PatientHistoryMockModel(MockModel):
+class ParticipantHistoryMockModel(MockModel):
     @classmethod
     def related_visit_model_attr(cls):
         return "subject_visit"
 
 
-class PatientHistoryFormValidator(FormValidatorTestMixin, Base):
+class ParticipantHistoryFormValidator(FormValidatorTestMixin, Base):
     pass
 
 
-class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
+class TestParticipantHistoryFormValidator(TestCaseMixin, TestCase):
     def setUp(self) -> None:
         super().setUp()
         self.medications_choice_na = MockModel(
@@ -69,7 +71,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
 
     def test_cleaned_data_ok(self):
         cleaned_data = self.get_cleaned_data()
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -83,7 +85,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_days": None,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_days", cm.exception.error_dict)
@@ -98,7 +100,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_dose": "1200_mg_d",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -112,7 +114,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_days": 2,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_days", cm.exception.error_dict)
@@ -130,7 +132,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_dose": NOT_APPLICABLE,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose", cm.exception.error_dict)
@@ -144,7 +146,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_dose": "800_mg_d",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -159,7 +161,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_dose": "800_mg_d",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose", cm.exception.error_dict)
@@ -178,7 +180,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_dose_other": None,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose_other", cm.exception.error_dict)
@@ -193,7 +195,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_dose_other_reason": "reason for other dose",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -209,7 +211,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_dose_other": 400,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose_other", cm.exception.error_dict)
@@ -229,7 +231,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_dose_other_reason": "",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose_other_reason", cm.exception.error_dict)
@@ -243,7 +245,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_dose_other_reason": "reason for other dose",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -260,7 +262,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "flucon_dose_other_reason": "Some other reason",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("flucon_dose_other_reason", cm.exception.error_dict)
@@ -277,7 +279,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "neuro_abnormality_details": "",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("neuro_abnormality_details", cm.exception.error_dict)
@@ -291,7 +293,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "neuro_abnormality_details": "Details of abnormality",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -305,7 +307,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "neuro_abnormality_details": "Details of abnormality",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("neuro_abnormality_details", cm.exception.error_dict)
@@ -322,7 +324,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_dx_date": None,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("tb_dx_date", cm.exception.error_dict)
@@ -338,7 +340,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_site": "extra_pulmonary",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -352,7 +354,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_dx_date": self.consent_datetime.date() - relativedelta(years=1),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("tb_dx_date", cm.exception.error_dict)
@@ -370,7 +372,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_dx_date_estimated": NOT_APPLICABLE,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("tb_dx_date_estimated", cm.exception.error_dict)
@@ -385,7 +387,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_site": "pulmonary",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -400,7 +402,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_dx_date_estimated": NO,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("tb_dx_date_estimated", cm.exception.error_dict)
@@ -419,7 +421,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_site": NOT_APPLICABLE,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("tb_site", cm.exception.error_dict)
@@ -429,7 +431,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         )
 
         cleaned_data.update({"tb_site": "extra_pulmonary"})
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -445,7 +447,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_site": "pulmonary",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("tb_site", cm.exception.error_dict)
@@ -462,7 +464,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_tx_type": NOT_APPLICABLE,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("tb_tx_type", cm.exception.error_dict)
@@ -472,7 +474,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         )
 
         cleaned_data.update({"tb_tx_type": "ipt"})
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -488,7 +490,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                         "tb_tx_type": tx_type,
                     }
                 )
-                form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+                form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("tb_tx_type", cm.exception.error_dict)
@@ -498,7 +500,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 )
 
                 cleaned_data.update({"tb_tx_type": NOT_APPLICABLE})
-                form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+                form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -516,7 +518,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_tx_type": "active_tb",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("tb_tx_type", cm.exception.error_dict)
@@ -528,7 +530,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         )
 
         cleaned_data.update({"tb_tx_type": "ipt"})
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -547,7 +549,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "active_tb_tx": MockSet(self.tb_treatments_choice_hrze),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -565,7 +567,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_tx_type": "latent_tb",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("tb_tx_type", cm.exception.error_dict)
@@ -577,7 +579,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         )
 
         cleaned_data.update({"tb_tx_type": "ipt"})
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -595,7 +597,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_tx_type": "latent_tb",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -613,7 +615,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_tx_type": "ipt",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -631,7 +633,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "tb_tx_type": "ipt",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -650,7 +652,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "active_tb_tx": MockSet(),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("active_tb_tx", cm.exception.error_dict)
@@ -660,7 +662,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         )
 
         cleaned_data.update({"active_tb_tx": MockSet(self.tb_treatments_choice_hrze)})
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -681,7 +683,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                         "active_tb_tx": MockSet(self.tb_treatments_choice_hrze),
                     }
                 )
-                form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+                form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("active_tb_tx", cm.exception.error_dict)
@@ -691,7 +693,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 )
 
         cleaned_data.update({"active_tb_tx": None})
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -706,7 +708,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "active_tb_tx": MockSet(self.tb_treatments_choice_hrze),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("active_tb_tx", cm.exception.error_dict)
@@ -716,7 +718,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
         )
 
         cleaned_data.update({"active_tb_tx": None})
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -730,7 +732,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "previous_oi_name": "",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("previous_oi_name", cm.exception.error_dict)
@@ -747,7 +749,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 ),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -761,7 +763,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "previous_oi_name": "Prev OI",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("previous_oi_name", cm.exception.error_dict)
@@ -779,7 +781,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "previous_oi_date": None,
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("previous_oi_date", cm.exception.error_dict)
@@ -795,7 +797,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 ),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -811,7 +813,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 ),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("previous_oi_date", cm.exception.error_dict)
@@ -831,7 +833,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 ),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("previous_oi_date", cm.exception.error_dict)
@@ -849,7 +851,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "previous_oi_date": cleaned_data.get("report_datetime").date(),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -866,7 +868,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 ),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -880,7 +882,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_medications": MockSet(self.medications_choice_na),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("specify_medications", cm.exception.error_dict)
@@ -894,7 +896,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_medications": MockSet(self.medications_choice_tmp_smx),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -910,7 +912,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 ),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("specify_medications", cm.exception.error_dict)
@@ -924,7 +926,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_medications": MockSet(self.medications_choice_na),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("specify_medications", cm.exception.error_dict)
@@ -938,7 +940,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_medications": MockSet(self.medications_choice_tmp_smx),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -952,7 +954,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_medications": MockSet(self.medications_choice_tmp_smx),
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("specify_medications", cm.exception.error_dict)
@@ -973,7 +975,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_steroid_other": "",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("specify_steroid_other", cm.exception.error_dict)
@@ -987,7 +989,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_steroid_other": "Other steroid",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -1002,7 +1004,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_steroid_other": "Some other steroid",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("specify_steroid_other", cm.exception.error_dict)
@@ -1018,7 +1020,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_steroid_other": "Some other steroid",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("specify_steroid_other", cm.exception.error_dict)
@@ -1039,7 +1041,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_medications_other": "",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("specify_medications_other", cm.exception.error_dict)
@@ -1053,7 +1055,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_medications_other": "Other medication",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -1070,7 +1072,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_medications_other": "Other medication",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("specify_medications_other", cm.exception.error_dict)
@@ -1086,7 +1088,7 @@ class TestPatientHistoryFormValidator(TestCaseMixin, TestCase):
                 "specify_medications_other": "Other medication",
             }
         )
-        form_validator = PatientHistoryFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("specify_medications_other", cm.exception.error_dict)
