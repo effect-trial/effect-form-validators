@@ -3,7 +3,7 @@ from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 
 
-class PatientHistoryFormValidator(CrfFormValidator):
+class ParticipantHistoryFormValidator(CrfFormValidator):
     def _clean(self) -> None:
         self.validate_flucon()
 
