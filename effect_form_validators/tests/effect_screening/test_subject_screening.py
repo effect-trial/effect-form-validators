@@ -192,6 +192,45 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     cm.exception.error_dict.get("hiv_confirmed_method")[0].message,
                 )
 
+    def test_cd4_date_after_report_date_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "report_datetime": get_utcnow(),
+                "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                "cd4_date": get_utcnow_as_date() + relativedelta(days=1),
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("cd4_date", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. Cannot be after report date",
+            str(cm.exception.error_dict.get("cd4_date")),
+        )
+
+    def test_cd4_gt_21_days_before_report_date_raises(self):
+        for days in [22, 30, 60]:
+            with self.subTest(days_after=days):
+                cleaned_data = self.get_cleaned_data()
+                report_datetime = get_utcnow() - relativedelta(days=7)
+                cleaned_data.update(
+                    {
+                        "report_datetime": report_datetime,
+                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                        "cd4_date": report_datetime.date() - relativedelta(days=days),
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("cd4_date", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. Cannot be more than 21 days before the report date",
+                    str(cm.exception.error_dict.get("cd4_date")),
+                )
+
     def test_cd4_date_before_on_after_hiv_confirmed_date_ok(self):
         for cd4_days_ago in [8, 7, 6]:
             with self.subTest(cd4_days_ago=cd4_days_ago):
@@ -209,6 +248,104 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     form_validator.validate()
                 except forms.ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_serum_crag_negative_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "serum_crag_value": NEG,
+                "serum_crag_date": get_utcnow_as_date() - relativedelta(days=1),
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("serum_crag_value", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. Subject must have positive serum/plasma CrAg test result.",
+            str(cm.exception.error_dict.get("serum_crag_value")),
+        )
+
+    def test_serum_crag_positive_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "serum_crag_value": POS,
+                "serum_crag_date": get_utcnow_as_date() - relativedelta(days=2),
+                "lp_done": YES,
+                "lp_date": get_utcnow_as_date() - relativedelta(days=2),
+                "lp_declined": NOT_APPLICABLE,
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_serum_crag_before_cd4_date_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                "cd4_date": get_utcnow_as_date() - relativedelta(days=7),
+                "serum_crag_value": POS,
+                "serum_crag_date": get_utcnow_as_date() - relativedelta(days=8),
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("serum_crag_date", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. Cannot be before CD4 date.",
+            str(cm.exception.error_dict.get("serum_crag_date")),
+        )
+
+    def test_serum_crag_gt_21_days_after_cd4_date_raises(self):
+        for days in [22, 30, 60]:
+            with self.subTest(days_after=days):
+                cleaned_data = self.get_cleaned_data()
+                cd4_date = get_utcnow_as_date() - relativedelta(days=7)
+                cleaned_data.update(
+                    {
+                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                        "cd4_date": cd4_date,
+                        "serum_crag_value": POS,
+                        "serum_crag_date": cd4_date + relativedelta(days=days),
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("serum_crag_date", cm.exception.error_dict)
+                self.assertIn(
+                    f"Invalid. Must have been performed within 21 days of CD4. Got {days}.",
+                    str(cm.exception.error_dict.get("serum_crag_date")),
+                )
+
+    def test_serum_crag_gt_14_days_after_report_date_raises(self):
+        for days in [15, 20, 21]:
+            with self.subTest(days_after=days):
+                cleaned_data = self.get_cleaned_data()
+                report_datetime = get_utcnow()
+                cleaned_data.update(
+                    {
+                        "report_datetime": report_datetime,
+                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                        "cd4_date": report_datetime.date() - relativedelta(days=days),
+                        "serum_crag_value": POS,
+                        "serum_crag_date": report_datetime.date() - relativedelta(days=days),
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("serum_crag_date", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. Cannot be more than 14 days before the report date",
+                    str(cm.exception.error_dict.get("serum_crag_date")),
+                )
 
     def test_gender_male_no_pregnancy_answers_ok(self):
         cleaned_data = self.get_cleaned_data()
