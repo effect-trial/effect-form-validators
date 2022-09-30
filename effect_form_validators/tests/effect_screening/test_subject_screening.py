@@ -347,6 +347,92 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     str(cm.exception.error_dict.get("serum_crag_date")),
                 )
 
+    def test_lp_date_before_serum_crag_date_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        serum_crag_date = cleaned_data.get("report_datetime").date()
+        cleaned_data.update(
+            {
+                "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                "cd4_date": serum_crag_date,
+                "serum_crag_value": POS,
+                "serum_crag_date": serum_crag_date,
+                "lp_done": YES,
+                "lp_date": serum_crag_date - relativedelta(days=1),
+                "lp_declined": NOT_APPLICABLE,
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("lp_date", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. Cannot be before serum CrAg date",
+            str(cm.exception.error_dict.get("lp_date")),
+        )
+
+    def test_lp_date_on_serum_crag_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        serum_crag_date = cleaned_data.get("report_datetime").date()
+        cleaned_data.update(
+            {
+                "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                "cd4_date": serum_crag_date,
+                "serum_crag_value": POS,
+                "serum_crag_date": serum_crag_date,
+                "lp_done": YES,
+                "lp_date": serum_crag_date,
+                "lp_declined": NOT_APPLICABLE,
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_lp_date_after_report_date_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.get("report_datetime").date()
+        cleaned_data.update(
+            {
+                "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                "cd4_date": cleaned_data.get("report_datetime").date(),
+                "serum_crag_value": POS,
+                "serum_crag_date": cleaned_data.get("report_datetime").date(),
+                "lp_done": YES,
+                "lp_date": cleaned_data.get("report_datetime").date() + relativedelta(days=1),
+                "lp_declined": NOT_APPLICABLE,
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("lp_date", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. Cannot be after report date",
+            str(cm.exception.error_dict.get("lp_date")),
+        )
+
+    def test_lp_date_on_report_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.get("report_datetime").date()
+        cleaned_data.update(
+            {
+                "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                "cd4_date": cleaned_data.get("report_datetime").date(),
+                "serum_crag_value": POS,
+                "serum_crag_date": cleaned_data.get("report_datetime").date(),
+                "lp_done": YES,
+                "lp_date": cleaned_data.get("report_datetime").date(),
+                "lp_declined": NOT_APPLICABLE,
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
     def test_gender_male_no_pregnancy_answers_ok(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
