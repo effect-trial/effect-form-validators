@@ -9,6 +9,7 @@ from edc_constants.constants import (
     NO,
     NOT_APPLICABLE,
     NOT_EVALUATED,
+    PENDING,
     POS,
     YES,
 )
@@ -392,7 +393,6 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
 
     def test_lp_date_after_report_date_raises(self):
         cleaned_data = self.get_cleaned_data()
-        cleaned_data.get("report_datetime").date()
         cleaned_data.update(
             {
                 "cd4_value": self.ELIGIBLE_CD4_VALUE,
@@ -415,7 +415,6 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
 
     def test_lp_date_on_report_date_ok(self):
         cleaned_data = self.get_cleaned_data()
-        cleaned_data.get("report_datetime").date()
         cleaned_data.update(
             {
                 "cd4_value": self.ELIGIBLE_CD4_VALUE,
@@ -432,6 +431,110 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             form_validator.validate()
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_cm_in_csf_date_before_lp_date_raises(self):
+        for days in [1, 2, 10]:
+            with self.subTest(days_before=days):
+                cleaned_data = self.get_cleaned_data()
+                lp_date = cleaned_data.get("report_datetime").date()
+                cleaned_data.update(
+                    {
+                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                        "cd4_date": lp_date,
+                        "serum_crag_value": POS,
+                        "serum_crag_date": lp_date,
+                        "lp_done": YES,
+                        "lp_date": lp_date,
+                        "lp_declined": NOT_APPLICABLE,
+                        "cm_in_csf": PENDING,
+                        "cm_in_csf_date": lp_date - relativedelta(days=days),
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("cm_in_csf_date", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. Cannot be before LP date",
+                    str(cm.exception.error_dict.get("cm_in_csf_date")),
+                )
+
+    def test_cm_in_csf_date_on_after_lp_date_ok(self):
+        for days in [0, 1, 2, 10]:
+            with self.subTest(days_after=days):
+                cleaned_data = self.get_cleaned_data()
+                lp_date = cleaned_data.get("report_datetime").date()
+                cleaned_data.update(
+                    {
+                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                        "cd4_date": lp_date,
+                        "serum_crag_value": POS,
+                        "serum_crag_date": lp_date,
+                        "lp_done": YES,
+                        "lp_date": lp_date,
+                        "lp_declined": NOT_APPLICABLE,
+                        "cm_in_csf": PENDING,
+                        "cm_in_csf_date": lp_date + relativedelta(days=days),
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_cm_in_csf_date_before_report_date_raises(self):
+        for days in [1, 2, 10]:
+            with self.subTest(days_before=days):
+                cleaned_data = self.get_cleaned_data()
+                lp_date = cleaned_data.get("report_datetime").date() - relativedelta(days=10)
+                cleaned_data.update(
+                    {
+                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                        "cd4_date": lp_date,
+                        "serum_crag_value": POS,
+                        "serum_crag_date": lp_date,
+                        "lp_done": YES,
+                        "lp_date": lp_date,
+                        "lp_declined": NOT_APPLICABLE,
+                        "cm_in_csf": PENDING,
+                        "cm_in_csf_date": cleaned_data.get("report_datetime").date()
+                        - relativedelta(days=days),
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("cm_in_csf_date", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. Cannot be before report date",
+                    str(cm.exception.error_dict.get("cm_in_csf_date")),
+                )
+
+    def test_cm_in_csf_date_on_after_report_date_ok(self):
+        for days in [0, 1, 2, 10]:
+            with self.subTest(days_after=days):
+                cleaned_data = self.get_cleaned_data()
+                lp_date = cleaned_data.get("report_datetime").date()
+                cleaned_data.update(
+                    {
+                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                        "cd4_date": lp_date,
+                        "serum_crag_value": POS,
+                        "serum_crag_date": lp_date,
+                        "lp_done": YES,
+                        "lp_date": lp_date,
+                        "lp_declined": NOT_APPLICABLE,
+                        "cm_in_csf": PENDING,
+                        "cm_in_csf_date": cleaned_data.get("report_datetime").date()
+                        + relativedelta(days=days),
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_gender_male_no_pregnancy_answers_ok(self):
         cleaned_data = self.get_cleaned_data()
