@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from edc_constants.constants import (
     FEMALE,
+    MALE,
     NEG,
     NO,
     NOT_APPLICABLE,
@@ -208,6 +209,94 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     form_validator.validate()
                 except forms.ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_gender_male_no_pregnancy_answers_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "gender": MALE,
+                "pregnant": NOT_APPLICABLE,
+                "preg_test_date": None,
+                "breast_feeding": NOT_APPLICABLE,
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_gender_male_and_pregnant_not_not_applicable_raises(self):
+        for answ in [YES, NO, NOT_EVALUATED]:
+            with self.subTest(pregnant=answ):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "gender": MALE,
+                        "pregnant": answ,
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("pregnant", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. Subject is male",
+                    str(cm.exception.error_dict.get("pregnant")),
+                )
+
+    def test_gender_male_and_pregnant_not_applicable_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "gender": MALE,
+                "pregnant": NOT_APPLICABLE,
+                "breast_feeding": NOT_APPLICABLE,
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_gender_male_and_preg_test_date_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "gender": MALE,
+                "preg_test_date": get_utcnow_as_date(),
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("preg_test_date", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. Subject is male",
+            str(cm.exception.error_dict.get("preg_test_date")),
+        )
+
+    def test_gender_male_and_breast_feeding_raises(self):
+        for answ in [YES, NO, NOT_EVALUATED]:
+            with self.subTest(breast_feeding=answ):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "gender": MALE,
+                        "pregnant": NOT_APPLICABLE,
+                        "preg_test_date": None,
+                        "breast_feeding": answ,
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("breast_feeding", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not applicable.",
+                    str(cm.exception.error_dict.get("breast_feeding")),
+                )
 
     def test_reasons_unsuitable_required_if_unsuitable_for_study_yes(self):
         cleaned_data = self.get_cleaned_data()

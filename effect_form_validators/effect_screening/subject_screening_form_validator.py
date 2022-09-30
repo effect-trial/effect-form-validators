@@ -1,6 +1,15 @@
 from django import forms
 from edc_consent.form_validators import ConsentFormValidatorMixin
-from edc_constants.constants import FEMALE, MALE, NO, OTHER, PENDING, POS, YES
+from edc_constants.constants import (
+    FEMALE,
+    MALE,
+    NO,
+    NOT_APPLICABLE,
+    OTHER,
+    PENDING,
+    POS,
+    YES,
+)
 from edc_form_validators import FormValidator
 from edc_model_form.mixins import EstimatedDateFromAgoFormMixin
 
@@ -150,10 +159,10 @@ class SubjectScreeningFormValidator(
             )
 
     def validate_pregnancy(self) -> None:
-        if self.cleaned_data.get("gender") == MALE and self.cleaned_data.get("pregnant") in [
-            YES,
-            NO,
-        ]:
+        if (
+            self.cleaned_data.get("gender") == MALE
+            and self.cleaned_data.get("pregnant") != NOT_APPLICABLE
+        ):
             raise forms.ValidationError({"pregnant": "Invalid. Subject is male"})
         if self.cleaned_data.get("gender") == MALE and self.cleaned_data.get("preg_test_date"):
             raise forms.ValidationError({"preg_test_date": "Invalid. Subject is male"})
