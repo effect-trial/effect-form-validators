@@ -18,9 +18,7 @@ class SubjectScreeningFormValidator(
         self.validate_cm_in_csf()
         self.validate_mg_ssx()
         self.validate_pregnancy()
-        self.required_if(
-            YES, field="unsuitable_for_study", field_required="reasons_unsuitable"
-        )
+        self.validate_suitability_for_study()
 
     def validate_hiv(self):
         self.required_if(
@@ -176,3 +174,18 @@ class SubjectScreeningFormValidator(
             other_specify_field="any_other_mg_ssx_other",
             other_stored_value=YES,
         )
+
+    def validate_suitability_for_study(self):
+        self.required_if(
+            YES, field="unsuitable_for_study", field_required="reasons_unsuitable"
+        )
+        self.applicable_if(
+            YES, field="unsuitable_for_study", field_applicable="unsuitable_agreed"
+        )
+        if self.cleaned_data.get("unsuitable_agreed") == NO:
+            raise forms.ValidationError(
+                {
+                    "unsuitable_agreed": "The study coordinator MUST agree "
+                    "with your assessment. Please discuss before continuing."
+                }
+            )
