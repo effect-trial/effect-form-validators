@@ -80,6 +80,31 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         except forms.ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
+    def test_age_in_years_lt_18_raises(self):
+        for age in [17, 15, 1, 0]:
+            with self.subTest(age=age):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update({"age_in_years": age})
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("age_in_years", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. Subject must be 18 years or older",
+                    str(cm.exception.error_dict.get("age_in_years")),
+                )
+
+    def test_age_in_years_gte_18_ok(self):
+        for age in [18, 19, 29, 99]:
+            with self.subTest(age=age):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update({"age_in_years": age})
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
     def test_hiv_confirmed_date_required_if_hiv_pos_yes(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(

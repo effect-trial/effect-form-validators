@@ -160,7 +160,7 @@ class SubjectScreeningFormValidator(
         self.applicable_if(FEMALE, field="gender", field_applicable="breast_feeding")
 
     def validate_age(self) -> None:
-        if self.cleaned_data.get("age_in_years") and (
+        if self.cleaned_data.get("age_in_years") is not None and (
             self.cleaned_data.get("age_in_years") < 18
             or self.cleaned_data.get("age_in_years") > 120
         ):
