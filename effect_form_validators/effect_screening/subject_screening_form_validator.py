@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from django import forms
 from edc_consent.form_validators import ConsentFormValidatorMixin
-from edc_constants.constants import FEMALE, MALE, NO, OTHER, PENDING, POS, YES
+from edc_constants.constants import (
+    FEMALE,
+    MALE,
+    NO,
+    NOT_APPLICABLE,
+    OTHER,
+    PENDING,
+    POS,
+    YES,
+)
 from edc_form_validators import FormValidator
 from edc_model_form.mixins import EstimatedDateFromAgoFormMixin
 from edc_prn.modelform_mixins import PrnFormValidatorMixin
@@ -25,9 +34,7 @@ class SubjectScreeningFormValidator(
         self.validate_cm_in_csf()
         self.validate_mg_ssx()
         self.validate_pregnancy()
-        self.required_if(
-            YES, field="unsuitable_for_study", field_required="reasons_unsuitable"
-        )
+        self.validate_suitability_for_study()
 
     @property
     def age_in_years(self) -> int | None:
@@ -158,17 +165,17 @@ class SubjectScreeningFormValidator(
             )
 
     def validate_pregnancy(self) -> None:
-        if self.cleaned_data.get("gender") == MALE and self.cleaned_data.get("pregnant") in [
-            YES,
-            NO,
-        ]:
+        if (
+            self.cleaned_data.get("gender") == MALE
+            and self.cleaned_data.get("pregnant") != NOT_APPLICABLE
+        ):
             raise forms.ValidationError({"pregnant": "Invalid. Subject is male"})
         if self.cleaned_data.get("gender") == MALE and self.cleaned_data.get("preg_test_date"):
             raise forms.ValidationError({"preg_test_date": "Invalid. Subject is male"})
         self.applicable_if(FEMALE, field="gender", field_applicable="breast_feeding")
 
     def validate_age(self) -> None:
-        if self.age_in_years and not (18 <= self.age_in_years < 120):
+        if self.age_in_years is not None and not (18 <= self.age_in_years < 120):
             raise forms.ValidationError(
                 {"age_in_years": "Invalid. Subject must be 18 years or older"}
             )
@@ -179,3 +186,18 @@ class SubjectScreeningFormValidator(
             other_specify_field="any_other_mg_ssx_other",
             other_stored_value=YES,
         )
+
+    def validate_suitability_for_study(self):
+        self.required_if(
+            YES, field="unsuitable_for_study", field_required="reasons_unsuitable"
+        )
+        self.applicable_if(
+            YES, field="unsuitable_for_study", field_applicable="unsuitable_agreed"
+        )
+        if self.cleaned_data.get("unsuitable_agreed") == NO:
+            raise forms.ValidationError(
+                {
+                    "unsuitable_agreed": "The study coordinator MUST agree "
+                    "with your assessment. Please discuss before continuing."
+                }
+            )
