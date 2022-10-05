@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from django import forms
 from edc_consent.form_validators import ConsentFormValidatorMixin
 from edc_constants.constants import (
@@ -12,13 +14,18 @@ from edc_constants.constants import (
 )
 from edc_form_validators import FormValidator
 from edc_model_form.mixins import EstimatedDateFromAgoFormMixin
+from edc_prn.modelform_mixins import PrnFormValidatorMixin
+from edc_utils.date import to_local
 
 
 class SubjectScreeningFormValidator(
-    EstimatedDateFromAgoFormMixin, ConsentFormValidatorMixin, FormValidator
+    EstimatedDateFromAgoFormMixin,
+    ConsentFormValidatorMixin,
+    PrnFormValidatorMixin,
+    FormValidator,
 ):
     def clean(self) -> None:
-        self.get_consent_for_period_or_raise(self.cleaned_data.get("report_datetime"))
+        self.get_consent_for_period_or_raise()
         self.validate_age()
         self.validate_hiv()
         self.validate_cd4()
@@ -29,6 +36,10 @@ class SubjectScreeningFormValidator(
         self.validate_pregnancy()
         self.validate_suitability_for_study()
 
+    @property
+    def age_in_years(self) -> int | None:
+        return self.cleaned_data.get("age_in_years")
+
     def validate_hiv(self):
         self.required_if(
             YES,
@@ -38,17 +49,13 @@ class SubjectScreeningFormValidator(
         self.applicable_if(YES, field="hiv_pos", field_applicable="hiv_confirmed_method")
 
     def validate_cd4(self) -> None:
-        if self.cleaned_data.get("cd4_date") and self.cleaned_data.get("report_datetime"):
-            if (
-                self.cleaned_data.get("cd4_date")
-                > self.cleaned_data.get("report_datetime").date()
-            ):
+        if self.cleaned_data.get("cd4_date") and self.report_datetime:
+            if self.cleaned_data.get("cd4_date") > to_local(self.report_datetime).date():
                 raise forms.ValidationError(
                     {"cd4_date": "Invalid. Cannot be after report date"}
                 )
             if (
-                self.cleaned_data.get("report_datetime").date()
-                - self.cleaned_data.get("cd4_date")
+                to_local(self.report_datetime).date() - self.cleaned_data.get("cd4_date")
             ).days > 21:
                 raise forms.ValidationError(
                     {
@@ -97,7 +104,7 @@ class SubjectScreeningFormValidator(
                     }
                 )
             if (
-                self.cleaned_data.get("report_datetime").date()
+                to_local(self.report_datetime).date()
                 - self.cleaned_data.get("serum_crag_date")
             ).days > 14:
                 raise forms.ValidationError(
@@ -121,9 +128,9 @@ class SubjectScreeningFormValidator(
             )
 
         if (
-            self.cleaned_data.get("lp_date")
+            self.report_datetime
             and self.cleaned_data.get("lp_date")
-            > self.cleaned_data.get("report_datetime").date()
+            and self.cleaned_data.get("lp_date") > to_local(self.report_datetime).date()
         ):
             raise forms.ValidationError({"lp_date": "Invalid. Cannot be after report date"})
 
@@ -148,10 +155,9 @@ class SubjectScreeningFormValidator(
             )
         if (
             self.cleaned_data.get("cm_in_csf_date")
-            and self.cleaned_data.get("report_datetime")
+            and self.report_datetime
             and (
-                self.cleaned_data.get("report_datetime").date()
-                > self.cleaned_data.get("cm_in_csf_date")
+                to_local(self.report_datetime).date() > self.cleaned_data.get("cm_in_csf_date")
             )
         ):
             raise forms.ValidationError(
@@ -169,10 +175,7 @@ class SubjectScreeningFormValidator(
         self.applicable_if(FEMALE, field="gender", field_applicable="breast_feeding")
 
     def validate_age(self) -> None:
-        if self.cleaned_data.get("age_in_years") is not None and (
-            self.cleaned_data.get("age_in_years") < 18
-            or self.cleaned_data.get("age_in_years") > 120
-        ):
+        if self.age_in_years is not None and not (18 <= self.age_in_years < 120):
             raise forms.ValidationError(
                 {"age_in_years": "Invalid. Subject must be 18 years or older"}
             )

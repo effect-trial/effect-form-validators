@@ -16,6 +16,7 @@ DEFAULT_SETTINGS = dict(
     SECRET_KEY="django-insecure-37g_by$&j(g8r9uqn%*@i3!4y6_rxlyf57itfp+)_)z2(6!=$l",
     DEBUG=True,
     SUBJECT_CONSENT_MODEL=None,
+    # SUBJECT_SCREENING_MODEL=None,
     ALLOWED_HOSTS=[],
     INSTALLED_APPS=[
         "django.contrib.admin",
