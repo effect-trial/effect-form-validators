@@ -13,13 +13,11 @@ from edc_constants.constants import (
     YES,
 )
 from edc_form_validators import FormValidator
-from edc_model_form.mixins import EstimatedDateFromAgoFormMixin
 from edc_prn.modelform_mixins import PrnFormValidatorMixin
 from edc_utils.date import to_local
 
 
 class SubjectScreeningFormValidator(
-    EstimatedDateFromAgoFormMixin,
     ConsentFormValidatorMixin,
     PrnFormValidatorMixin,
     FormValidator,
