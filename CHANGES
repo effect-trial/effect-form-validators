@@ -1,6 +1,11 @@
 Changes
 =======
 
+unreleased
+----------
+- drop Python 3.9 support
+- drop Django 3.2 support
+
 0.1.19
 ------
 - vitals
