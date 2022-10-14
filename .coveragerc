@@ -2,3 +2,8 @@
 include = effect_form_validators/effect_*/*
 omit = effect_form_validators/tests/*
 branch = 1
+
+[report]
+exclude_lines =
+  pragma: no cover
+  if TYPE_CHECKING:
