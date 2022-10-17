@@ -116,14 +116,18 @@ class SubjectScreeningFormValidator(
     def validate_lp_and_csf_crag(self) -> None:
         self.required_if(YES, field="lp_done", field_required="lp_date")
 
-        if (
-            self.cleaned_data.get("lp_date")
-            and self.cleaned_data.get("serum_crag_date")
-            and (self.cleaned_data.get("lp_date") < self.cleaned_data.get("serum_crag_date"))
-        ):
-            raise forms.ValidationError(
-                {"lp_date": "Invalid. Cannot be before serum CrAg date"}
-            )
+        if self.cleaned_data.get("lp_date") and self.cleaned_data.get("serum_crag_date"):
+            days = (
+                self.cleaned_data.get("serum_crag_date") - self.cleaned_data.get("lp_date")
+            ).days
+
+            if days > 3:
+                raise forms.ValidationError(
+                    {
+                        "lp_date": "Invalid. "
+                        "LP cannot be more than 3 days before serum/plasma CrAg date"
+                    }
+                )
 
         if (
             self.report_datetime
