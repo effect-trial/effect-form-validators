@@ -15,10 +15,11 @@ from edc_constants.constants import (
     UNKNOWN,
     YES,
 )
+from edc_form_validators.tests.mixins import FormValidatorTestMixin
 
 from effect_form_validators.effect_subject import SignsAndSymptomsFormValidator as Base
 
-from ..mixins import FormValidatorTestMixin, TestCaseMixin
+from ..mixins import TestCaseMixin
 
 
 class SignsAndSymptomsMockModel(MockModel):

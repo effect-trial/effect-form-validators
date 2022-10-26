@@ -3,12 +3,13 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
+from edc_form_validators.tests.mixins import FormValidatorTestMixin
 
 from effect_form_validators.effect_subject import (
     ParticipantHistoryFormValidator as Base,
 )
 
-from ..mixins import FormValidatorTestMixin, TestCaseMixin
+from ..mixins import TestCaseMixin
 
 
 class ParticipantHistoryMockModel(MockModel):

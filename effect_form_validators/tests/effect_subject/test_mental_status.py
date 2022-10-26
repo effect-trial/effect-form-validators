@@ -5,11 +5,12 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel
 from edc_constants.constants import NO, NOT_APPLICABLE, NOT_DONE, YES
+from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_visit_schedule.constants import DAY01, DAY14, WEEK10, WEEK24
 
 from effect_form_validators.effect_subject import MentalStatusFormValidator as Base
 
-from ..mixins import FormValidatorTestMixin, TestCaseMixin
+from ..mixins import TestCaseMixin
 
 
 class MentalStatusMockModel(MockModel):

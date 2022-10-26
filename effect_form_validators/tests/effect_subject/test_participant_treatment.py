@@ -5,13 +5,14 @@ from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.constants import NO, NOT_APPLICABLE, NOT_ESTIMATED, OTHER, YES
 from edc_form_validators import FormValidatorTestCaseMixin
+from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow
 
 from effect_form_validators.effect_subject import (
     ParticipantTreatmentFormValidator as Base,
 )
 
-from ..mixins import FormValidatorTestMixin, TestCaseMixin
+from ..mixins import TestCaseMixin
 
 
 class ParticipantTreatmentMockModel(MockModel):

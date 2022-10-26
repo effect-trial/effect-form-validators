@@ -3,11 +3,12 @@ from django import forms
 from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.constants import NO, NOT_APPLICABLE
+from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
 
 from effect_form_validators.effect_subject import ArvHistoryFormValidator as Base
 
-from ..mixins import FormValidatorTestMixin, TestCaseMixin
+from ..mixins import TestCaseMixin
 
 
 class ArvHistoryMockModel(MockModel):

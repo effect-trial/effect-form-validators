@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from django import forms
-from edc_consent.form_validators import ConsentFormValidatorMixin
+from edc_consent.form_validators import SubjectConsentFormValidatorMixin
 from edc_constants.constants import (
     FEMALE,
     MALE,
@@ -14,11 +14,12 @@ from edc_constants.constants import (
 )
 from edc_form_validators import FormValidator
 from edc_prn.modelform_mixins import PrnFormValidatorMixin
+from edc_screening.form_validator_mixins import SubjectScreeningFormValidatorMixin
 from edc_utils.date import to_local
 
 
 class SubjectScreeningFormValidator(
-    ConsentFormValidatorMixin,
+    SubjectScreeningFormValidatorMixin,
     PrnFormValidatorMixin,
     FormValidator,
 ):
@@ -101,6 +102,8 @@ class SubjectScreeningFormValidator(
                         )
                     }
                 )
+            # TODO: allow this to save on/after CD4 date but still ineligble if greater
+            #  than 14 days
             if (
                 to_local(self.report_datetime).date()
                 - self.cleaned_data.get("serum_crag_date")

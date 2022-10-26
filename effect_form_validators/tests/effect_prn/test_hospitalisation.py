@@ -4,10 +4,12 @@ from django import forms
 from django.test import TestCase
 from edc_constants.constants import NO, NOT_APPLICABLE, UNKNOWN, YES
 from edc_form_validators import FormValidatorTestCaseMixin
+from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
 
 from effect_form_validators.effect_prn import HospitalizationFormValidator as Base
-from effect_form_validators.tests.mixins import FormValidatorTestMixin, TestCaseMixin
+
+from ..mixins import TestCaseMixin
 
 
 class HospitalizationFormValidator(FormValidatorTestMixin, Base):
