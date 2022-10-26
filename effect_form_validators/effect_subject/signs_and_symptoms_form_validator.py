@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django import forms
 from edc_constants.constants import (
     HEADACHE,
@@ -18,6 +20,7 @@ from edc_constants.disease_constants import (
 from edc_constants.utils import get_display
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR, NOT_APPLICABLE_ERROR
+from edc_model.utils import timedelta_from_duration_dh_field
 from edc_visit_schedule.utils import is_baseline
 from edc_visit_tracking.choices import ASSESSMENT_TYPES, ASSESSMENT_WHO_CHOICES
 
@@ -30,6 +33,8 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
         self.validate_any_sx_unknown()
 
         self.validate_current_sx()
+
+        self.validate_headache_duration()
 
         self.m2m_other_specify(OTHER, m2m_field="current_sx", field_other="current_sx_other")
 
@@ -116,10 +121,24 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
                 }
             )
 
-    def validate_current_sx_other_specify_fields(self):
+    def validate_headache_duration(self):
         self.m2m_other_specify(
             HEADACHE, m2m_field="current_sx", field_other="headache_duration"
         )
+        if self.cleaned_data.get("headache_duration") and (
+            timedelta_from_duration_dh_field(
+                data=self.cleaned_data, duration_dh_field="headache_duration"
+            )
+            <= timedelta(
+                days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0
+            )
+        ):
+            self.raise_validation_error(
+                {"headache_duration": "Invalid. Headache duration cannot be <= 0"},
+                INVALID_ERROR,
+            )
+
+    def validate_current_sx_other_specify_fields(self):
         self.m2m_other_specify(
             CN_PALSY_LEFT_OTHER,
             m2m_field="current_sx",

@@ -4,7 +4,7 @@
 effect-form-validators
 ----------------------
 
-Form validator classes for EFFECT model forms
+Form validator classes for `EFFECT Edc <https://github.com/effect-trial/effect-edc#readme>`_ model forms
 
 .. |pypi| image:: https://img.shields.io/pypi/v/effect-form-validators.svg
     :target: https://pypi.python.org/pypi/effect-form-validators

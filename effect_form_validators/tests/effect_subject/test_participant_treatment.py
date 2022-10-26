@@ -5,11 +5,21 @@ from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.constants import NO, NOT_APPLICABLE, NOT_ESTIMATED, OTHER, YES
 from edc_form_validators import FormValidatorTestCaseMixin
+from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow
 
-from effect_form_validators.effect_subject import PatientTreatmentFormValidator as Base
+from effect_form_validators.effect_subject import (
+    ParticipantTreatmentFormValidator as Base,
+)
 
-from ..mixins import FormValidatorTestMixin, TestCaseMixin
+from ..mixins import TestCaseMixin
+
+
+class ParticipantTreatmentMockModel(MockModel):
+    @classmethod
+    def related_visit_model_attr(cls):
+        return "subject_visit"
+
 
 MyInstance = namedtuple("MyList", ["name", "display_name"])
 
@@ -26,13 +36,16 @@ class MockList:
         yield self.instance
 
 
-class PatientTreatmentFormValidator(FormValidatorTestMixin, Base):
+class ParticipantTreatmentFormValidator(FormValidatorTestMixin, Base):
     pass
 
 
-class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMixin, TestCase):
+class TestParticipantTreatmentFormValidation(
+    FormValidatorTestCaseMixin, TestCaseMixin, TestCase
+):
 
-    form_validator_default_form_cls = PatientTreatmentFormValidator
+    form_validator_cls = ParticipantTreatmentFormValidator
+    form_validator_model_cls = ParticipantTreatmentMockModel
 
     def setUp(self):
         self.antibiotics_obj = MockModel(
@@ -56,7 +69,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     @staticmethod
-    def get_cleaned_data_patient_no_cm_no_tx():
+    def get_cleaned_data_participant_no_cm_no_tx():
         return {
             "report_datetime": get_utcnow(),
             "lp_completed": NO,
@@ -95,7 +108,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         }
 
     @staticmethod
-    def get_cleaned_data_patient_with_cm_with_all_tx():
+    def get_cleaned_data_participant_with_cm_with_all_tx():
         return {
             "report_datetime": get_utcnow(),
             "lp_completed": YES,
@@ -133,32 +146,38 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             "other_drugs_given_other": "",
         }
 
-    def test_cleaned_data_patient_no_cm_no_tx_ok(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+    def test_cleaned_data_participant_no_cm_no_tx_ok(self):
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
+        form_validator = ParticipantTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=ParticipantTreatmentMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_cleaned_data_patient_with_cm_with_all_tx_ok(self):
-        cleaned_data = self.get_cleaned_data_patient_with_cm_with_all_tx()
+    def test_cleaned_data_participant_with_cm_with_all_tx_ok(self):
+        cleaned_data = self.get_cleaned_data_participant_with_cm_with_all_tx()
 
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=ParticipantTreatmentMockModel
+        )
         try:
             form_validator.validate()
         except forms.ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_cm_confirmed_na_if_lp_not_completed(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "lp_completed": NO,
                 "cm_confirmed": NO,
             }
         )
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=ParticipantTreatmentMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cm_confirmed", cm.exception.error_dict)
@@ -168,14 +187,16 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_cm_confirmed_applicable_if_lp_completed(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "lp_completed": YES,
                 "cm_confirmed": NOT_APPLICABLE,
             }
         )
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=ParticipantTreatmentMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cm_confirmed", cm.exception.error_dict)
@@ -185,7 +206,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_cm_tx_na_if_cm_not_confirmed(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "lp_completed": YES,
@@ -193,7 +214,9 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
                 "on_cm_tx": NO,
             }
         )
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=ParticipantTreatmentMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("on_cm_tx", cm.exception.error_dict)
@@ -203,7 +226,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_cm_tx_applicable_if_cm_confirmed(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "lp_completed": YES,
@@ -212,7 +235,9 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             }
         )
 
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=ParticipantTreatmentMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("on_cm_tx", cm.exception.error_dict)
@@ -222,7 +247,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_cm_tx_given_na_if_cm_tx_no(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "lp_completed": YES,
@@ -231,7 +256,9 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
                 "cm_tx_given": "1w_amb_5fc",
             }
         )
-        form_validator = PatientTreatmentFormValidator(cleaned_data=cleaned_data)
+        form_validator = ParticipantTreatmentFormValidator(
+            cleaned_data=cleaned_data, model=ParticipantTreatmentMockModel
+        )
         with self.assertRaises(forms.ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cm_tx_given", cm.exception.error_dict)
@@ -241,7 +268,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_cm_tx_given_applicable_if_cm_tx(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "lp_completed": YES,
@@ -257,7 +284,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_cm_tx_given_other_required_if_specified(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "lp_completed": YES,
@@ -274,7 +301,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_cm_tx_given_other_not_required_if_not_specified(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "lp_completed": YES,
@@ -293,7 +320,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
     # steroid validation tests
 
     def test_steroids_given_na_if_steroids_no(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "on_steroids": NO,
@@ -309,7 +336,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_steroids_given_applicable_if_steroids(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "on_steroids": YES,
@@ -327,7 +354,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_steroids_given_other_required_if_specified(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "on_steroids": YES,
@@ -345,7 +372,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_steroids_given_other_not_required_if_not_specified(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "on_steroids": YES,
@@ -363,7 +390,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_steroids_course_not_required_if_steroids_no(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "on_steroids": NO,
@@ -379,7 +406,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
         )
 
     def test_steroids_course_required_if_steroids(self):
-        cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+        cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
         cleaned_data.update(
             {
                 "on_steroids": YES,
@@ -405,7 +432,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             "other_drugs",
         ]:
             with self.subTest(field_stub=field_stub):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": YES,
@@ -427,7 +454,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             "other_drugs",
         ]:
             with self.subTest(field_stub=field_stub):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": NO,
@@ -449,7 +476,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             "other_drugs",
         ]:
             with self.subTest(field_stub=field_stub):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": YES,
@@ -472,7 +499,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             "other_drugs",
         ]:
             with self.subTest(field_stub=field_stub):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": NO,
@@ -493,7 +520,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             ("other_drugs", MockModel),
         ]:
             with self.subTest(field_stub=field_stub, list_model=list_model):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": YES,
@@ -517,7 +544,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             ("other_drugs", MockModel),
         ]:
             with self.subTest(field_stub=field_stub, list_model=list_model):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": NO,
@@ -540,7 +567,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             ("other_drugs", MockModel),
         ]:
             with self.subTest(field_stub=field_stub, list_model=list_model):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": YES,
@@ -570,7 +597,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
             ("other_drugs", MockModel),
         ]:
             with self.subTest(field_stub=field_stub, list_model=list_model):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": NO,
@@ -593,7 +620,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
     def test_reason_no_applicable_if_prescribed_no(self):
         for field_stub in ["tb_tx", "co_trimoxazole"]:
             with self.subTest(field_stub=field_stub):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update({f"{field_stub}_reason_no": NOT_APPLICABLE})
                 self.assertFormValidatorError(
                     field=f"{field_stub}_reason_no",
@@ -604,7 +631,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
     def test_reason_no_not_applicable_if_prescribed_yes(self):
         for field_stub in ["tb_tx", "co_trimoxazole"]:
             with self.subTest(field_stub=field_stub):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": YES,
@@ -625,7 +652,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
     def test_reason_no_other_required_if_specified(self):
         for field_stub in ["tb_tx", "co_trimoxazole"]:
             with self.subTest(field_stub=field_stub):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": NO,
@@ -642,7 +669,7 @@ class TestPatientTreatmentFormValidation(FormValidatorTestCaseMixin, TestCaseMix
     def test_reason_no_other_not_required_if_not_specified(self):
         for field_stub in ["tb_tx", "co_trimoxazole"]:
             with self.subTest(field_stub=field_stub):
-                cleaned_data = self.get_cleaned_data_patient_no_cm_no_tx()
+                cleaned_data = self.get_cleaned_data_participant_no_cm_no_tx()
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": NO,

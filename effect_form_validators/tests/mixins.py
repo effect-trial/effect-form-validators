@@ -1,44 +1,44 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Optional
+from typing import Optional
 
 from dateutil.relativedelta import relativedelta
 from django.test import TestCase
 from django_mock_queries.query import MockModel
 from edc_utils import get_utcnow
-from edc_visit_schedule.constants import DAY01
-
-
-class FormValidatorTestMixin:
-
-    consent_model = None
-
-    def get_consent_for_period_or_raise(self, *args) -> Any:
-        pass
-
-    def validate_crf_report_datetime(self):
-        pass
-
-    def validate_appt_datetime_in_window_period(self: Any, appointment, *args) -> None:
-        pass
-
-    def validate_visit_datetime_in_window_period(self: Any, *args) -> None:
-        pass
-
-    def validate_crf_datetime_in_window_period(self: Any, *args) -> None:
-        pass
-
-    def datetime_in_window_or_raise(self, *args):
-        pass
+from edc_visit_schedule.constants import (
+    DAY01,
+    DAY03,
+    DAY09,
+    DAY14,
+    WEEK04,
+    WEEK10,
+    WEEK16,
+    WEEK24,
+)
 
 
 class TestCaseMixin(TestCase):
+    visit_schedule = [
+        DAY01,
+        DAY03,
+        DAY09,
+        DAY14,
+        WEEK04,
+        WEEK10,
+        WEEK16,
+        WEEK24,
+    ]
+
     def setUp(self) -> None:
         """Setup appointment and subject_visit Mock models"""
-        self.consent_datetime = get_utcnow() - relativedelta(years=1)
+        self.screening_datetime = get_utcnow() - relativedelta(years=1)
+        self.consent_datetime = self.screening_datetime
+        self.subject_identifier = "12345"
         # appointment
         self.appointment = MockModel(
             mock_name="Appointment",
+            subject_identifier=self.subject_identifier,
             appt_datetime=self.consent_datetime,
             visit_code=DAY01,
             visit_code_sequence=0,
@@ -50,6 +50,7 @@ class TestCaseMixin(TestCase):
         # subject_visit
         self.subject_visit = MockModel(
             mock_name="SubjectVisit",
+            subject_identifier=self.subject_identifier,
             report_datetime=self.consent_datetime,
             visit_code=DAY01,
             visit_code_sequence=0,

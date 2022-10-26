@@ -1,7 +1,6 @@
 _version.py
 .DS_Store
 django_crypto_fields
-.env
 .etc
 
 # Byte-compiled / optimized / DLL files

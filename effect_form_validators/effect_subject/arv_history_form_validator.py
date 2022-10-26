@@ -1,9 +1,12 @@
 from edc_constants.constants import NO, YES
 from edc_crf.crf_form_validator import CrfFormValidator
+from edc_form_validators import INVALID_ERROR
 
 
 class ArvHistoryFormValidator(CrfFormValidator):
     def clean(self) -> None:
+        self.validate_date_against_report_datetime("hiv_dx_date")
+        self.validate_hiv_dx_date_against_screening_cd4_date()
 
         condition = (
             self.cleaned_data.get("on_art_at_crag")
@@ -104,41 +107,81 @@ class ArvHistoryFormValidator(CrfFormValidator):
         #     "Invalid. Cannot be before HIV diagnosis date.",
         # )
 
-        # cd4
-        self.required_if(YES, field="has_cd4", field_required="cd4_result")
-        self.required_if(YES, field="has_cd4", field_required="cd4_date")
-        self.applicable_if(YES, field="has_cd4", field_applicable="cd4_date_estimated")
+        self.validate_cd4_date()
+
+        self.validate_cd4_against_screening_cd4_data()
+
+    # self.required_if(
+    #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
+    # )
+    #
+    # if self.cleaned_data.get("has_previous_arv_regimen") == NO:
+    #     self.date_equal(
+    #         "initial_art_date",
+    #         "current_art_regimen_start_date",
+    #         "Invalid. Expected current regimen date to equal initiation date.",
+    #     )
+    #
+    # self.required_if(
+    #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
+    # )
+    #
+    # self.required_if(
+    #     OTHER,
+    #     field="previous_arv_regimen",
+    #     field_required="other_previous_arv_regimen",
+    # )
+
+    def validate_hiv_dx_date_against_screening_cd4_date(self):
+        if (
+            self.cleaned_data.get("hiv_dx_date")
+            and self.cleaned_data.get("hiv_dx_date") > self.subject_screening.cd4_date
+        ):
+            self.raise_validation_error(
+                {
+                    "hiv_dx_date": (
+                        "Invalid. Cannot be after screening CD4 date "
+                        f"({self.subject_screening.cd4_date})."
+                    )
+                },
+                INVALID_ERROR,
+            )
+
+    def validate_cd4_date(self):
         self.validate_date_against_report_datetime("cd4_date")
+        self.date_not_before(
+            "hiv_dx_date",
+            "cd4_date",
+            "Invalid. Cannot be before 'HIV diagnosis first known' date",
+            message_on_field="cd4_date",
+        )
 
-        # self.date_not_before(
-        #     "hiv_diagnosis_date",
-        #     "cd4_date",
-        #     "Invalid. Cannot be before HIV diagnosis date.",
-        # )
+    def validate_cd4_against_screening_cd4_data(self):
+        arv_history_cd4_value = self.cleaned_data.get("cd4_value")
+        arv_history_cd4_date = self.cleaned_data.get("cd4_date")
+        if (
+            arv_history_cd4_value
+            and arv_history_cd4_date
+            and arv_history_cd4_date == self.subject_screening.cd4_date
+            and arv_history_cd4_value != self.subject_screening.cd4_value
+        ):
+            self.raise_validation_error(
+                {
+                    "cd4_value": (
+                        "Invalid. Cannot differ from screening CD4 count "
+                        f"({self.subject_screening.cd4_value}) if collected on same date."
+                    )
+                },
+                INVALID_ERROR,
+            )
 
-        # self.required_if(
-        #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
-        # )
-        #
-        # if self.cleaned_data.get("has_previous_arv_regimen") == NO:
-        #     self.date_equal(
-        #         "initial_art_date",
-        #         "current_art_regimen_start_date",
-        #         "Invalid. Expected current regimen date to equal initiation date.",
-        #     )
-        #
-        # self.required_if(
-        #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
-        # )
-        #
-        # self.required_if(
-        #     OTHER,
-        #     field="previous_arv_regimen",
-        #     field_required="other_previous_arv_regimen",
-        # )
-        #
-        # self.required_if(YES, field="on_oi_prophylaxis", field_required="oi_prophylaxis")
-        #
-        # self.m2m_other_specify(
-        #     OTHER, m2m_field="oi_prophylaxis", field_other="other_oi_prophylaxis"
-        # )
+        if arv_history_cd4_date and arv_history_cd4_date < self.subject_screening.cd4_date:
+            self.raise_validation_error(
+                {
+                    "cd4_date": (
+                        "Invalid. Cannot be before screening CD4 date "
+                        f"({self.subject_screening.cd4_date})."
+                    )
+                },
+                INVALID_ERROR,
+            )

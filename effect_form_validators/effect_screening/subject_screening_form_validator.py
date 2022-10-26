@@ -1,65 +1,60 @@
+from __future__ import annotations
+
 from django import forms
-from edc_consent.form_validators import ConsentFormValidatorMixin
-from edc_constants.constants import FEMALE, MALE, NO, OTHER, PENDING, POS, YES
+from edc_consent.form_validators import SubjectConsentFormValidatorMixin
+from edc_constants.constants import (
+    FEMALE,
+    MALE,
+    NO,
+    NOT_APPLICABLE,
+    OTHER,
+    PENDING,
+    POS,
+    YES,
+)
 from edc_form_validators import FormValidator
-from edc_model import estimated_date_from_ago
-from edc_utils.forms import EstimatedDateFromAgoFormMixin
+from edc_prn.modelform_mixins import PrnFormValidatorMixin
+from edc_screening.form_validator_mixins import SubjectScreeningFormValidatorMixin
+from edc_utils.date import to_local
 
 
 class SubjectScreeningFormValidator(
-    EstimatedDateFromAgoFormMixin, ConsentFormValidatorMixin, FormValidator
+    SubjectScreeningFormValidatorMixin,
+    PrnFormValidatorMixin,
+    FormValidator,
 ):
     def clean(self) -> None:
-        self.get_consent_for_period_or_raise(self.cleaned_data.get("report_datetime"))
+        self.get_consent_for_period_or_raise()
         self.validate_age()
-        self.validate_hiv_dx()
+        self.validate_hiv()
         self.validate_cd4()
         self.validate_serum_crag()
         self.validate_lp_and_csf_crag()
         self.validate_cm_in_csf()
         self.validate_mg_ssx()
         self.validate_pregnancy()
+        self.validate_suitability_for_study()
+
+    @property
+    def age_in_years(self) -> int | None:
+        return self.cleaned_data.get("age_in_years")
+
+    def validate_hiv(self):
         self.required_if(
-            YES, field="unsuitable_for_study", field_required="reasons_unsuitable"
-        )
-
-    def validate_hiv_dx(self):
-        self.not_required_if(
-            NO,
+            YES,
             field="hiv_pos",
-            field_required="hiv_dx_ago",
-            inverse=False,
+            field_required="hiv_confirmed_date",
         )
-        self.not_required_if(
-            NO,
-            field="hiv_pos",
-            field_required="hiv_dx_date",
-            inverse=False,
-        )
-        if self.cleaned_data.get("hiv_pos") == YES and not (
-            self.cleaned_data.get("hiv_dx_ago") or self.cleaned_data.get("hiv_dx_date")
-        ):
-            raise forms.ValidationError(
-                {"hiv_dx_date": "This field is required (or the above)."}
-            )
-
-        self.raise_if_both_ago_and_actual_date(
-            ago_field="hiv_dx_ago", date_field="hiv_dx_date", label="HIV diagnosis"
-        )
-        self.applicable_if(YES, field="hiv_pos", field_applicable="hiv_dx_new")
+        self.applicable_if(YES, field="hiv_pos", field_applicable="hiv_confirmed_method")
 
     def validate_cd4(self) -> None:
-        if self.cleaned_data.get("cd4_date") and self.cleaned_data.get("report_datetime"):
-            if (
-                self.cleaned_data.get("cd4_date")
-                > self.cleaned_data.get("report_datetime").date()
-            ):
+        if self.cleaned_data.get("cd4_date") and self.report_datetime:
+            if self.cleaned_data.get("cd4_date") > to_local(self.report_datetime).date():
                 raise forms.ValidationError(
                     {"cd4_date": "Invalid. Cannot be after report date"}
                 )
             if (
-                self.cleaned_data.get("report_datetime").date()
-                - self.cleaned_data.get("cd4_date")
+                to_local(self.report_datetime).date() - self.cleaned_data.get("cd4_date")
             ).days > 21:
                 raise forms.ValidationError(
                     {
@@ -107,8 +102,10 @@ class SubjectScreeningFormValidator(
                         )
                     }
                 )
+            # TODO: allow this to save on/after CD4 date but still ineligble if greater
+            #  than 14 days
             if (
-                self.cleaned_data.get("report_datetime").date()
+                to_local(self.report_datetime).date()
                 - self.cleaned_data.get("serum_crag_date")
             ).days > 14:
                 raise forms.ValidationError(
@@ -122,19 +119,23 @@ class SubjectScreeningFormValidator(
     def validate_lp_and_csf_crag(self) -> None:
         self.required_if(YES, field="lp_done", field_required="lp_date")
 
-        if (
-            self.cleaned_data.get("lp_date")
-            and self.cleaned_data.get("serum_crag_date")
-            and (self.cleaned_data.get("lp_date") < self.cleaned_data.get("serum_crag_date"))
-        ):
-            raise forms.ValidationError(
-                {"lp_date": "Invalid. Cannot be before serum CrAg date"}
-            )
+        if self.cleaned_data.get("lp_date") and self.cleaned_data.get("serum_crag_date"):
+            days = (
+                self.cleaned_data.get("serum_crag_date") - self.cleaned_data.get("lp_date")
+            ).days
+
+            if days > 3:
+                raise forms.ValidationError(
+                    {
+                        "lp_date": "Invalid. "
+                        "LP cannot be more than 3 days before serum/plasma CrAg date"
+                    }
+                )
 
         if (
-            self.cleaned_data.get("lp_date")
+            self.report_datetime
             and self.cleaned_data.get("lp_date")
-            > self.cleaned_data.get("report_datetime").date()
+            and self.cleaned_data.get("lp_date") > to_local(self.report_datetime).date()
         ):
             raise forms.ValidationError({"lp_date": "Invalid. Cannot be after report date"})
 
@@ -159,10 +160,9 @@ class SubjectScreeningFormValidator(
             )
         if (
             self.cleaned_data.get("cm_in_csf_date")
-            and self.cleaned_data.get("report_datetime")
+            and self.report_datetime
             and (
-                self.cleaned_data.get("report_datetime").date()
-                > self.cleaned_data.get("cm_in_csf_date")
+                to_local(self.report_datetime).date() > self.cleaned_data.get("cm_in_csf_date")
             )
         ):
             raise forms.ValidationError(
@@ -170,20 +170,17 @@ class SubjectScreeningFormValidator(
             )
 
     def validate_pregnancy(self) -> None:
-        if self.cleaned_data.get("gender") == MALE and self.cleaned_data.get("pregnant") in [
-            YES,
-            NO,
-        ]:
+        if (
+            self.cleaned_data.get("gender") == MALE
+            and self.cleaned_data.get("pregnant") != NOT_APPLICABLE
+        ):
             raise forms.ValidationError({"pregnant": "Invalid. Subject is male"})
         if self.cleaned_data.get("gender") == MALE and self.cleaned_data.get("preg_test_date"):
             raise forms.ValidationError({"preg_test_date": "Invalid. Subject is male"})
         self.applicable_if(FEMALE, field="gender", field_applicable="breast_feeding")
 
     def validate_age(self) -> None:
-        if self.cleaned_data.get("age_in_years") and (
-            self.cleaned_data.get("age_in_years") < 18
-            or self.cleaned_data.get("age_in_years") > 120
-        ):
+        if self.age_in_years is not None and not (18 <= self.age_in_years < 120):
             raise forms.ValidationError(
                 {"age_in_years": "Invalid. Subject must be 18 years or older"}
             )
@@ -195,8 +192,17 @@ class SubjectScreeningFormValidator(
             other_stored_value=YES,
         )
 
-    @property
-    def provided_hiv_dx_date(self):
-        if self.cleaned_data.get("hiv_dx_ago"):
-            return estimated_date_from_ago(data=self.cleaned_data, ago_field="hiv_dx_ago")
-        return self.cleaned_data.get("hiv_dx_date")
+    def validate_suitability_for_study(self):
+        self.required_if(
+            YES, field="unsuitable_for_study", field_required="reasons_unsuitable"
+        )
+        self.applicable_if(
+            YES, field="unsuitable_for_study", field_applicable="unsuitable_agreed"
+        )
+        if self.cleaned_data.get("unsuitable_agreed") == NO:
+            raise forms.ValidationError(
+                {
+                    "unsuitable_agreed": "The study coordinator MUST agree "
+                    "with your assessment. Please discuss before continuing."
+                }
+            )
