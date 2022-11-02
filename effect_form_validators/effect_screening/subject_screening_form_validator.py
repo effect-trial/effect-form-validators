@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from django import forms
-from edc_consent.form_validators import SubjectConsentFormValidatorMixin
 from edc_constants.constants import (
     FEMALE,
     MALE,
