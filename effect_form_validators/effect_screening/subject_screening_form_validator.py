@@ -101,19 +101,6 @@ class SubjectScreeningFormValidator(
                         )
                     }
                 )
-            # TODO: allow this to save on/after CD4 date but still ineligble if greater
-            #  than 14 days
-            if (
-                to_local(self.report_datetime).date()
-                - self.cleaned_data.get("serum_crag_date")
-            ).days > 14:
-                raise forms.ValidationError(
-                    {
-                        "serum_crag_date": (
-                            "Invalid. Cannot be more than 14 days before the report date"
-                        )
-                    }
-                )
 
     def validate_lp_and_csf_crag(self) -> None:
         self.required_if(YES, field="lp_done", field_required="lp_date")
