@@ -328,7 +328,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     str(cm.exception.error_dict.get("serum_crag_date")),
                 )
 
-    def test_serum_crag_gt_14_days_after_report_date_raises(self):
+    def test_serum_crag_gt_14_days_before_report_date_ok(self):
         for days in [15, 20, 21]:
             with self.subTest(days_after=days):
                 cleaned_data = self.get_cleaned_data()
@@ -343,13 +343,10 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     }
                 )
                 form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-                with self.assertRaises(ValidationError) as cm:
+                try:
                     form_validator.validate()
-                self.assertIn("serum_crag_date", cm.exception.error_dict)
-                self.assertIn(
-                    "Invalid. Cannot be more than 14 days before the report date",
-                    str(cm.exception.error_dict.get("serum_crag_date")),
-                )
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_lp_date_gt_3_days_before_serum_crag_date_raises(self):
         for days_before in [4, 14, 21]:
