@@ -67,7 +67,6 @@ class SubjectScreeningFormValidator(
         """Assert serum CrAg is positive, and serum CrAg date is:
         - not before CD4 date
         - within 21 days of CD4
-        - within 14 days of report
         """
         if self.cleaned_data.get("serum_crag_value") != POS:
             raise forms.ValidationError(
