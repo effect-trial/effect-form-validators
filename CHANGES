@@ -4,6 +4,7 @@ Changes
 [unreleased]
 ------------
 - update Subject Screening allow 'serum_crag_date' > 14 days to be saved (patient to remain ineligible) (#488)
+- update to support edc 0.4.51
 
 0.1.25
 ------
