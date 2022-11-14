@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from django import forms
-from edc_consent.form_validators import SubjectConsentFormValidatorMixin
 from edc_constants.constants import (
     FEMALE,
     MALE,
@@ -68,7 +67,6 @@ class SubjectScreeningFormValidator(
         """Assert serum CrAg is positive, and serum CrAg date is:
         - not before CD4 date
         - within 21 days of CD4
-        - within 14 days of report
         """
         if self.cleaned_data.get("serum_crag_value") != POS:
             raise forms.ValidationError(
@@ -99,19 +97,6 @@ class SubjectScreeningFormValidator(
                         "serum_crag_date": (
                             "Invalid. Must have been performed within 21 days "
                             f"of CD4. Got {days}."
-                        )
-                    }
-                )
-            # TODO: allow this to save on/after CD4 date but still ineligble if greater
-            #  than 14 days
-            if (
-                to_local(self.report_datetime).date()
-                - self.cleaned_data.get("serum_crag_date")
-            ).days > 14:
-                raise forms.ValidationError(
-                    {
-                        "serum_crag_date": (
-                            "Invalid. Cannot be more than 14 days before the report date"
                         )
                     }
                 )

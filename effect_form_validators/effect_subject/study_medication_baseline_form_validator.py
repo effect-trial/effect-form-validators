@@ -1,5 +1,4 @@
-from edc_appointment.constants import TODAY
-from edc_constants.constants import NO, NOT_APPLICABLE, YES
+from edc_constants.constants import NO, NOT_APPLICABLE, TODAY, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_utils.text import formatted_date
