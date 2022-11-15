@@ -8,6 +8,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
         self.validate_date_against_report_datetime("hiv_dx_date")
         self.validate_hiv_dx_date_against_screening_cd4_date()
 
+        # ARV treatment and monitoring
         condition = (
             self.cleaned_data.get("on_art_at_crag")
             and self.cleaned_data.get("ever_on_art")
@@ -74,6 +75,9 @@ class ArvHistoryFormValidator(CrfFormValidator):
         )
 
         self.validate_art_adherence()
+
+        # art decision
+        self.applicable_if(NO, field="has_defaulted", field_applicable="art_decision")
 
         # vl
         self.required_if(YES, field="has_viral_load", field_required="viral_load_result")

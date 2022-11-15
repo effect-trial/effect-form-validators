@@ -6,6 +6,7 @@ from edc_constants.choices import DATE_ESTIMATED_NA
 from edc_constants.constants import DEFAULTED, NO, NOT_APPLICABLE, YES
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
+from effect_subject.constants import ART_CONTINUED, ART_STOPPED
 
 from effect_form_validators.effect_subject import ArvHistoryFormValidator as Base
 
@@ -266,6 +267,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "defaulted_date": None,
                 "defaulted_date_estimated": NOT_APPLICABLE,
                 "is_adherent": YES,
+                "art_decision": ART_STOPPED,
             }
         )
         form_validator = ArvHistoryFormValidator(
@@ -555,6 +557,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "defaulted_date": None,
                 "defaulted_date_estimated": NOT_APPLICABLE,
                 "is_adherent": YES,
+                "art_decision": ART_STOPPED,
             }
         )
         form_validator = ArvHistoryFormValidator(
@@ -579,6 +582,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "defaulted_date_estimated": NOT_APPLICABLE,
                 "is_adherent": NO,
                 "art_doses_missed": 10,
+                "art_decision": ART_STOPPED,
             }
         )
         form_validator = ArvHistoryFormValidator(
@@ -728,6 +732,117 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                         "defaulted_date_estimated": NOT_APPLICABLE,
                         "is_adherent": NO,
                         "art_doses_missed": art_doses_missed,
+                        "art_decision": ART_CONTINUED,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_art_decision_not_applicable_if_has_defaulted_not_applicable(self):
+        for art_decision in [ART_CONTINUED, ART_STOPPED]:
+            with self.subTest(art_decision):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "has_defaulted": NOT_APPLICABLE,
+                        "defaulted_date": None,
+                        "defaulted_date_estimated": NOT_APPLICABLE,
+                        "is_adherent": NOT_APPLICABLE,
+                        "art_doses_missed": None,
+                        "art_decision": art_decision,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("art_decision", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not applicable",
+                    str(cm.exception.error_dict.get("art_decision")),
+                )
+
+    def test_art_decision_not_applicable_if_has_defaulted_yes(self):
+        for art_decision in [ART_CONTINUED, ART_STOPPED]:
+            with self.subTest(art_decision):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "ever_on_art": YES,
+                        "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                        "initial_art_date_estimated": NO,
+                        "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                        "has_switched_art_regimen": NO,
+                        "has_defaulted": YES,
+                        "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
+                        "defaulted_date_estimated": "D",
+                        "is_adherent": DEFAULTED,
+                        "art_doses_missed": None,
+                        "art_decision": art_decision,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("art_decision", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not applicable",
+                    str(cm.exception.error_dict.get("art_decision")),
+                )
+
+    def test_art_decision_applicable_if_has_defaulted_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": NO,
+                "defaulted_date": None,
+                "defaulted_date_estimated": NOT_APPLICABLE,
+                "is_adherent": YES,
+                "art_doses_missed": None,
+                "art_decision": NOT_APPLICABLE,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("art_decision", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable",
+            str(cm.exception.error_dict.get("art_decision")),
+        )
+
+    def test_art_decision_choices_with_has_defaulted_no_ok(self):
+        for art_decision in [ART_CONTINUED, ART_STOPPED]:
+            with self.subTest(art_decision):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "ever_on_art": YES,
+                        "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                        "initial_art_date_estimated": NO,
+                        "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                        "has_switched_art_regimen": NO,
+                        "has_defaulted": NO,
+                        "defaulted_date": None,
+                        "defaulted_date_estimated": NOT_APPLICABLE,
+                        "is_adherent": YES,
+                        "art_doses_missed": None,
+                        "art_decision": art_decision,
                     }
                 )
                 form_validator = ArvHistoryFormValidator(
