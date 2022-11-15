@@ -1,8 +1,9 @@
 from dateutil.relativedelta import relativedelta
-from django import forms
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
-from edc_constants.constants import NO, NOT_APPLICABLE
+from edc_constants.choices import DATE_ESTIMATED_NA
+from edc_constants.constants import DEFAULTED, NO, NOT_APPLICABLE, YES
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
 
@@ -37,6 +38,10 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
 
         self.arv_regimens_choice_na = MockModel(
             mock_name="ArvRegimens", name=NOT_APPLICABLE, display_name=NOT_APPLICABLE
+        )
+
+        self.arv_regimens_choice_abc_3tc_ftc = MockModel(
+            mock_name="ArvRegimens", name="ABC_3TC/FTC", display_name="ABC_3TC/FTC"
         )
 
     def get_cleaned_data(self, **kwargs) -> dict:
@@ -88,7 +93,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         )
         try:
             form_validator.validate()
-        except forms.ValidationError as e:
+        except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_hiv_dx_date_before_screening_cd4_date_ok(self):
@@ -116,7 +121,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         )
         try:
             form_validator.validate()
-        except forms.ValidationError as e:
+        except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_hiv_dx_date_matches_screening_cd4_date_ok(self):
@@ -144,7 +149,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         )
         try:
             form_validator.validate()
-        except forms.ValidationError as e:
+        except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_hiv_dx_date_after_screening_cd4_date_raises(self):
@@ -170,13 +175,568 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         form_validator = OverriddenArvHistoryFormValidator(
             cleaned_data=cleaned_data, model=ArvHistoryMockModel
         )
-        with self.assertRaises(forms.ValidationError) as cm:
+        with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("hiv_dx_date", cm.exception.error_dict)
         self.assertIn(
             f"Invalid. Cannot be after screening CD4 date ({screening_cd4_date}).",
             cm.exception.error_dict.get("hiv_dx_date")[0].message,
         )
+
+    def test_has_defaulted_applicable_if_initial_art_date(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": NOT_APPLICABLE,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("has_defaulted", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable",
+            str(cm.exception.error_dict.get("has_defaulted")),
+        )
+
+    def test_has_defaulted_not_applicable_if_initial_art_date_none(self):
+        for has_defaulted in [YES, NO]:
+            with self.subTest(has_defaulted=has_defaulted):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "on_art_at_crag": NO,
+                        "ever_on_art": NO,
+                        "initial_art_date": None,
+                        "initial_art_date_estimated": NOT_APPLICABLE,
+                        "has_defaulted": has_defaulted,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("has_defaulted", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not applicable",
+                    str(cm.exception.error_dict.get("has_defaulted")),
+                )
+
+    def test_has_defaulted_yes_if_initial_art_date_provided_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": YES,
+                "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
+                "defaulted_date_estimated": "D",
+                "is_adherent": DEFAULTED,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_has_defaulted_no_if_initial_art_date_provided_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": NO,
+                "defaulted_date": None,
+                "defaulted_date_estimated": NOT_APPLICABLE,
+                "is_adherent": YES,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_defaulted_date_required_if_has_defaulted_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": YES,
+                "defaulted_date": None,
+                "is_adherent": DEFAULTED,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("defaulted_date", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required",
+            str(cm.exception.error_dict.get("defaulted_date")),
+        )
+
+    def test_defaulted_date_not_required_if_has_defaulted_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": NO,
+                "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("defaulted_date", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("defaulted_date")),
+        )
+
+    def test_defaulted_date_with_has_defaulted_yes_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": YES,
+                "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
+                "defaulted_date_estimated": "D",
+                "is_adherent": DEFAULTED,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_defaulted_date_not_required_if_has_defaulted_not_applicable(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "has_defaulted": NOT_APPLICABLE,
+                "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("defaulted_date", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("defaulted_date")),
+        )
+
+    def test_defaulted_date_estimated_not_applicable_if_defaulted_date_none(self):
+        for has_defaulted in [NO, NOT_APPLICABLE]:
+            with self.subTest(has_defaulted=has_defaulted):
+                cleaned_data = self.get_cleaned_data()
+                if has_defaulted != NOT_APPLICABLE:
+                    cleaned_data.update(
+                        {
+                            "ever_on_art": YES,
+                            "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                            "initial_art_date_estimated": NO,
+                            "initial_art_regimen": MockSet(
+                                self.arv_regimens_choice_abc_3tc_ftc
+                            ),
+                            "has_switched_art_regimen": NO,
+                        }
+                    )
+                cleaned_data.update(
+                    {
+                        "has_defaulted": has_defaulted,
+                        "defaulted_date": None,
+                        "defaulted_date_estimated": "D",
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("defaulted_date_estimated", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not applicable",
+                    str(cm.exception.error_dict.get("defaulted_date_estimated")),
+                )
+
+    def test_defaulted_date_estimated_applicable_if_defaulted_date_provided(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": YES,
+                "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
+                "defaulted_date_estimated": NOT_APPLICABLE,
+                "is_adherent": DEFAULTED,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("defaulted_date_estimated", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable",
+            str(cm.exception.error_dict.get("defaulted_date_estimated")),
+        )
+
+        for choice in [ch[0] for ch in DATE_ESTIMATED_NA if ch[0] != NOT_APPLICABLE]:
+            with self.subTest(defaulted_date_estimated=choice):
+                cleaned_data.update({"defaulted_date_estimated": choice})
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_is_adherent_not_applicable_if_has_defaulted_not_applicable(self):
+        for is_adherent in [YES, NO, DEFAULTED]:
+            with self.subTest(is_adherent=is_adherent):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "has_defaulted": NOT_APPLICABLE,
+                        "is_adherent": is_adherent,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("is_adherent", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not applicable",
+                    str(cm.exception.error_dict.get("is_adherent")),
+                )
+
+    def test_is_adherent_applicable_if_has_defaulted_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": NO,
+                "defaulted_date": None,
+                "defaulted_date_estimated": NOT_APPLICABLE,
+                "is_adherent": NOT_APPLICABLE,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("is_adherent", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable",
+            str(cm.exception.error_dict.get("is_adherent")),
+        )
+
+    def test_is_adherent_defaulted_raises_if_has_defaulted_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": NO,
+                "defaulted_date": None,
+                "defaulted_date_estimated": NOT_APPLICABLE,
+                "is_adherent": DEFAULTED,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("is_adherent", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. "
+            "Participant not reported as defaulted from their current ART regimen.",
+            str(cm.exception.error_dict.get("is_adherent")),
+        )
+
+    def test_is_adherent_not_defaulted_raises_if_has_defaulted_yes(self):
+        for is_adherent in [YES, NO]:
+            with self.subTest(is_adherent=is_adherent):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "ever_on_art": YES,
+                        "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                        "initial_art_date_estimated": NO,
+                        "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                        "has_switched_art_regimen": NO,
+                        "has_defaulted": YES,
+                        "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
+                        "defaulted_date_estimated": "D",
+                        "is_adherent": is_adherent,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("is_adherent", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. "
+                    "Expected DEFAULTED. Participant reported as defaulted "
+                    "from their current ART regimen.",
+                    str(cm.exception.error_dict.get("is_adherent")),
+                )
+
+    def test_is_adherent_yes_if_has_defaulted_no_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": NO,
+                "defaulted_date": None,
+                "defaulted_date_estimated": NOT_APPLICABLE,
+                "is_adherent": YES,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_is_adherent_no_if_has_defaulted_no_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": NO,
+                "defaulted_date": None,
+                "defaulted_date_estimated": NOT_APPLICABLE,
+                "is_adherent": NO,
+                "art_doses_missed": 10,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_is_adherent_defaulted_if_has_defaulted_yes_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": YES,
+                "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
+                "defaulted_date_estimated": "D",
+                "is_adherent": DEFAULTED,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_art_doses_missed_required_if_is_adherent_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": NO,
+                "defaulted_date": None,
+                "defaulted_date_estimated": NOT_APPLICABLE,
+                "is_adherent": NO,
+                "art_doses_missed": None,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("art_doses_missed", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required",
+            str(cm.exception.error_dict.get("art_doses_missed")),
+        )
+
+    def test_art_doses_missed_not_required_if_is_adherent_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": NO,
+                "defaulted_date": None,
+                "defaulted_date_estimated": NOT_APPLICABLE,
+                "is_adherent": YES,
+                "art_doses_missed": 3,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("art_doses_missed", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("art_doses_missed")),
+        )
+
+    def test_art_doses_missed_not_required_if_is_adherent_defaulted(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "ever_on_art": YES,
+                "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                "initial_art_date_estimated": NO,
+                "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                "has_switched_art_regimen": NO,
+                "has_defaulted": YES,
+                "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
+                "defaulted_date_estimated": "D",
+                "is_adherent": DEFAULTED,
+                "art_doses_missed": 3,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("art_doses_missed", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("art_doses_missed")),
+        )
+
+    def test_art_doses_missed_not_required_if_is_adherent_not_applicable(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "is_adherent": NOT_APPLICABLE,
+                "art_doses_missed": 3,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("art_doses_missed", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("art_doses_missed")),
+        )
+
+    def test_art_doses_missed_ok_if_is_adherent_no(self):
+        for art_doses_missed in [0, 1, 5, 10, 31]:
+            with self.subTest(art_doses_missed=art_doses_missed):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "ever_on_art": YES,
+                        "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                        "initial_art_date_estimated": NO,
+                        "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                        "has_switched_art_regimen": NO,
+                        "has_defaulted": NO,
+                        "defaulted_date": None,
+                        "defaulted_date_estimated": NOT_APPLICABLE,
+                        "is_adherent": NO,
+                        "art_doses_missed": art_doses_missed,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_arv_history_cd4_date_after_hiv_dx_date_ok(self):
         hiv_dx_date = self.screening_datetime.date() - relativedelta(days=7)
@@ -197,7 +757,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         )
         try:
             form_validator.validate()
-        except forms.ValidationError as e:
+        except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_arv_history_cd4_date_matches_hiv_dx_date_ok(self):
@@ -219,7 +779,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         )
         try:
             form_validator.validate()
-        except forms.ValidationError as e:
+        except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_arv_history_cd4_date_before_hiv_dx_date_raises(self):
@@ -238,7 +798,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         form_validator = ArvHistoryFormValidator(
             cleaned_data=cleaned_data, model=ArvHistoryMockModel
         )
-        with self.assertRaises(forms.ValidationError) as cm:
+        with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cd4_date", cm.exception.error_dict)
         self.assertIn(
@@ -273,7 +833,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         )
         try:
             form_validator.validate()
-        except forms.ValidationError as e:
+        except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_matching_arv_history_and_screening_cd4_dates_with_differing_cd4_values_raises(
@@ -303,7 +863,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         form_validator = OverriddenArvHistoryFormValidator(
             cleaned_data=cleaned_data, model=ArvHistoryMockModel
         )
-        with self.assertRaises(forms.ValidationError) as cm:
+        with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cd4_value", cm.exception.error_dict)
         self.assertIn(
@@ -337,7 +897,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         form_validator = OverriddenArvHistoryFormValidator(
             cleaned_data=cleaned_data, model=ArvHistoryMockModel
         )
-        with self.assertRaises(forms.ValidationError) as cm:
+        with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("cd4_date", cm.exception.error_dict)
         self.assertIn(
@@ -372,5 +932,5 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         )
         try:
             form_validator.validate()
-        except forms.ValidationError as e:
+        except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")

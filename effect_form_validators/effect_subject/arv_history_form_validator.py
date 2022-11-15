@@ -1,4 +1,4 @@
-from edc_constants.constants import NO, YES
+from edc_constants.constants import DEFAULTED, NO, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 
@@ -42,6 +42,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
         self.required_if(
             YES, field="has_switched_art_regimen", field_required="current_art_date"
         )
+
         self.date_not_before(
             "initial_art_date",
             "current_art_date",
@@ -73,6 +74,27 @@ class ArvHistoryFormValidator(CrfFormValidator):
         )
 
         # defaulted
+        self.applicable_if_true(
+            self.cleaned_data.get("initial_art_date"),
+            field_applicable="has_defaulted",
+        )
+
+        self.required_if(YES, field="has_defaulted", field_required="defaulted_date")
+
+        self.date_not_before(
+            "initial_art_date",
+            "defaulted_date",
+            "Invalid. Cannot be before initial ART start date",
+            message_on_field="defaulted_date",
+        )
+
+        self.date_not_equal(
+            "initial_art_date",
+            "defaulted_date",
+            "Invalid. Cannot be equal to the current ART start datee",
+            message_on_field="defaulted_date",
+        )
+
         self.date_not_before(
             "current_art_date",
             "defaulted_date",
@@ -87,11 +109,48 @@ class ArvHistoryFormValidator(CrfFormValidator):
             message_on_field="defaulted_date",
         )
 
-        # adherent
-        self.applicable_if(
-            YES, field="has_switched_art_regimen", field_applicable="is_adherent"
+        self.applicable_if_true(
+            self.cleaned_data.get("defaulted_date"),
+            field_applicable="defaulted_date_estimated",
         )
-        self.required_if(NO, field="is_adherent", field_required="art_doses_missed")
+
+        # adherent
+        self.applicable_if(YES, NO, field="has_defaulted", field_applicable="is_adherent")
+        if (
+            self.cleaned_data.get("has_defaulted") != YES
+            and self.cleaned_data.get("is_adherent") == DEFAULTED
+        ):
+            self.raise_validation_error(
+                {
+                    "is_adherent": (
+                        "Invalid. "
+                        "Participant not reported as defaulted from their "
+                        "current ART regimen."
+                    )
+                },
+                INVALID_ERROR,
+            )
+        elif (
+            self.cleaned_data.get("has_defaulted") == YES
+            and self.cleaned_data.get("is_adherent") != DEFAULTED
+        ):
+            self.raise_validation_error(
+                {
+                    "is_adherent": (
+                        "Invalid. "
+                        "Expected DEFAULTED. Participant reported as defaulted "
+                        "from their current ART regimen."
+                    )
+                },
+                INVALID_ERROR,
+            )
+
+        self.required_if(
+            NO,
+            field="is_adherent",
+            field_required="art_doses_missed",
+            field_required_evaluate_as_int=True,
+        )
 
         # vl
         self.required_if(YES, field="has_viral_load", field_required="viral_load_result")
