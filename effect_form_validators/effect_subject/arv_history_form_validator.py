@@ -1,4 +1,4 @@
-from edc_constants.constants import NO, YES
+from edc_constants.constants import DEFAULTED, NO, NOT_APPLICABLE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 
@@ -8,6 +8,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
         self.validate_date_against_report_datetime("hiv_dx_date")
         self.validate_hiv_dx_date_against_screening_cd4_date()
 
+        # ARV treatment and monitoring
         condition = (
             self.cleaned_data.get("on_art_at_crag")
             and self.cleaned_data.get("ever_on_art")
@@ -30,6 +31,8 @@ class ArvHistoryFormValidator(CrfFormValidator):
             self.cleaned_data.get("initial_art_date"), m2m_field="initial_art_regimen"
         )
 
+        self.m2m_single_selection_if(NOT_APPLICABLE, m2m_field="initial_art_regimen")
+
         self.m2m_other_specify(
             m2m_field="initial_art_regimen", field_other="initial_art_regimen_other"
         )
@@ -42,6 +45,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
         self.required_if(
             YES, field="has_switched_art_regimen", field_required="current_art_date"
         )
+
         self.date_not_before(
             "initial_art_date",
             "current_art_date",
@@ -68,30 +72,16 @@ class ArvHistoryFormValidator(CrfFormValidator):
             self.cleaned_data.get("current_art_date"), m2m_field="current_art_regimen"
         )
 
+        self.m2m_single_selection_if(NOT_APPLICABLE, m2m_field="current_art_regimen")
+
         self.m2m_other_specify(
             m2m_field="current_art_regimen", field_other="current_art_regimen_other"
         )
 
-        # defaulted
-        self.date_not_before(
-            "current_art_date",
-            "defaulted_date",
-            "Invalid. Cannot be before current ART start date",
-            message_on_field="defaulted_date",
-        )
+        self.validate_art_adherence()
 
-        self.date_not_equal(
-            "current_art_date",
-            "defaulted_date",
-            "Invalid. Cannot be equal to the current ART start date",
-            message_on_field="defaulted_date",
-        )
-
-        # adherent
-        self.applicable_if(
-            YES, field="has_switched_art_regimen", field_applicable="is_adherent"
-        )
-        self.required_if(NO, field="is_adherent", field_required="art_doses_missed")
+        # art decision
+        self.applicable_if(NO, field="has_defaulted", field_applicable="art_decision")
 
         # vl
         self.required_if(YES, field="has_viral_load", field_required="viral_load_result")
@@ -146,6 +136,86 @@ class ArvHistoryFormValidator(CrfFormValidator):
                 },
                 INVALID_ERROR,
             )
+
+    def validate_art_adherence(self):
+        # defaulted
+        self.applicable_if_true(
+            self.cleaned_data.get("initial_art_date"),
+            field_applicable="has_defaulted",
+        )
+
+        self.required_if(YES, field="has_defaulted", field_required="defaulted_date")
+
+        self.date_not_before(
+            "initial_art_date",
+            "defaulted_date",
+            "Invalid. Cannot be before initial ART start date",
+            message_on_field="defaulted_date",
+        )
+
+        self.date_not_equal(
+            "initial_art_date",
+            "defaulted_date",
+            "Invalid. Cannot be equal to the current ART start date",
+            message_on_field="defaulted_date",
+        )
+
+        self.date_not_before(
+            "current_art_date",
+            "defaulted_date",
+            "Invalid. Cannot be before current ART start date",
+            message_on_field="defaulted_date",
+        )
+
+        self.date_not_equal(
+            "current_art_date",
+            "defaulted_date",
+            "Invalid. Cannot be equal to the current ART start date",
+            message_on_field="defaulted_date",
+        )
+
+        self.applicable_if_true(
+            self.cleaned_data.get("defaulted_date"),
+            field_applicable="defaulted_date_estimated",
+        )
+
+        # adherent
+        self.applicable_if(YES, NO, field="has_defaulted", field_applicable="is_adherent")
+        if (
+            self.cleaned_data.get("has_defaulted") != YES
+            and self.cleaned_data.get("is_adherent") == DEFAULTED
+        ):
+            self.raise_validation_error(
+                {
+                    "is_adherent": (
+                        "Invalid. "
+                        "Participant not reported as defaulted from their "
+                        "current ART regimen."
+                    )
+                },
+                INVALID_ERROR,
+            )
+        elif (
+            self.cleaned_data.get("has_defaulted") == YES
+            and self.cleaned_data.get("is_adherent") != DEFAULTED
+        ):
+            self.raise_validation_error(
+                {
+                    "is_adherent": (
+                        "Invalid. "
+                        "Expected DEFAULTED. Participant reported as defaulted "
+                        "from their current ART regimen."
+                    )
+                },
+                INVALID_ERROR,
+            )
+
+        self.required_if(
+            NO,
+            field="is_adherent",
+            field_required="art_doses_missed",
+            field_required_evaluate_as_int=True,
+        )
 
     def validate_cd4_date(self):
         self.validate_date_against_report_datetime("cd4_date")
