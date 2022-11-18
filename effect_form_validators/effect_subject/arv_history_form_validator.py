@@ -156,7 +156,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
         self.date_not_equal(
             "initial_art_date",
             "defaulted_date",
-            "Invalid. Cannot be equal to the current ART start datee",
+            "Invalid. Cannot be equal to the current ART start date",
             message_on_field="defaulted_date",
         )
 
