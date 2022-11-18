@@ -6,10 +6,10 @@ from edc_constants.choices import DATE_ESTIMATED_NA
 from edc_constants.constants import DEFAULTED, NO, NOT_APPLICABLE, YES
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
-from effect_subject.constants import ART_CONTINUED, ART_STOPPED
 
 from effect_form_validators.effect_subject import ArvHistoryFormValidator as Base
 
+from ...constants import ART_CONTINUED, ART_STOPPED
 from ..mixins import TestCaseMixin
 
 
