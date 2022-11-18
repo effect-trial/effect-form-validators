@@ -1,14 +1,17 @@
 Changes
 =======
 
-[0.1.26]
+[0.1.27]
 --------
-- update Subject Screening allow 'serum_crag_date' > 14 days to be saved (patient to remain ineligible) (#488)
-- update to support edc 0.4.51
 - updates to ARV History form validation (#375, #479, #506)
     - improve validation for applicability of 'art_decision' question (#375)
     - fix validation preventing 'is_adherent' from being answered when applicable (#479, #506)
     - other validation improvements/fixes
+
+[0.1.26]
+--------
+- update Subject Screening allow 'serum_crag_date' > 14 days to be saved (patient to remain ineligible) (#488)
+- update to support edc 0.4.51
 
 0.1.25
 ------
