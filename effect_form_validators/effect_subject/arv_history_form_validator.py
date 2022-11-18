@@ -1,4 +1,4 @@
-from edc_constants.constants import DEFAULTED, NO, YES
+from edc_constants.constants import DEFAULTED, NO, NOT_APPLICABLE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 
@@ -30,6 +30,8 @@ class ArvHistoryFormValidator(CrfFormValidator):
         self.m2m_applicable_if_true(
             self.cleaned_data.get("initial_art_date"), m2m_field="initial_art_regimen"
         )
+
+        self.m2m_single_selection_if(NOT_APPLICABLE, m2m_field="initial_art_regimen")
 
         self.m2m_other_specify(
             m2m_field="initial_art_regimen", field_other="initial_art_regimen_other"
@@ -69,6 +71,8 @@ class ArvHistoryFormValidator(CrfFormValidator):
         self.m2m_applicable_if_true(
             self.cleaned_data.get("current_art_date"), m2m_field="current_art_regimen"
         )
+
+        self.m2m_single_selection_if(NOT_APPLICABLE, m2m_field="current_art_regimen")
 
         self.m2m_other_specify(
             m2m_field="current_art_regimen", field_other="current_art_regimen_other"
