@@ -1,6 +1,10 @@
 Changes
 =======
 
+[unreleased]
+------------
+- fix 'Server error on participant history form (with previous opportunistic infection)' (#515)
+
 [0.1.27]
 --------
 - updates to ARV History form validation (#375, #479, #506)
