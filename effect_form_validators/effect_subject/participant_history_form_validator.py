@@ -51,8 +51,8 @@ class ParticipantHistoryFormValidator(CrfFormValidator):
 
     def validate_previous_oi(self):
         self.required_if(YES, field="previous_oi", field_required="previous_oi_name")
-        self.required_if(YES, field="previous_oi", field_required="previous_oi_date")
-        self.validate_date_against_report_datetime("previous_oi_date")
+        self.required_if(YES, field="previous_oi", field_required="previous_oi_dx_date")
+        self.validate_date_against_report_datetime("previous_oi_dx_date")
 
     def validate_other_medication(self):
         self.m2m_applicable_if(YES, field="any_medications", m2m_field="specify_medications")
