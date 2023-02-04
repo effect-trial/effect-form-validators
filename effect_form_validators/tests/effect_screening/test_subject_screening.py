@@ -30,7 +30,6 @@ class SubjectScreeningFormValidator(FormValidatorTestMixin, Base):
 
 
 class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCase):
-
     form_validator_cls = SubjectScreeningFormValidator
     ELIGIBLE_CD4_VALUE = 99
 

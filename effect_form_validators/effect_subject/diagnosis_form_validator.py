@@ -5,11 +5,9 @@ from edc_crf.crf_form_validator import CrfFormValidator
 
 
 class DiagnosesFormValidator(CrfFormValidator):
-
     reportable_fields = ["reportable_as_ae", "patient_admitted"]
 
     def clean(self) -> None:
-
         self.validate_diagnoses()
 
         self.validate_reporting_fieldset()

@@ -43,7 +43,6 @@ class ParticipantTreatmentFormValidator(FormValidatorTestMixin, Base):
 class TestParticipantTreatmentFormValidation(
     FormValidatorTestCaseMixin, TestCaseMixin, TestCase
 ):
-
     form_validator_cls = ParticipantTreatmentFormValidator
     form_validator_model_cls = ParticipantTreatmentMockModel
 

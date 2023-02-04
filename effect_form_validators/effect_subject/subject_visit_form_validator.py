@@ -28,11 +28,9 @@ from edc_visit_tracking.form_validators import VisitFormValidator
 
 
 class SubjectVisitFormValidator(VisitFormValidator):
-
     validate_missed_visit_reason = False
 
     def clean(self):
-
         self.not_applicable_if(
             MISSED_VISIT,
             field="reason",
