@@ -78,7 +78,6 @@ class SubjectScreeningFormValidator(
             )
 
         if self.cleaned_data.get("serum_crag_date") and self.cleaned_data.get("cd4_date"):
-
             days = (
                 self.cleaned_data.get("cd4_date") - self.cleaned_data.get("serum_crag_date")
             ).days

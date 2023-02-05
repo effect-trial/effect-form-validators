@@ -26,7 +26,6 @@ from edc_visit_tracking.choices import ASSESSMENT_TYPES, ASSESSMENT_WHO_CHOICES
 
 
 class SignsAndSymptomsFormValidator(CrfFormValidator):
-
     reportable_fields = ["reportable_as_ae", "patient_admitted"]
 
     def clean(self) -> None:
