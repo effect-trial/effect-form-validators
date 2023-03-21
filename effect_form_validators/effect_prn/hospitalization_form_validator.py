@@ -5,7 +5,6 @@ from edc_form_validators.form_validator import FormValidator
 
 class HospitalizationFormValidator(FormValidator):
     def clean(self):
-
         self.validate_discharged_date()
 
         self.required_if(YES, field="lp_performed", field_required="lp_count")

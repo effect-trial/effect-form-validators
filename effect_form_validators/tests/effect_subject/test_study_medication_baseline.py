@@ -29,7 +29,6 @@ class StudyMedicationBaselineFormValidator(FormValidatorTestMixin, Base):
 
 @tag("debug")
 class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
-
     flucyt_individual_dose_fields = [
         f"flucyt_dose_{hr}" for hr in ["0400", "1000", "1600", "2200"]
     ]

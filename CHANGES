@@ -1,6 +1,11 @@
 Changes
 =======
 
+[0.1.29]
+--------
+- add Adherence Day 14 form validation for days/doses missed (for flucon and flucyt) (towards #422)
+- drop Django 4.0 support
+
 [0.1.28]
 --------
 - fix 'Server error on participant history form (with previous opportunistic infection)' (#515)

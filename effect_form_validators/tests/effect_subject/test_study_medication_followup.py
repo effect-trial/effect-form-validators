@@ -37,7 +37,6 @@ class StudyMedicationFollowupFormValidator(FormValidatorTestMixin, Base):
 
 @tag("debug")
 class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
-
     flucyt_individual_dose_fields = [
         f"flucyt_dose_{hr}" for hr in ["0400", "1000", "1600", "2200"]
     ]

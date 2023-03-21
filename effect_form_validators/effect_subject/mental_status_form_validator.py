@@ -6,11 +6,9 @@ from edc_visit_schedule.utils import is_baseline
 
 
 class MentalStatusFormValidator(CrfFormValidator):
-
     reportable_fields = ["reportable_as_ae", "patient_admitted"]
 
     def clean(self) -> None:
-
         self.validate_if_baseline()
 
         self.validate_if_scheduled_w10_or_w24()
