@@ -1,6 +1,6 @@
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
-from django.test import TestCase
+from django.test import TestCase, override_settings
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.choices import DATE_ESTIMATED_NA
 from edc_constants.constants import DEFAULTED, NO, NOT_APPLICABLE, YES
@@ -29,6 +29,10 @@ class ArvHistoryFormValidator(FormValidatorTestMixin, Base):
             cd4_value=80,
             cd4_date=screening_date - relativedelta(days=7),
         )
+
+
+class ArvHistoryWithoutSubjectScreeningMockFormValidator(FormValidatorTestMixin, Base):
+    pass
 
 
 class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
@@ -1049,3 +1053,19 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             form_validator.validate()
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    @override_settings(SUBJECT_SCREENING_MODEL="effect_screening.subjectscreening")
+    def test_subject_screening_property_present(self):
+        """Tests only that subject_screening property is present in form
+        validator class.
+        """
+        cleaned_data = self.get_cleaned_data()
+        form_validator = ArvHistoryWithoutSubjectScreeningMockFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except AttributeError as e:
+            self.fail(f"AttributeError unexpectedly raised. Got {e}")
+        except LookupError:
+            pass
