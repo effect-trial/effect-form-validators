@@ -1,9 +1,16 @@
 from edc_constants.constants import DEFAULTED, NO, NOT_APPLICABLE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
+from edc_screening.utils import get_subject_screening_model_cls
 
 
 class ArvHistoryFormValidator(CrfFormValidator):
+    @property
+    def subject_screening(self):
+        return get_subject_screening_model_cls().objects.get(
+            subject_identifier=self.subject_identifier
+        )
+
     def clean(self) -> None:
         self.validate_date_against_report_datetime("hiv_dx_date")
         self.validate_hiv_dx_date_against_screening_cd4_date()
