@@ -1,6 +1,10 @@
 Changes
 =======
 
+[unreleased]
+------------
+- add Participant History form validation for 'admission_indication' (#540)
+
 [0.1.30]
 --------
 - fix 'Server error on ARV history form' (missing subject_screening property), (#535)
