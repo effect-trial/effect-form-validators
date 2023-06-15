@@ -45,6 +45,8 @@ class TestParticipantHistoryFormValidator(TestCaseMixin, TestCase):
         cleaned_data = super().get_cleaned_data(**kwargs)
         cleaned_data.update(
             {
+                "inpatient": NO,
+                "admission_indication": "",
                 "flucon_1w_prior_rando": NO,
                 "flucon_days": None,
                 "flucon_dose": NOT_APPLICABLE,
@@ -72,6 +74,64 @@ class TestParticipantHistoryFormValidator(TestCaseMixin, TestCase):
 
     def test_cleaned_data_ok(self):
         cleaned_data = self.get_cleaned_data()
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_admission_indication_required_if_inpatient_yes(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "inpatient": YES,
+                "admission_indication": "",
+            }
+        )
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("admission_indication", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required.",
+            str(cm.exception.error_dict.get("admission_indication")),
+        )
+
+        cleaned_data.update(
+            {
+                "inpatient": YES,
+                "admission_indication": "blah...",
+            }
+        )
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_admission_indication_not_required_if_inpatient_no(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "inpatient": NO,
+                "admission_indication": "blah...",
+            }
+        )
+        form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("admission_indication", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required.",
+            str(cm.exception.error_dict.get("admission_indication")),
+        )
+
+        cleaned_data.update(
+            {
+                "inpatient": NO,
+                "admission_indication": "",
+            }
+        )
         form_validator = ParticipantHistoryFormValidator(cleaned_data=cleaned_data)
         try:
             form_validator.validate()
