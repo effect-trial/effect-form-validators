@@ -1,4 +1,4 @@
-from edc_constants.constants import NO, NOT_APPLICABLE, NOT_DONE, YES
+from edc_constants.constants import NO, NOT_APPLICABLE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_visit_schedule.constants import WEEK10, WEEK24
@@ -26,18 +26,18 @@ class MentalStatusFormValidator(CrfFormValidator):
                         INVALID_ERROR,
                     )
 
-            if self.cleaned_data.get("modified_rankin_score") not in ["0", NOT_DONE]:
+            if self.cleaned_data.get("modified_rankin_score") == "6":
                 self.raise_validation_error(
                     {
                         "modified_rankin_score": (
-                            "Invalid. Modified Rankin cannot be > 0 at baseline."
+                            "Invalid. Modified Rankin cannot be '[6] Dead' at baseline."
                         )
                     },
                     INVALID_ERROR,
                 )
-            elif self.cleaned_data.get("ecog_score") != "0":
+            elif self.cleaned_data.get("ecog_score") == "5":
                 self.raise_validation_error(
-                    {"ecog_score": "Invalid. ECOG cannot be > 0 at baseline."},
+                    {"ecog_score": "Invalid. ECOG cannot be '[5] Deceased' at baseline."},
                     INVALID_ERROR,
                 )
             elif (
@@ -78,44 +78,25 @@ class MentalStatusFormValidator(CrfFormValidator):
             error_msg = {}
 
             if require_help_response == YES or any_other_problems_response == YES:
+                msg_text = (
+                    "Invalid. Expected to be > '0' "
+                    "if participant requires help or has any other problems."
+                )
                 if modified_rankin_score_response == "0":
-                    error_msg.update(
-                        {
-                            "modified_rankin_score": (
-                                "Invalid. Expected to be > '0' or 'Not done' "
-                                "if participant requires help or has any other problems."
-                            ),
-                        }
-                    )
+                    error_msg.update({"modified_rankin_score": msg_text})
                 if ecog_score_response == "0":
-                    error_msg.update(
-                        {
-                            "ecog_score": (
-                                "Invalid. Expected to be > '0' "
-                                "if participant requires help or has any other problems."
-                            ),
-                        }
-                    )
+                    error_msg.update({"ecog_score": msg_text})
 
             elif require_help_response == NO and any_other_problems_response == NO:
-                if modified_rankin_score_response not in ["0", NOT_DONE]:
-                    error_msg.update(
-                        {
-                            "modified_rankin_score": (
-                                "Invalid. Expected to be '0' or 'Not done' if participant "
-                                "does not require help or have any other problems."
-                            ),
-                        }
-                    )
-                if ecog_score_response != "0":
-                    error_msg.update(
-                        {
-                            "ecog_score": (
-                                "Invalid. Expected to be '0' if participant "
-                                "does not require help or have any other problems."
-                            ),
-                        }
-                    )
+                msg_text = (
+                    "Invalid. Expected to be '0' if participant "
+                    "does not require help or have any other problems."
+                )
+                if modified_rankin_score_response not in ["0"]:
+                    error_msg.update({"modified_rankin_score": msg_text})
+                if ecog_score_response not in ["0"]:
+                    error_msg.update({"ecog_score": msg_text})
+
             if error_msg:
                 self.raise_validation_error(error_msg, INVALID_ERROR)
 
@@ -129,7 +110,7 @@ class MentalStatusFormValidator(CrfFormValidator):
                     and self.cleaned_data.get("confusion") == NO
                     and self.cleaned_data.get("require_help") in [NOT_APPLICABLE, NO]
                     and self.cleaned_data.get("any_other_problems") in [NOT_APPLICABLE, NO]
-                    and self.cleaned_data.get("modified_rankin_score") in ["0", NOT_DONE]
+                    and self.cleaned_data.get("modified_rankin_score") == "0"
                     and self.cleaned_data.get("ecog_score") == "0"
                     and self.cleaned_data.get("glasgow_coma_score") == 15
                 ):
@@ -149,7 +130,7 @@ class MentalStatusFormValidator(CrfFormValidator):
                     )
                 elif self.cleaned_data.get("any_other_problems") == YES:
                     self.raise_applicable(field=fld, msg="Other problems reported.")
-                elif self.cleaned_data.get("modified_rankin_score") not in ["0", NOT_DONE]:
+                elif self.cleaned_data.get("modified_rankin_score") != "0":
                     self.raise_applicable(field=fld, msg="Modified Rankin Score > 0.")
                 elif self.cleaned_data.get("ecog_score") != "0":
                     self.raise_applicable(field=fld, msg="ECOG score > 0.")
