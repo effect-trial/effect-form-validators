@@ -89,12 +89,12 @@ class MentalStatusFormValidator(CrfFormValidator):
 
             elif require_help_response == NO and any_other_problems_response == NO:
                 msg_text = (
-                    "Invalid. Expected to be '0' if participant "
+                    "Invalid. Expected score between '0' and '2' if participant "
                     "does not require help or have any other problems."
                 )
-                if modified_rankin_score_response not in ["0"]:
+                if modified_rankin_score_response not in ["0", "1", "2"]:
                     error_msg.update({"modified_rankin_score": msg_text})
-                if ecog_score_response not in ["0"]:
+                if ecog_score_response not in ["0", "1", "2"]:
                     error_msg.update({"ecog_score": msg_text})
 
             if error_msg:
