@@ -92,8 +92,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    # TODO: Review
-    def test_reportable_fieldset_not_applicable_at_baseline(self):
+    def test_reportable_fieldset_not_applicable_if_no_symptoms_at_baseline(self):
         self.mock_is_baseline.return_value = True
         for reporting_field in self.reportable_fields:
             for response in [YES, NO]:
@@ -110,6 +109,109 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         "This field is not applicable. No symptoms were reported.",
                         str(cm.exception.error_dict.get(reporting_field)),
                     )
+
+                    cleaned_data.update({reporting_field: NOT_APPLICABLE})
+                    form_validator = MentalStatusFormValidator(
+                        cleaned_data=cleaned_data, model=MentalStatusMockModel
+                    )
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_reporting_fieldset_applicable_if_symptoms_at_baseline(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(visit_code=DAY01)
+        cleaned_data.update(
+            {
+                "ecog_score": "1",  # <-- any sx makes reporting fieldset applicable
+                "reportable_as_ae": NOT_APPLICABLE,
+                "patient_admitted": NOT_APPLICABLE,
+            }
+        )
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("reportable_as_ae", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable.",
+            str(cm.exception.error_dict.get("reportable_as_ae")),
+        )
+
+        cleaned_data.update({"reportable_as_ae": NO})
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("patient_admitted", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable.",
+            str(cm.exception.error_dict.get("patient_admitted")),
+        )
+
+        cleaned_data.update({"patient_admitted": NO})
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_reporting_fieldset_can_be_answered_at_baseline(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(
+            visit_code="1000",
+            visit_code_sequence=0,
+        )
+        cleaned_data.update(
+            {
+                "recent_seizure": NO,
+                "behaviour_change": NO,
+                "confusion": NO,
+                "modified_rankin_score": "2",  # <-- any sx makes reporting fieldset applicable
+                "ecog_score": "1",  # <-- any sx makes reporting fieldset applicable
+                "glasgow_coma_score": 15,
+                "reportable_as_ae": NO,
+                "patient_admitted": YES,
+            }
+        )
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_reporting_fieldset_can_be_not_applicable_at_baseline(self):
+        self.mock_is_baseline.return_value = True
+        cleaned_data = self.get_cleaned_data(
+            visit_code="1000",
+            visit_code_sequence=0,
+        )
+        cleaned_data.update(
+            {
+                "recent_seizure": NO,
+                "behaviour_change": NO,
+                "confusion": NO,
+                "modified_rankin_score": "0",
+                "ecog_score": "0",
+                "glasgow_coma_score": 15,
+                "reportable_as_ae": NOT_APPLICABLE,
+                "patient_admitted": NOT_APPLICABLE,
+            }
+        )
+        form_validator = MentalStatusFormValidator(
+            cleaned_data=cleaned_data, model=MentalStatusMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_reporting_fieldset_can_be_not_applicable_after_baseline(self):
         self.mock_is_baseline.return_value = False
