@@ -9,33 +9,33 @@ unreleased
     - if require_help AND any_other_problems both NO, Modified Rankin + ECOG
       should be 0-2 (as per #455-7)
 
-[0.1.31]
---------
+0.1.31
+------
 - add Participant History form validation for 'admission_indication' (#540)
 
-[0.1.30]
---------
+0.1.30
+------
 - fix 'Server error on ARV history form' (missing subject_screening property), (#535)
 
-[0.1.29]
---------
+0.1.29
+------
 - add Adherence Day 14 form validation for days/doses missed (for flucon and flucyt) (towards #422)
 - drop Django 4.0 support
 
-[0.1.28]
---------
+0.1.28
+------
 - fix 'Server error on participant history form (with previous opportunistic infection)' (#515)
 
-[0.1.27]
---------
+0.1.27
+------
 - updates to ARV History form validation (#375, #479, #506)
     - improve validation for applicability of 'art_decision' question (#375)
     - fix validation preventing 'is_adherent' from being answered when applicable (#479, #506)
     - other validation improvements/fixes
 - expand test matrix to include Py: 3.11
 
-[0.1.26]
---------
+0.1.26
+------
 - update Subject Screening allow 'serum_crag_date' > 14 days to be saved (patient to remain ineligible) (#488)
 - update to support edc 0.4.51
 
