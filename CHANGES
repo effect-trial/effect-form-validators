@@ -1,6 +1,14 @@
 Changes
 =======
 
+unreleased
+------
+- updates to Mental Status form validation (#455, #482)
+    - allow ECOG and Modified Rankin to be all but deceased/dead at baseline (#455, #482)
+    - support removal of 'Not done' choice (as per #455-7)
+    - if require_help AND any_other_problems both NO, Modified Rankin + ECOG
+      should be 0-2 (as per #455-7)
+
 [0.1.31]
 --------
 - add Participant History form validation for 'admission_indication' (#540)
