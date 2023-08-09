@@ -38,6 +38,8 @@ is_baseline_import_path = (
 
 
 class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
+    reportable_fields = ["reportable_as_ae", "patient_admitted"]
+
     def setUp(self) -> None:
         super().setUp()
         self.sisx_choice_na = MockModel(
@@ -330,3 +332,41 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     form_validator.validate()
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    @patch(is_baseline_import_path)
+    def test_reporting_fieldset_not_applicable_if_no_si_sx_d3(self, mock_is_baseline):
+        mock_is_baseline.return_value = False
+        self.subject_visit.assessment_type = TELEPHONE
+
+        for reporting_fld in self.reportable_fields:
+            for response in [YES, NO]:
+                with self.subTest(reporting_fld=reporting_fld, response=response):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "any_sx": NO,
+                            "xray_performed": NOT_APPLICABLE,
+                            "lp_performed": NOT_APPLICABLE,
+                            "urinary_lam_performed": NOT_APPLICABLE,
+                            reporting_fld: response,
+                        }
+                    )
+                    form_validator = SignsAndSymptomsFormValidator(
+                        cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                    )
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn(reporting_fld, cm.exception.error_dict)
+                    self.assertEqual(
+                        {reporting_fld: ["This field is not applicable."]},
+                        cm.exception.message_dict,
+                    )
+
+                    cleaned_data.update({reporting_fld: NOT_APPLICABLE})
+                    form_validator = SignsAndSymptomsFormValidator(
+                        cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                    )
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
