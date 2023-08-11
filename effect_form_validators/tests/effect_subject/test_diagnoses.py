@@ -81,6 +81,8 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
             {
                 "gi_side_effects": YES,
                 "gi_side_effects_details": "some details",
+                "reportable_as_ae": NO,
+                "patient_admitted": NO,
             }
         )
         form_validator = DiagnosesFormValidator(
@@ -270,6 +272,89 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
             form_validator.validate()
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_reporting_fields_applicable_if_gi_side_effects_YES(self):
+        for reporting_fld_answer in [YES, NO]:
+            with self.subTest(
+                reporting_fld_answer=reporting_fld_answer,
+            ):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "gi_side_effects": YES,
+                        "gi_side_effects_details": "some details",
+                        "reportable_as_ae": NOT_APPLICABLE,
+                        "patient_admitted": NOT_APPLICABLE,
+                    }
+                )
+
+                form_validator = DiagnosesFormValidator(
+                    cleaned_data=cleaned_data, model=DiagnosesMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("reportable_as_ae", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is applicable.",
+                    str(cm.exception.error_dict.get("reportable_as_ae")),
+                )
+
+                cleaned_data.update({"reportable_as_ae": reporting_fld_answer})
+                form_validator = DiagnosesFormValidator(
+                    cleaned_data=cleaned_data, model=DiagnosesMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("patient_admitted", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is applicable.",
+                    str(cm.exception.error_dict.get("patient_admitted")),
+                )
+
+                cleaned_data.update({"patient_admitted": reporting_fld_answer})
+                form_validator = DiagnosesFormValidator(
+                    cleaned_data=cleaned_data, model=DiagnosesMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_reporting_fields_not_applicable_if_gi_side_effects_NO(self):
+        for reporting_fld in self.reportable_fields:
+            for reporting_fld_answer in [YES, NO]:
+                with self.subTest(
+                    reporting_fld=reporting_fld,
+                    reporting_fld_answer=reporting_fld_answer,
+                ):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "gi_side_effects": NO,
+                            "gi_side_effects_details": "",
+                            reporting_fld: reporting_fld_answer,
+                        }
+                    )
+
+                    form_validator = DiagnosesFormValidator(
+                        cleaned_data=cleaned_data, model=DiagnosesMockModel
+                    )
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn(reporting_fld, cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is not applicable.",
+                        str(cm.exception.error_dict.get(reporting_fld)),
+                    )
+
+                    cleaned_data.update({reporting_fld: NOT_APPLICABLE})
+                    form_validator = DiagnosesFormValidator(
+                        cleaned_data=cleaned_data, model=DiagnosesMockModel
+                    )
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_reporting_fields_applicable_if_has_diagnoses_YES(self):
         for reporting_fld_answer in [YES, NO]:

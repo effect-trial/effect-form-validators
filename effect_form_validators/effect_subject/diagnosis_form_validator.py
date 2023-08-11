@@ -28,7 +28,7 @@ class DiagnosesFormValidator(CrfFormValidator):
                 m2m_field="diagnoses",
                 error_msg="Expected N/A only if NO significant diagnoses to report.",
             )
-        elif self.cleaned_data.get("has_diagnoses") == YES:
+        else:
             self.m2m_selections_not_expected(
                 NOT_APPLICABLE,
                 m2m_field="diagnoses",
@@ -40,5 +40,9 @@ class DiagnosesFormValidator(CrfFormValidator):
         self.m2m_other_specify(OTHER, m2m_field="diagnoses", field_other="diagnoses_other")
 
     def validate_reporting_fieldset(self: Any) -> None:
+        condition = (
+            self.cleaned_data.get("gi_side_effects") == YES
+            or self.cleaned_data.get("has_diagnoses") == YES
+        )
         for reportable_field in self.reportable_fields:
-            self.applicable_if(YES, field="has_diagnoses", field_applicable=reportable_field)
+            self.applicable_if_true(condition=condition, field_applicable=reportable_field)
