@@ -30,11 +30,6 @@ class SignsAndSymptomsFormValidator(FormValidatorTestMixin, Base):
     pass
 
 
-is_baseline_import_path = (
-    "effect_form_validators.effect_subject.signs_and_symptoms_form_validator.is_baseline"
-)
-
-
 class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
     reportable_fields = ["reportable_as_ae", "patient_admitted"]
 
