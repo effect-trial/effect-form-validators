@@ -8,9 +8,18 @@ class DiagnosesFormValidator(CrfFormValidator):
     reportable_fields = ["reportable_as_ae", "patient_admitted"]
 
     def clean(self) -> None:
+        self.validate_gi_side_effects()
+
         self.validate_diagnoses()
 
         self.validate_reporting_fieldset()
+
+    def validate_gi_side_effects(self):
+        self.validate_other_specify(
+            field="gi_side_effects",
+            other_specify_field="gi_side_effects_details",
+            other_stored_value=YES,
+        )
 
     def validate_diagnoses(self: Any) -> Any:
         if self.cleaned_data.get("has_diagnoses") == NO:
