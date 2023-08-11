@@ -8,6 +8,7 @@ unreleased
     - support removal of 'Not done' choice (as per #455-7)
     - if require_help AND any_other_problems both NO, Modified Rankin + ECOG
       should be 0-2 (as per #455-7)
+- make reporting fields applicable at baseline (if 'any_symptoms') in Signs and Symptoms (#418)
 - updates to Significant Diagnoses form validation (#403, #603)
     - to validate 'gi_side_effects_details' against answer to 'gi_side_effects' (#663)
     - to make reporting fields applicable, if participant has any 'gi_side_effects' (#403)
