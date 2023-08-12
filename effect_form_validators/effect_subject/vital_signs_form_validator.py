@@ -1,7 +1,6 @@
 from edc_constants.constants import YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
-from edc_visit_schedule.utils import is_baseline
 from edc_vitals import has_severe_htn
 from edc_vitals.form_validators import BloodPressureFormValidatorMixin
 from edc_vitals.utils import (
@@ -21,13 +20,10 @@ class VitalSignsFormValidator(BloodPressureFormValidatorMixin, CrfFormValidator)
 
         self.raise_on_systolic_lt_diastolic_bp(**self.cleaned_data)
 
-        for fld in ["reportable_as_ae", "patient_admitted"]:
-            self.applicable_if_true(
-                condition=not is_baseline(instance=self.related_visit),
-                field_applicable=fld,
-                not_applicable_msg="Not applicable at baseline",
-            )
+        self.validate_reporting_fieldset()
 
+    def validate_reporting_fieldset(self):
+        self.applicable_if_true(True, field_applicable="reportable_as_ae")
         if self.cleaned_data.get("reportable_as_ae") != YES and has_severe_htn(
             sys=self.cleaned_data.get("sys_blood_pressure"),
             dia=self.cleaned_data.get("dia_blood_pressure"),
@@ -57,3 +53,4 @@ class VitalSignsFormValidator(BloodPressureFormValidatorMixin, CrfFormValidator)
                 },
                 error_code=INVALID_ERROR,
             )
+        self.applicable_if_true(True, field_applicable="patient_admitted")
