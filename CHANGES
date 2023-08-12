@@ -1,7 +1,7 @@
 Changes
 =======
 
-unreleased
+0.1.32
 ------
 - updates to Mental Status form validation (#455, #482)
     - allow ECOG and Modified Rankin to be all but deceased/dead at baseline (#455, #482)
