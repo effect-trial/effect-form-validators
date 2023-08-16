@@ -1,6 +1,10 @@
 Changes
 =======
 
+unreleased
+------
+- re-add Python 3.10 support
+
 0.1.32
 ------
 - updates to Mental Status form validation (#455, #482)
