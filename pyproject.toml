@@ -56,9 +56,7 @@ DJANGO =
 deps =
     -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/tox.txt
     -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/test_utils.txt
-    # TODO: Revert to just using edc.txt when dropping py310 support
-    py310: effect-edc>=0.1.36
-    py311: -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/edc.txt
+    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/edc.txt
     -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/third_party_dev.txt
     dj41: Django>=4.1,<4.2
     dj42: Django>=4.2,<5.0
