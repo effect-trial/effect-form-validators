@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.1.34
+------
+- drop Django 4.1 support
+- drop Python 3.10 support
+
 0.1.33
 ------
 - re-add Python 3.10 support
