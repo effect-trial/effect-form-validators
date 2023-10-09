@@ -3,6 +3,7 @@ Changes
 
 unreleased
 ------
+- drop Django 4.1 support
 - drop Python 3.10 support
 
 0.1.33
