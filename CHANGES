@@ -1,6 +1,10 @@
 Changes
 =======
 
+unreleased
+------
+- drop Python 3.10 support
+
 0.1.33
 ------
 - re-add Python 3.10 support
