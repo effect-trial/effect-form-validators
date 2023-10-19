@@ -42,7 +42,3 @@ class LpCsfFormValidator(
         self.validate_requisition(
             requisition, "csf_culture_assay_datetime", self.csf_culture_panel
         )
-        self.required_if_true(
-            self.cleaned_data.get("quantitative_culture") is not None,
-            field_required=requisition,
-        )
