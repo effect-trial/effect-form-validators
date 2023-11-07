@@ -1,6 +1,10 @@
 Changes
 =======
 
+unreleased
+------
+- add trial specific Death Report form validation
+
 0.1.35
 ------
 - fix 'CSF CRF culture requisition - field not required error' (#377)
