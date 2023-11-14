@@ -7,13 +7,13 @@ effect-form-validators
 Form validator classes for `EFFECT Edc <https://github.com/effect-trial/effect-edc#readme>`_ model forms
 
 .. |pypi| image:: https://img.shields.io/pypi/v/effect-form-validators.svg
-    :target: https://pypi.python.org/pypi/effect-form-validators
+   :target: https://pypi.python.org/pypi/effect-form-validators
 
-.. |actions| image:: https://github.com/effect-trial/effect-form-validators/workflows/build/badge.svg?branch=develop
-  :target: https://github.com/effect-trial/effect-form-validators/actions?query=workflow:build
+.. |actions| image:: https://github.com/effect-trial/effect-form-validators/actions/workflows/build.yml/badge.svg
+   :target: https://github.com/effect-trial/effect-form-validators/actions/workflows/build.yml
 
 .. |codecov| image:: https://codecov.io/gh/effect-trial/effect-form-validators/branch/develop/graph/badge.svg
-  :target: https://codecov.io/gh/effect-trial/effect-form-validators
+   :target: https://codecov.io/gh/effect-trial/effect-form-validators
 
 .. |downloads| image:: https://pepy.tech/badge/effect-form-validators
    :target: https://pepy.tech/project/effect-form-validators
