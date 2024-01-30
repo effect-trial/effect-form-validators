@@ -63,7 +63,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
             if self.in_person_visit():
                 error_msg = (
                     "Invalid. Cannot be 'Unknown' "
-                    f"if this is an '{get_display(ASSESSMENT_TYPES,IN_PERSON)}' visit."
+                    f"if this is an '{get_display(ASSESSMENT_TYPES, IN_PERSON)}' visit."
                 )
             elif self.cleaned_data.get("subject_visit").assessment_who == PATIENT:
                 error_msg = (
@@ -163,7 +163,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
                 field_applicable=fld,
                 not_applicable_msg=(
                     "Invalid. This field is not applicable if this is not "
-                    f"an '{get_display(ASSESSMENT_TYPES,IN_PERSON)}' visit."
+                    f"an '{get_display(ASSESSMENT_TYPES, IN_PERSON)}' visit."
                 ),
             )
 
