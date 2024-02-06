@@ -2,7 +2,9 @@
 import logging
 import os.path
 import sys
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import django
 from django.conf import settings
@@ -12,8 +14,8 @@ app_name = "effect_form_validators"
 base_dir = Path(__file__).resolve().parent.parent
 
 DEFAULT_SETTINGS = dict(
-    BASE_DIR=Path(__file__).resolve().parent.parent,
-    SECRET_KEY="django-insecure-37g_by$&j(g8r9uqn%*@i3!4y6_rxlyf57itfp+)_)z2(6!=$l",
+    BASE_DIR=base_dir,
+    SECRET_KEY="django-insecure-37g_by$&j(g8r9uqn%*@i3!_rxlyf57itfp+)_)z2(6!=$l",  # nosec B106
     DEBUG=True,
     SUBJECT_CONSENT_MODEL=None,
     # SUBJECT_SCREENING_MODEL=None,
@@ -82,6 +84,11 @@ DEFAULT_SETTINGS = dict(
     USE_TZ=True,
     STATIC_URL="/static/",
     DEFAULT_AUTO_FIELD="django.db.models.BigAutoField",
+    SITE_ID=101,
+    EDC_PROTOCOL_STUDY_OPEN_DATETIME=datetime(2022, 5, 10, tzinfo=ZoneInfo("Africa/Gaborone")),
+    EDC_PROTOCOL_STUDY_CLOSE_DATETIME=datetime(
+        2026, 12, 31, tzinfo=ZoneInfo("Africa/Gaborone")
+    ),
 )
 
 

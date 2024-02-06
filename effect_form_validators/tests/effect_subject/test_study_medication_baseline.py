@@ -680,9 +680,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     cleaned_data.update(
                         {
                             "flucyt_initiated": answer,
-                            "flucyt_not_initiated_reason": "Some reason"
-                            if answer == NO
-                            else "",
+                            "flucyt_not_initiated_reason": (
+                                "Some reason" if answer == NO else ""
+                            ),
                             "flucyt_dose_datetime": None,
                             "flucyt_dose": None,
                             # Reset all individual doses to None
@@ -751,9 +751,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     cleaned_data.update(
                         {
                             "flucyt_initiated": answer,
-                            "flucyt_not_initiated_reason": "Some reason"
-                            if answer == NO
-                            else "",
+                            "flucyt_not_initiated_reason": (
+                                "Some reason" if answer == NO else ""
+                            ),
                             "flucyt_dose_datetime": None,
                             "flucyt_dose": None,
                             # Reset all individual doses to None
@@ -867,9 +867,9 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
                     cleaned_data.update(
                         {
                             "flucyt_initiated": answer,
-                            "flucyt_not_initiated_reason": "Some reason"
-                            if answer == NO
-                            else "",
+                            "flucyt_not_initiated_reason": (
+                                "Some reason" if answer == NO else ""
+                            ),
                             "flucyt_dose_datetime": None,
                             "flucyt_dose": None,
                             "flucyt_dose_0400": None,
