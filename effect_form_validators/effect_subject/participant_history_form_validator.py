@@ -5,6 +5,8 @@ from edc_form_validators import INVALID_ERROR
 
 class ParticipantHistoryFormValidator(CrfFormValidator):
     def _clean(self) -> None:
+        self.required_if(YES, field="inpatient", field_required="admission_indication")
+
         self.validate_flucon()
 
         self.required_if(

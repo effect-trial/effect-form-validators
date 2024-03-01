@@ -1,5 +1,3 @@
-from unittest.mock import patch
-
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
@@ -32,16 +30,16 @@ class SignsAndSymptomsFormValidator(FormValidatorTestMixin, Base):
     pass
 
 
-is_baseline_import_path = (
-    "effect_form_validators.effect_subject.signs_and_symptoms_form_validator.is_baseline"
-)
-
-
 class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
+    reportable_fields = ["reportable_as_ae", "patient_admitted"]
+
     def setUp(self) -> None:
         super().setUp()
         self.sisx_choice_na = MockModel(
             mock_name="SiSx", name=NOT_APPLICABLE, display_name=NOT_APPLICABLE
+        )
+        self.sisx_choice_fever = MockModel(
+            mock_name="SiSx", name="fever", display_name="fever"
         )
         self.sisx_choice_headache = MockModel(
             mock_name="SiSx", name=HEADACHE, display_name=HEADACHE
@@ -74,9 +72,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
         )
         return cleaned_data
 
-    @patch(is_baseline_import_path)
-    def test_cleaned_data_ok(self, mock_is_baseline):
-        mock_is_baseline.return_value = True
+    def test_cleaned_data_ok(self):
         self.subject_visit.assessment_type = IN_PERSON
         form_validator = SignsAndSymptomsFormValidator(cleaned_data=self.get_cleaned_data())
         try:
@@ -84,9 +80,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    @patch(is_baseline_import_path)
-    def test_any_sx_unknown_ok(self, mock_is_baseline):
-        mock_is_baseline.return_value = True
+    def test_any_sx_unknown_ok(self):
         self.subject_visit.assessment_type = TELEPHONE
         self.subject_visit.assessment_who = NEXT_OF_KIN
         cleaned_data = self.get_cleaned_data()
@@ -117,9 +111,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    @patch(is_baseline_import_path)
-    def test_any_sx_unknown_raises_if_in_person_visit(self, mock_is_baseline):
-        mock_is_baseline.return_value = True
+    def test_any_sx_unknown_raises_if_in_person_visit(self):
         self.subject_visit.assessment_type = IN_PERSON
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(any_sx=UNKNOWN)
@@ -135,9 +127,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
             cm.exception.message_dict,
         )
 
-    @patch(is_baseline_import_path)
-    def test_unknown_raises_if_telephone_visit_with_patient(self, mock_is_baseline):
-        mock_is_baseline.return_value = True
+    def test_unknown_raises_if_telephone_visit_with_patient(self):
         self.subject_visit.assessment_type = TELEPHONE
         self.subject_visit.assessment_who = PATIENT
         cleaned_data = self.get_cleaned_data()
@@ -154,9 +144,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
             cm.exception.message_dict,
         )
 
-    @patch(is_baseline_import_path)
-    def test_any_sx_unknown_ok_if_did_not_speak_to_patient(self, mock_is_baseline):
-        mock_is_baseline.return_value = True
+    def test_any_sx_unknown_ok_if_did_not_speak_to_patient(self):
         self.subject_visit.assessment_type = TELEPHONE
         self.subject_visit.assessment_who = NEXT_OF_KIN
         cleaned_data = self.get_cleaned_data()
@@ -180,9 +168,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertNotIn("any_sx", cm.exception.error_dict)
 
-    @patch(is_baseline_import_path)
-    def test_investigations_performed_applicable_if_in_person_visit(self, mock_is_baseline):
-        mock_is_baseline.return_value = True
+    def test_investigations_performed_applicable_if_in_person_visit(self):
         self.subject_visit.assessment_type = IN_PERSON
 
         for fld in self.investigations_performed_fields:
@@ -229,11 +215,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     except ValidationError as e:
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    @patch(is_baseline_import_path)
-    def test_investigations_performed_not_applicable_if_not_in_person_visit(
-        self, mock_is_baseline
-    ):
-        mock_is_baseline.return_value = True
+    def test_investigations_performed_not_applicable_if_not_in_person_visit(self):
         for fld in self.investigations_performed_fields:
             for assess_type, assess_who in [(TELEPHONE, NEXT_OF_KIN), (OTHER, OTHER)]:
                 for answer in [YES, NO]:
@@ -281,9 +263,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                             cm.exception.message_dict,
                         )
 
-    @patch(is_baseline_import_path)
-    def test_specified_headache_duration_zero_raises(self, mock_is_baseline):
-        mock_is_baseline.return_value = True
+    def test_specified_headache_duration_zero_raises(self):
         self.subject_visit.assessment_type = IN_PERSON
 
         for invalid_duration in ["0d", "0h", "0d0h", "00d", "00h", "000d00h"]:
@@ -308,9 +288,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     cm.exception.message_dict,
                 )
 
-    @patch(is_baseline_import_path)
-    def test_specified_headache_duration_gt_zero_ok(self, mock_is_baseline):
-        mock_is_baseline.return_value = True
+    def test_specified_headache_duration_gt_zero_ok(self):
         self.subject_visit.assessment_type = IN_PERSON
 
         for valid_duration in ["1d", "1h", "1d6h", "03d", "23h", "001d01h"]:
@@ -322,7 +300,187 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     current_sx=MockSet(self.sisx_choice_headache),
                     current_sx_gte_g3=MockSet(self.sisx_choice_na),
                     headache_duration=valid_duration,
+                    reportable_as_ae=NO,
+                    patient_admitted=NO,
                 )
+                form_validator = SignsAndSymptomsFormValidator(
+                    cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_reporting_fieldset_not_applicable_at_baseline_if_si_sx_NO(self):
+        for reporting_fld in self.reportable_fields:
+            for response in [YES, NO]:
+                with self.subTest(reporting_fld=reporting_fld, response=response):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "any_sx": NO,
+                            "xray_performed": NOT_APPLICABLE,
+                            "lp_performed": NOT_APPLICABLE,
+                            "urinary_lam_performed": NOT_APPLICABLE,
+                            reporting_fld: response,
+                        }
+                    )
+                    form_validator = SignsAndSymptomsFormValidator(
+                        cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                    )
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn(reporting_fld, cm.exception.error_dict)
+                    self.assertEqual(
+                        {reporting_fld: ["This field is not applicable."]},
+                        cm.exception.message_dict,
+                    )
+
+                    cleaned_data.update({reporting_fld: NOT_APPLICABLE})
+                    form_validator = SignsAndSymptomsFormValidator(
+                        cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                    )
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_reporting_fieldset_not_applicable_on_d3_if_si_sx_NO(self):
+        self.subject_visit.assessment_type = TELEPHONE
+
+        for reporting_fld in self.reportable_fields:
+            for response in [YES, NO]:
+                with self.subTest(reporting_fld=reporting_fld, response=response):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "any_sx": NO,
+                            "xray_performed": NOT_APPLICABLE,
+                            "lp_performed": NOT_APPLICABLE,
+                            "urinary_lam_performed": NOT_APPLICABLE,
+                            reporting_fld: response,
+                        }
+                    )
+                    form_validator = SignsAndSymptomsFormValidator(
+                        cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                    )
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn(reporting_fld, cm.exception.error_dict)
+                    self.assertEqual(
+                        {reporting_fld: ["This field is not applicable."]},
+                        cm.exception.message_dict,
+                    )
+
+                    cleaned_data.update({reporting_fld: NOT_APPLICABLE})
+                    form_validator = SignsAndSymptomsFormValidator(
+                        cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                    )
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_reporting_fieldset_applicable_at_baseline_if_si_sx_YES(self):
+        for response in [YES, NO]:
+            with self.subTest(response=response):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "any_sx": YES,
+                        "current_sx": MockSet(self.sisx_choice_fever),
+                        "current_sx_gte_g3": (
+                            MockSet(self.sisx_choice_fever)
+                            if response == YES
+                            else MockSet(self.sisx_choice_na)
+                        ),
+                        "cm_sx": NO,
+                        "xray_performed": NOT_APPLICABLE,
+                        "lp_performed": NOT_APPLICABLE,
+                        "urinary_lam_performed": NOT_APPLICABLE,
+                        "reportable_as_ae": NOT_APPLICABLE,
+                        "patient_admitted": NOT_APPLICABLE,
+                    }
+                )
+                form_validator = SignsAndSymptomsFormValidator(
+                    cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("reportable_as_ae", cm.exception.error_dict)
+                self.assertEqual(
+                    {"reportable_as_ae": ["This field is applicable."]},
+                    cm.exception.message_dict,
+                )
+
+                cleaned_data.update({"reportable_as_ae": response})
+                form_validator = SignsAndSymptomsFormValidator(
+                    cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("patient_admitted", cm.exception.error_dict)
+                self.assertEqual(
+                    {"patient_admitted": ["This field is applicable."]},
+                    cm.exception.message_dict,
+                )
+
+                cleaned_data.update({"patient_admitted": response})
+                form_validator = SignsAndSymptomsFormValidator(
+                    cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_reporting_fieldset_applicable_on_d3_if_si_sx_YES(self):
+        self.subject_visit.assessment_type = TELEPHONE
+
+        for response in [YES, NO]:
+            with self.subTest(response=response):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "any_sx": YES,
+                        "current_sx": MockSet(self.sisx_choice_fever),
+                        "current_sx_gte_g3": (
+                            MockSet(self.sisx_choice_fever)
+                            if response == YES
+                            else MockSet(self.sisx_choice_na)
+                        ),
+                        "cm_sx": NO,
+                        "xray_performed": NOT_APPLICABLE,
+                        "lp_performed": NOT_APPLICABLE,
+                        "urinary_lam_performed": NOT_APPLICABLE,
+                        "reportable_as_ae": NOT_APPLICABLE,
+                        "patient_admitted": NOT_APPLICABLE,
+                    }
+                )
+                form_validator = SignsAndSymptomsFormValidator(
+                    cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("reportable_as_ae", cm.exception.error_dict)
+                self.assertEqual(
+                    {"reportable_as_ae": ["This field is applicable."]},
+                    cm.exception.message_dict,
+                )
+
+                cleaned_data.update({"reportable_as_ae": response})
+                form_validator = SignsAndSymptomsFormValidator(
+                    cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("patient_admitted", cm.exception.error_dict)
+                self.assertEqual(
+                    {"patient_admitted": ["This field is applicable."]},
+                    cm.exception.message_dict,
+                )
+
+                cleaned_data.update({"patient_admitted": response})
                 form_validator = SignsAndSymptomsFormValidator(
                     cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
                 )

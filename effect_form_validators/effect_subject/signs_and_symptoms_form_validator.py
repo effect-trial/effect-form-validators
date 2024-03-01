@@ -19,9 +19,8 @@ from edc_constants.disease_constants import (
 )
 from edc_constants.utils import get_display
 from edc_crf.crf_form_validator import CrfFormValidator
-from edc_form_validators import INVALID_ERROR, NOT_APPLICABLE_ERROR
+from edc_form_validators import INVALID_ERROR
 from edc_model.utils import timedelta_from_duration_dh_field
-from edc_visit_schedule.utils import is_baseline
 from edc_visit_tracking.choices import ASSESSMENT_TYPES, ASSESSMENT_WHO_CHOICES
 
 
@@ -64,7 +63,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
             if self.in_person_visit():
                 error_msg = (
                     "Invalid. Cannot be 'Unknown' "
-                    f"if this is an '{get_display(ASSESSMENT_TYPES,IN_PERSON)}' visit."
+                    f"if this is an '{get_display(ASSESSMENT_TYPES, IN_PERSON)}' visit."
                 )
             elif self.cleaned_data.get("subject_visit").assessment_who == PATIENT:
                 error_msg = (
@@ -164,46 +163,37 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
                 field_applicable=fld,
                 not_applicable_msg=(
                     "Invalid. This field is not applicable if this is not "
-                    f"an '{get_display(ASSESSMENT_TYPES,IN_PERSON)}' visit."
+                    f"an '{get_display(ASSESSMENT_TYPES, IN_PERSON)}' visit."
                 ),
             )
 
     def validate_reporting_fieldset(self):
-        # hospitalization not reportable at baseline
-        baseline = is_baseline(instance=self.cleaned_data.get("subject_visit"))
-        for fld in self.reportable_fields:
-            if baseline and self.cleaned_data.get(fld) != NOT_APPLICABLE:
-                raise self.raise_validation_error(
-                    {fld: "Not applicable at baseline."}, NOT_APPLICABLE_ERROR
-                )
+        self.applicable_if(YES, field="any_sx", field_applicable="reportable_as_ae")
 
-        if not baseline:
-            self.applicable_if(YES, field="any_sx", field_applicable="reportable_as_ae")
+        sx_gte_g3_selections = self._get_selection_keys("current_sx_gte_g3")
+        if (
+            sx_gte_g3_selections == [NOT_APPLICABLE]
+            and self.cleaned_data.get("reportable_as_ae") == YES
+        ):
+            raise forms.ValidationError(
+                {
+                    "reportable_as_ae": (
+                        "Invalid selection. "
+                        "Expected 'No', if no symptoms at Grade 3 or above were reported."
+                    )
+                }
+            )
+        if (
+            sx_gte_g3_selections != [NOT_APPLICABLE]
+            and self.cleaned_data.get("reportable_as_ae") == NO
+        ):
+            raise forms.ValidationError(
+                {
+                    "reportable_as_ae": (
+                        "Invalid selection. "
+                        "Expected 'Yes', if symptoms Grade 3 or above were reported."
+                    )
+                }
+            )
 
-            sx_gte_g3_selections = self._get_selection_keys("current_sx_gte_g3")
-            if (
-                sx_gte_g3_selections == [NOT_APPLICABLE]
-                and self.cleaned_data.get("reportable_as_ae") == YES
-            ):
-                raise forms.ValidationError(
-                    {
-                        "reportable_as_ae": (
-                            "Invalid selection. "
-                            "Expected 'No', if no symptoms at Grade 3 or above were reported."
-                        )
-                    }
-                )
-            if (
-                sx_gte_g3_selections != [NOT_APPLICABLE]
-                and self.cleaned_data.get("reportable_as_ae") == NO
-            ):
-                raise forms.ValidationError(
-                    {
-                        "reportable_as_ae": (
-                            "Invalid selection. "
-                            "Expected 'Yes', if symptoms Grade 3 or above were reported."
-                        )
-                    }
-                )
-
-            self.applicable_if(YES, field="any_sx", field_applicable="patient_admitted")
+        self.applicable_if(YES, field="any_sx", field_applicable="patient_admitted")
