@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.1.39
+------
+- add validation for Consent Version 2 and Consent Version 2 (Update)
+  forms (#755)
+
 0.1.36
 ------
 - add trial specific Death Report form validation
