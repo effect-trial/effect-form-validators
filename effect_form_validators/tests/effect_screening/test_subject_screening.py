@@ -213,8 +213,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             str(cm.exception.error_dict.get("cd4_date")),
         )
 
-    def test_cd4_gt_21_days_before_report_date_raises(self):
-        for days in [22, 30, 60]:
+    def test_cd4_date_gt_21_days_before_report_date_ok(self):
+        for days in [22, 30, 60, 365]:
             with self.subTest(days_after=days):
                 cleaned_data = self.get_cleaned_data()
                 report_datetime = get_utcnow() - relativedelta(days=7)
@@ -223,16 +223,18 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "report_datetime": report_datetime,
                         "cd4_value": self.ELIGIBLE_CD4_VALUE,
                         "cd4_date": report_datetime.date() - relativedelta(days=days),
+                        # TODO: review below after #488 changes applied
+                        "serum_crag_date": (
+                            report_datetime.date() - relativedelta(days=days - 1)
+                        ),
+                        "lp_date": report_datetime.date() - relativedelta(days=days - 1),
                     }
                 )
                 form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-                with self.assertRaises(ValidationError) as cm:
+                try:
                     form_validator.validate()
-                self.assertIn("cd4_date", cm.exception.error_dict)
-                self.assertIn(
-                    "Invalid. Cannot be more than 21 days before the report date",
-                    str(cm.exception.error_dict.get("cd4_date")),
-                )
+                except forms.ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_cd4_date_before_on_after_hiv_confirmed_date_ok(self):
         for cd4_days_ago in [8, 7, 6]:
