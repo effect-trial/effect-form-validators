@@ -1,7 +1,7 @@
 Changes
 =======
 
-0.1.40 (unreleased)
+0.1.40
 ------
 - updates to Subject Screening validation (#503)
     - allow out of date CD4 to be saved, though will remain ineligible (#503)
