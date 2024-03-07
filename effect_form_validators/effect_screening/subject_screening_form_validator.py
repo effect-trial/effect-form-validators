@@ -52,16 +52,6 @@ class SubjectScreeningFormValidator(
                 raise forms.ValidationError(
                     {"cd4_date": "Invalid. Cannot be after report date"}
                 )
-            if (
-                to_local(self.report_datetime).date() - self.cleaned_data.get("cd4_date")
-            ).days > 21:
-                raise forms.ValidationError(
-                    {
-                        "cd4_date": (
-                            "Invalid. Cannot be more than 21 days before the report date"
-                        )
-                    }
-                )
 
     def validate_serum_crag(self) -> None:
         """Assert serum CrAg is positive, and serum CrAg date is:
@@ -77,6 +67,7 @@ class SubjectScreeningFormValidator(
                 }
             )
 
+        # TODO: remove, see KC request #488-10
         if self.cleaned_data.get("serum_crag_date") and self.cleaned_data.get("cd4_date"):
             days = (
                 self.cleaned_data.get("cd4_date") - self.cleaned_data.get("serum_crag_date")
@@ -86,6 +77,7 @@ class SubjectScreeningFormValidator(
                 raise forms.ValidationError(
                     {"serum_crag_date": "Invalid. Cannot be before CD4 date."}
                 )
+            # TODO: remove, see KC request #488-10
             if not 0 <= abs(days) <= 21:
                 days = (
                     self.cleaned_data.get("serum_crag_date")
