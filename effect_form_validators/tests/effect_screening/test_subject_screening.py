@@ -19,8 +19,8 @@ from edc_constants.constants import (
 from edc_form_validators import FormValidatorTestCaseMixin
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
-from effect_screening.constants import UNABLE_TO_CONTACT
 
+from effect_form_validators.constants import UNABLE_TO_CONTACT
 from effect_form_validators.effect_screening import (
     SubjectScreeningFormValidator as Base,
 )
