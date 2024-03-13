@@ -169,11 +169,16 @@ class SubjectScreeningFormValidator(
         )
 
     def validate_suitability_for_study(self):
-        self.required_if(
-            YES, field="unsuitable_for_study", field_required="reasons_unsuitable"
+        self.applicable_if(
+            YES, field="unsuitable_for_study", field_applicable="unsuitable_reason"
+        )
+        self.validate_other_specify(
+            field="unsuitable_reason",
+            other_specify_field="unsuitable_reason_other",
+            other_stored_value=OTHER,
         )
         self.applicable_if(
-            YES, field="unsuitable_for_study", field_applicable="unsuitable_agreed"
+            OTHER, field="unsuitable_reason", field_applicable="unsuitable_agreed"
         )
         if self.cleaned_data.get("unsuitable_agreed") == NO:
             raise forms.ValidationError(

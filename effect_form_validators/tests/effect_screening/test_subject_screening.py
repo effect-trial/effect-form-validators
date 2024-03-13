@@ -3,6 +3,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from edc_constants.constants import (
+    DECEASED,
     FEMALE,
     MALE,
     NEG,
@@ -10,6 +11,7 @@ from edc_constants.constants import (
     NOT_APPLICABLE,
     NOT_DONE,
     NOT_EVALUATED,
+    OTHER,
     PENDING,
     POS,
     YES,
@@ -17,6 +19,7 @@ from edc_constants.constants import (
 from edc_form_validators import FormValidatorTestCaseMixin
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
+from effect_screening.constants import UNABLE_TO_CONTACT
 
 from effect_form_validators.effect_screening import (
     SubjectScreeningFormValidator as Base,
@@ -72,7 +75,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             "willing_to_participate": YES,
             "consent_ability": YES,
             "unsuitable_for_study": NO,
-            "reasons_unsuitable": "",
+            "unsuitable_reason": NOT_APPLICABLE,
+            "unsuitable_reason_other": "",
             "unsuitable_agreed": NOT_APPLICABLE,
         }
 
@@ -728,48 +732,114 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     str(cm.exception.error_dict.get("breast_feeding")),
                 )
 
-    def test_reasons_unsuitable_required_if_unsuitable_for_study_yes(self):
+    def test_unsuitable_reason_applicable_if_unsuitable_for_study_yes(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
                 "unsuitable_for_study": YES,
-                "reasons_unsuitable": "",
+                "unsuitable_reason": NOT_APPLICABLE,
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
-        self.assertIn("reasons_unsuitable", cm.exception.error_dict)
+        self.assertIn("unsuitable_reason", cm.exception.error_dict)
         self.assertIn(
-            "This field is required.",
-            str(cm.exception.error_dict.get("reasons_unsuitable")),
+            "This field is applicable.",
+            str(cm.exception.error_dict.get("unsuitable_reason")),
         )
 
-    def test_reasons_unsuitable_not_required_if_unsuitable_for_study_not_yes(self):
+        cleaned_data.update({"unsuitable_reason": DECEASED})
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_unsuitable_reason_not_applicable_if_unsuitable_for_study_not_yes(self):
         for answ in [NO, NOT_EVALUATED]:
-            with self.subTest(unsuitable_for_study=answ):
+            with self.subTest(answ=answ):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
                     {
                         "unsuitable_for_study": answ,
-                        "reasons_unsuitable": "Some reason ....",
+                        "unsuitable_reason": UNABLE_TO_CONTACT,
                     }
                 )
                 form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
-                self.assertIn("reasons_unsuitable", cm.exception.error_dict)
+                self.assertIn("unsuitable_reason", cm.exception.error_dict)
                 self.assertIn(
-                    "This field is not required.",
-                    str(cm.exception.error_dict.get("reasons_unsuitable")),
+                    "This field is not applicable.",
+                    str(cm.exception.error_dict.get("unsuitable_reason")),
                 )
 
-    def test_unsuitable_agreed_applicable_if_unsuitable_for_study_yes(self):
+                cleaned_data.update({"unsuitable_reason": NOT_APPLICABLE})
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_unsuitable_reason_other_not_required_if_unsuitable_reason_is_not_other(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
                 "unsuitable_for_study": YES,
-                "reasons_unsuitable": "Some reason",
+                "unsuitable_reason": UNABLE_TO_CONTACT,
+                "unsuitable_reason_other": "some other reason",
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("unsuitable_reason_other", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required.",
+            str(cm.exception.error_dict.get("unsuitable_reason_other")),
+        )
+
+        cleaned_data.update({"unsuitable_reason_other": ""})
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_unsuitable_reason_other_required_if_unsuitable_reason_is_other(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "unsuitable_for_study": YES,
+                "unsuitable_reason": OTHER,
+                "unsuitable_reason_other": "",
+                "unsuitable_agreed": YES,
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("unsuitable_reason_other", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required.",
+            str(cm.exception.error_dict.get("unsuitable_reason_other")),
+        )
+
+        cleaned_data.update({"unsuitable_reason_other": "Some other reason"})
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_unsuitable_agreed_applicable_if_unsuitable_for_study_other(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                "unsuitable_for_study": YES,
+                "unsuitable_reason": OTHER,
+                "unsuitable_reason_other": "Some reason",
                 "unsuitable_agreed": NOT_APPLICABLE,
             }
         )
@@ -782,8 +852,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             str(cm.exception.error_dict.get("unsuitable_agreed")),
         )
 
-    def test_unsuitable_agreed_not_applicable_if_unsuitable_for_study_not_yes(self):
-        for unsuitable_answ in [NO, NOT_EVALUATED]:
+    def test_unsuitable_agreed_not_applicable_if_unsuitable_for_study_not_other(self):
+        for unsuitable_answ in [YES, NO, NOT_EVALUATED]:
             for agreed_answ in [YES, NO]:
                 with self.subTest(
                     unsuitable_for_study=unsuitable_answ, unsuitable_agreed=agreed_answ
@@ -792,7 +862,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     cleaned_data.update(
                         {
                             "unsuitable_for_study": unsuitable_answ,
-                            "reasons_unsuitable": "",
+                            "unsuitable_reason": (
+                                DECEASED if unsuitable_answ == YES else NOT_APPLICABLE
+                            ),
                             "unsuitable_agreed": agreed_answ,
                         }
                     )
@@ -805,12 +877,13 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         str(cm.exception.error_dict.get("unsuitable_agreed")),
                     )
 
-    def test_unsuitable_agreed_not_yes_raises_if_unsuitable_for_study_yes(self):
+    def test_unsuitable_agreed_not_yes_raises_if_unsuitable_for_study_other(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
                 "unsuitable_for_study": YES,
-                "reasons_unsuitable": "Reason unsuitable",
+                "unsuitable_reason": OTHER,
+                "unsuitable_reason_other": "some other reason",
                 "unsuitable_agreed": NO,
             }
         )
@@ -826,12 +899,13 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             str(cm.exception.error_dict.get("unsuitable_agreed")),
         )
 
-    def test_unsuitable_agreed_yes_with_unsuitable_for_study_yes_ok(self):
+    def test_unsuitable_agreed_yes_with_unsuitable_reason_other_ok(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
                 "unsuitable_for_study": YES,
-                "reasons_unsuitable": "Reason unsuitable",
+                "unsuitable_reason": OTHER,
+                "unsuitable_reason_other": "some other reason",
                 "unsuitable_agreed": YES,
             }
         )
