@@ -52,16 +52,6 @@ class SubjectScreeningFormValidator(
                 raise forms.ValidationError(
                     {"cd4_date": "Invalid. Cannot be after report date"}
                 )
-            if (
-                to_local(self.report_datetime).date() - self.cleaned_data.get("cd4_date")
-            ).days > 21:
-                raise forms.ValidationError(
-                    {
-                        "cd4_date": (
-                            "Invalid. Cannot be more than 21 days before the report date"
-                        )
-                    }
-                )
 
     def validate_serum_crag(self) -> None:
         """Assert serum CrAg is positive, and serum CrAg date is:
@@ -77,6 +67,7 @@ class SubjectScreeningFormValidator(
                 }
             )
 
+        # TODO: remove, see KC request #488-10
         if self.cleaned_data.get("serum_crag_date") and self.cleaned_data.get("cd4_date"):
             days = (
                 self.cleaned_data.get("cd4_date") - self.cleaned_data.get("serum_crag_date")
@@ -86,6 +77,7 @@ class SubjectScreeningFormValidator(
                 raise forms.ValidationError(
                     {"serum_crag_date": "Invalid. Cannot be before CD4 date."}
                 )
+            # TODO: remove, see KC request #488-10
             if not 0 <= abs(days) <= 21:
                 days = (
                     self.cleaned_data.get("serum_crag_date")
@@ -177,11 +169,16 @@ class SubjectScreeningFormValidator(
         )
 
     def validate_suitability_for_study(self):
-        self.required_if(
-            YES, field="unsuitable_for_study", field_required="reasons_unsuitable"
+        self.applicable_if(
+            YES, field="unsuitable_for_study", field_applicable="unsuitable_reason"
+        )
+        self.validate_other_specify(
+            field="unsuitable_reason",
+            other_specify_field="unsuitable_reason_other",
+            other_stored_value=OTHER,
         )
         self.applicable_if(
-            YES, field="unsuitable_for_study", field_applicable="unsuitable_agreed"
+            OTHER, field="unsuitable_reason", field_applicable="unsuitable_agreed"
         )
         if self.cleaned_data.get("unsuitable_agreed") == NO:
             raise forms.ValidationError(
