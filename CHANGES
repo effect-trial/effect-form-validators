@@ -1,6 +1,10 @@
 Changes
 =======
 
+0.1.41 (unreleased)
+------
+- fix 'Server error when completing Chest X-Ray form' (#786)
+
 0.1.40
 ------
 - updates to Subject Screening validation (#503, #731)
