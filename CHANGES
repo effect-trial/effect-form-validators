@@ -1,6 +1,15 @@
 Changes
 =======
 
+0.1.41
+------
+- fix 'Server error when completing Chest X-Ray form' (#786)
+- updates to Subject Screening validation (#731)
+    - validation connecting 'unsuitable_for_study', 'unsuitable_reason' and
+      'unsuitable_reason_other' (#731)
+    - 'unsuitable_agreed' only applicable it 'unsuitable_reason' is OTHER (#731)
+    - remove 'reasons_unsuitable' references/validation (#731)
+
 0.1.40
 ------
 - updates to Subject Screening validation (#503)

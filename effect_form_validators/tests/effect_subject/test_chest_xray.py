@@ -15,7 +15,7 @@ from ..mixins import TestCaseMixin
 
 class ChestXrayMockModel(MockModel):
     @classmethod
-    def related_visit_model_attr(cls):
+    def related_visit_model_attr(cls) -> str:
         return "subject_visit"
 
 
@@ -25,8 +25,11 @@ class ChestXrayFormValidator(FormValidatorTestMixin, Base):
         return get_utcnow() - relativedelta(years=1)
 
     @property
-    def previous_chest_xray_date(self):
+    def previous_chest_xray_date(self) -> datetime.date:
         return (get_utcnow() - relativedelta(years=1)).date()
+
+    def get_consent_datetime_or_raise(self, **kwargs) -> datetime:
+        return self.consent_datetime
 
 
 class TestChestXrayFormValidation(TestCaseMixin, TestCase):
@@ -175,7 +178,27 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertIn("chest_xray_results", cm.exception.error_dict)
 
-    def test_chest_xray_not_performed_raises(self):
+    def test_chest_xray_performed_with_chest_xray_no_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        self.subject_visit.signsandsymptoms.xray_performed = YES
+        cleaned_data.update(
+            chest_xray=NO,
+            chest_xray_date=None,
+            chest_xray_results=None,
+            chest_xray_results_other=None,
+        )
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("chest_xray", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. X-ray performed. Expected YES.",
+            str(cm.exception.error_dict.get("chest_xray")),
+        )
+
+    def test_chest_xray_not_performed_with_chest_xray_yes_raises(self):
         cleaned_data = self.get_cleaned_data()
         self.subject_visit.signsandsymptoms.xray_performed = NO
         cleaned_data.update(
@@ -190,6 +213,10 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
         self.assertIn("chest_xray", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. X-ray not performed. Expected NO.",
+            str(cm.exception.error_dict.get("chest_xray")),
+        )
 
     def test_no_chest_xray_with_date_raises(self):
         cleaned_data = self.get_cleaned_data()
@@ -227,3 +254,46 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             "Invalid combination",
             str(cm.exception.error_dict.get("chest_xray_results")),
         )
+
+    def test_chest_xray_date_before_consent_date_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        self.subject_visit.signsandsymptoms.xray_performed = YES
+        cleaned_data.update(
+            chest_xray=YES,
+            chest_xray_date=(self.consent_datetime - relativedelta(days=1)).date(),
+            chest_xray_results=None,
+            chest_xray_results_other=None,
+        )
+        form_validator = ChestXrayFormValidator(
+            cleaned_data=cleaned_data, model=ChestXrayMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("chest_xray_date", cm.exception.error_dict)
+        self.assertIn(
+            "Invalid. Cannot be before consent date",
+            str(cm.exception.error_dict.get("chest_xray_date")),
+        )
+
+    def test_chest_xray_date_on_or_after_consent_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        self.subject_visit.signsandsymptoms.xray_performed = YES
+        for days_after_consent in [0, 1, 7, 21]:
+            with self.subTest(days_after_consent=days_after_consent):
+                report_datetime = self.consent_datetime + relativedelta(
+                    days=days_after_consent
+                )
+                cleaned_data.update(
+                    report_datetime=report_datetime,
+                    chest_xray=YES,
+                    chest_xray_date=report_datetime.date(),
+                    chest_xray_results=MockSet(self.xray_result_normal),
+                    chest_xray_results_other=None,
+                )
+                form_validator = ChestXrayFormValidator(
+                    cleaned_data=cleaned_data, model=ChestXrayMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
