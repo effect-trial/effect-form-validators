@@ -1,6 +1,5 @@
-from datetime import date, datetime
+from datetime import date
 from typing import Optional
-from zoneinfo import ZoneInfo
 
 from edc_constants.constants import NO, NORMAL, OTHER, YES
 from edc_crf.crf_form_validator import CrfFormValidator
