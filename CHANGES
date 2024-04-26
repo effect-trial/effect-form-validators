@@ -1,6 +1,11 @@
 Changes
 =======
 
+0.1.42 (unreleased)
+------
+- update Chest X-ray form validation to now allow x-ray date up to 7
+  days before consent date (#786-2)
+
 0.1.41
 ------
 - fix 'Server error when completing Chest X-Ray form' (#786)

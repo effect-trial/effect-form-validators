@@ -1,6 +1,7 @@
 from datetime import date
 from typing import Optional
 
+from dateutil.relativedelta import relativedelta
 from edc_constants.constants import NO, NORMAL, OTHER, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
@@ -59,16 +60,20 @@ class ChestXrayFormValidator(CrfFormValidator):
 
     def validate_chest_xray_date(self):
         if self.report_datetime and self.cleaned_data.get("chest_xray_date"):
-            if (
-                self.cleaned_data.get("chest_xray_date")
-                < to_local(
-                    self.get_consent_datetime_or_raise(
-                        report_datetime=self.cleaned_data.get("report_datetime")
-                    )
-                ).date()
-            ):
+            episode_start_date_lower = to_local(
+                self.get_consent_datetime_or_raise(
+                    report_datetime=self.cleaned_data.get("report_datetime")
+                )
+                - relativedelta(days=7)
+            ).date()
+            if self.cleaned_data.get("chest_xray_date") < episode_start_date_lower:
                 self.raise_validation_error(
-                    {"chest_xray_date": "Invalid. Cannot be before consent date"},
+                    {
+                        "chest_xray_date": (
+                            "Invalid. Expected date during this episode. "
+                            "Cannot be >7 days before consent date"
+                        )
+                    },
                     INVALID_ERROR,
                 )
             elif (

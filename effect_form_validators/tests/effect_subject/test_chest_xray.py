@@ -26,7 +26,7 @@ class ChestXrayFormValidator(FormValidatorTestMixin, Base):
 
     @property
     def previous_chest_xray_date(self) -> datetime.date:
-        return (get_utcnow() - relativedelta(years=1)).date()
+        return (self.consent_datetime - relativedelta(months=1)).date()
 
     def get_consent_datetime_or_raise(self, **kwargs) -> datetime:
         return self.consent_datetime
@@ -255,25 +255,55 @@ class TestChestXrayFormValidation(TestCaseMixin, TestCase):
             str(cm.exception.error_dict.get("chest_xray_results")),
         )
 
-    def test_chest_xray_date_before_consent_date_raises(self):
+    def test_chest_xray_date_gt_7_days_before_consent_date_raises(self):
         cleaned_data = self.get_cleaned_data()
         self.subject_visit.signsandsymptoms.xray_performed = YES
-        cleaned_data.update(
-            chest_xray=YES,
-            chest_xray_date=(self.consent_datetime - relativedelta(days=1)).date(),
-            chest_xray_results=None,
-            chest_xray_results_other=None,
-        )
-        form_validator = ChestXrayFormValidator(
-            cleaned_data=cleaned_data, model=ChestXrayMockModel
-        )
-        with self.assertRaises(ValidationError) as cm:
-            form_validator.validate()
-        self.assertIn("chest_xray_date", cm.exception.error_dict)
-        self.assertIn(
-            "Invalid. Cannot be before consent date",
-            str(cm.exception.error_dict.get("chest_xray_date")),
-        )
+        for days_before_consent in [8, 9, 14, 21]:
+            with self.subTest(days_before_consent=days_before_consent):
+                cleaned_data.update(
+                    chest_xray=YES,
+                    chest_xray_date=(
+                        self.consent_datetime - relativedelta(days=days_before_consent)
+                    ).date(),
+                    chest_xray_results=None,
+                    chest_xray_results_other=None,
+                )
+                form_validator = ChestXrayFormValidator(
+                    cleaned_data=cleaned_data, model=ChestXrayMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("chest_xray_date", cm.exception.error_dict)
+                self.assertIn(
+                    (
+                        "Invalid. Expected date during this episode. "
+                        "Cannot be >7 days before consent date"
+                    ),
+                    str(cm.exception.error_dict.get("chest_xray_date")),
+                )
+
+    def test_chest_xray_date_lte_7_days_before_consent_date_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        self.subject_visit.signsandsymptoms.xray_performed = YES
+        for days_before_consent in [0, 1, 7]:
+            with self.subTest(days_before_consent=days_before_consent):
+                report_datetime = self.consent_datetime - relativedelta(
+                    days=days_before_consent
+                )
+                cleaned_data.update(
+                    report_datetime=report_datetime,
+                    chest_xray=YES,
+                    chest_xray_date=report_datetime.date(),
+                    chest_xray_results=MockSet(self.xray_result_normal),
+                    chest_xray_results_other=None,
+                )
+                form_validator = ChestXrayFormValidator(
+                    cleaned_data=cleaned_data, model=ChestXrayMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_chest_xray_date_on_or_after_consent_date_ok(self):
         cleaned_data = self.get_cleaned_data()
