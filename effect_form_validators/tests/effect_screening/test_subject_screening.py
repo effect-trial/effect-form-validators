@@ -333,7 +333,6 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "report_datetime": report_datetime,
                         "cd4_value": self.ELIGIBLE_CD4_VALUE,
                         "cd4_date": report_datetime.date() - relativedelta(days=days),
-                        # TODO: review below after #488 changes applied
                         "serum_crag_date": (
                             report_datetime.date() - relativedelta(days=days - 1)
                         ),
@@ -398,7 +397,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_serum_crag_before_cd4_date_raises(self):
+    def test_serum_crag_before_cd4_date_now_ok(self):
+        # test when eligible
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -409,16 +409,29 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        with self.assertRaises(ValidationError) as cm:
+        try:
             form_validator.validate()
-        self.assertIn("serum_crag_date", cm.exception.error_dict)
-        self.assertIn(
-            "Invalid. Cannot be before CD4 date.",
-            str(cm.exception.error_dict.get("serum_crag_date")),
-        )
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_serum_crag_gt_21_days_after_cd4_date_raises(self):
-        for days in [22, 30, 60]:
+        # test can still save when ineligible
+        cd4_date = get_utcnow_as_date() - relativedelta(days=61)
+        cleaned_data.update(
+            {
+                "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                "cd4_date": cd4_date,
+                "serum_crag_value": POS,
+                "serum_crag_date": cd4_date - relativedelta(days=30),
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_serum_crag_gt_21_days_away_from_cd4_now_date_ok(self):
+        for days in [-90, -60, -30, -22, 22, 30, 60, 90]:
             with self.subTest(days_after=days):
                 cleaned_data = self.get_cleaned_data()
                 cd4_date = get_utcnow_as_date() - relativedelta(days=7)
@@ -428,19 +441,22 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "cd4_date": cd4_date,
                         "serum_crag_value": POS,
                         "serum_crag_date": cd4_date + relativedelta(days=days),
+                        # avoid anything that will trigger lp validation
+                        "lp_done": NO,
+                        "lp_date": None,
+                        "lp_declined": YES,
+                        "csf_crag_value": NOT_APPLICABLE,
+                        "cm_in_csf": NOT_APPLICABLE,
                     }
                 )
                 form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-                with self.assertRaises(ValidationError) as cm:
+                try:
                     form_validator.validate()
-                self.assertIn("serum_crag_date", cm.exception.error_dict)
-                self.assertIn(
-                    f"Invalid. Must have been performed within 21 days of CD4. Got {days}.",
-                    str(cm.exception.error_dict.get("serum_crag_date")),
-                )
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_serum_crag_lte_14_days_before_report_date_ok(self):
-        for days in [14, 13, 1, 0]:
+    def test_serum_crag_lte_21_days_before_report_date_ok(self):
+        for days in [21, 14, 13, 1, 0]:
             with self.subTest(days_before=days):
                 cleaned_data = self.get_cleaned_data()
                 report_datetime = get_utcnow()
@@ -460,8 +476,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_serum_crag_gt_14_days_before_report_date_ok(self):
-        for days in [15, 20, 21]:
+    def test_serum_crag_gt_21_days_before_report_date_ok(self):
+        for days in [22, 25, 30]:
             with self.subTest(days_before=days):
                 cleaned_data = self.get_cleaned_data()
                 report_datetime = get_utcnow()
