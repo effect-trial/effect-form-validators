@@ -3,6 +3,8 @@ Changes
 
 0.1.42 (unreleased)
 ------
+- update to Subject Screening form validation to allow
+  screening age < 18 (though requires consent, and will be ineligible)  (#638)
 - update Chest X-ray form validation to now allow x-ray date up to 7
   days before consent date (#786-2)
 
