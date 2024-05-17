@@ -11,7 +11,7 @@ from edc_constants.constants import (
     POS,
     YES,
 )
-from edc_form_validators import FormValidator
+from edc_form_validators import INVALID_ERROR, FormValidator
 from edc_prn.modelform_mixins import PrnFormValidatorMixin
 from edc_screening.form_validator_mixins import SubjectScreeningFormValidatorMixin
 from edc_utils.date import to_local
@@ -156,9 +156,24 @@ class SubjectScreeningFormValidator(
         self.applicable_if(FEMALE, field="gender", field_applicable="breast_feeding")
 
     def validate_age(self) -> None:
-        if self.age_in_years is not None and not (18 <= self.age_in_years < 120):
-            raise forms.ValidationError(
-                {"age_in_years": "Invalid. Subject must be 18 years or older"}
+        if self.age_in_years is not None and not (12 <= self.age_in_years < 120):
+            self.raise_validation_error(
+                {"age_in_years": "Invalid. Please enter a valid age in years."},
+                INVALID_ERROR,
+            )
+
+        is_minor = self.age_in_years is not None and self.age_in_years < 18
+        self.applicable_if_true(is_minor, field_applicable="parent_guardian_consent")
+
+        if is_minor and self.cleaned_data.get("parent_guardian_consent") != YES:
+            self.raise_validation_error(
+                {
+                    "parent_guardian_consent": (
+                        "STOP. You must have consent from parent or "
+                        "legal guardian to store patient information."
+                    )
+                },
+                INVALID_ERROR,
             )
 
     def validate_mg_ssx(self) -> None:

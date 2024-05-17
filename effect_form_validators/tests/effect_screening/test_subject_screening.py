@@ -42,6 +42,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             "initials": "EW",
             "gender": FEMALE,
             "age_in_years": 25,
+            "parent_guardian_consent": NOT_APPLICABLE,
             "hiv_pos": YES,
             "hiv_confirmed_date": get_utcnow_as_date() - relativedelta(days=30),
             "hiv_confirmed_method": "historical_lab_result",
@@ -88,30 +89,135 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         except forms.ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_age_in_years_lt_18_raises(self):
-        for age in [17, 15, 1, 0]:
-            with self.subTest(age=age):
-                cleaned_data = self.get_cleaned_data()
-                cleaned_data.update({"age_in_years": age})
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-                with self.assertRaises(ValidationError) as cm:
-                    form_validator.validate()
-                self.assertIn("age_in_years", cm.exception.error_dict)
-                self.assertIn(
-                    "Invalid. Subject must be 18 years or older",
-                    str(cm.exception.error_dict.get("age_in_years")),
-                )
+    def test_age_in_years_lt_12_raises(self):
+        for age in [11, 10, 5, 1, 0, -1, -2, -20]:
+            for consent_answ in [YES, NO, NOT_APPLICABLE]:
+                with self.subTest(age=age, consent_answ=consent_answ):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "age_in_years": age,
+                            "parent_guardian_consent": consent_answ,
+                        }
+                    )
+                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("age_in_years", cm.exception.error_dict)
+                    self.assertIn(
+                        "Invalid. Please enter a valid age in years.",
+                        str(cm.exception.error_dict.get("age_in_years")),
+                    )
+
+    def test_age_in_years_gt_120_raises(self):
+        for age in [121, 122, 200, 999]:
+            for consent_answ in [YES, NO, NOT_APPLICABLE]:
+                with self.subTest(age=age, consent_answ=consent_answ):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "age_in_years": age,
+                            "parent_guardian_consent": consent_answ,
+                        }
+                    )
+                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("age_in_years", cm.exception.error_dict)
+                    self.assertIn(
+                        "Invalid. Please enter a valid age in years.",
+                        str(cm.exception.error_dict.get("age_in_years")),
+                    )
 
     def test_age_in_years_gte_18_ok(self):
-        for age in [18, 19, 29, 99]:
+        for age in [18, 19, 29, 99, 119]:
             with self.subTest(age=age):
                 cleaned_data = self.get_cleaned_data()
-                cleaned_data.update({"age_in_years": age})
+                cleaned_data.update(
+                    {
+                        "age_in_years": age,
+                        "parent_guardian_consent": NOT_APPLICABLE,
+                    }
+                )
                 form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
                 try:
                     form_validator.validate()
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_parent_guardian_consent_applicable_if_age_in_years_lt_18(self):
+        for age in [17, 16, 13, 12]:
+            with self.subTest(age=age):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "age_in_years": age,
+                        "parent_guardian_consent": NOT_APPLICABLE,
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("parent_guardian_consent", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is applicable.",
+                    str(cm.exception.error_dict.get("parent_guardian_consent")),
+                )
+
+    def test_age_in_years_lt_18_without_consent_yes_raises(self):
+        for age in [17, 16, 13, 12]:
+            with self.subTest(age=age):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "age_in_years": age,
+                        "parent_guardian_consent": NO,
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("parent_guardian_consent", cm.exception.error_dict)
+                self.assertIn(
+                    "STOP. You must have consent from parent",
+                    str(cm.exception.error_dict.get("parent_guardian_consent")),
+                )
+
+    def test_age_in_years_lt_18_with_consent_yes_ok(self):
+        for age in [17, 16, 13, 12]:
+            with self.subTest(age=age):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "age_in_years": age,
+                        "parent_guardian_consent": YES,
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_age_in_years_gte_18_doesnt_require_consent(self):
+        for age in [18, 19, 29, 99, 119]:
+            for consent_answ in [YES, NO]:
+                with self.subTest(age=age, consent_answ=consent_answ):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "age_in_years": age,
+                            "parent_guardian_consent": consent_answ,
+                        }
+                    )
+                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("parent_guardian_consent", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is not applicable.",
+                        str(cm.exception.error_dict.get("parent_guardian_consent")),
+                    )
 
     def test_hiv_confirmed_date_required_if_hiv_pos_yes(self):
         cleaned_data = self.get_cleaned_data()
