@@ -67,31 +67,6 @@ class SubjectScreeningFormValidator(
                 }
             )
 
-        # TODO: remove, see KC request #488-10
-        if self.cleaned_data.get("serum_crag_date") and self.cleaned_data.get("cd4_date"):
-            days = (
-                self.cleaned_data.get("cd4_date") - self.cleaned_data.get("serum_crag_date")
-            ).days
-
-            if days > 0:
-                raise forms.ValidationError(
-                    {"serum_crag_date": "Invalid. Cannot be before CD4 date."}
-                )
-            # TODO: remove, see KC request #488-10
-            if not 0 <= abs(days) <= 21:
-                days = (
-                    self.cleaned_data.get("serum_crag_date")
-                    - self.cleaned_data.get("cd4_date")
-                ).days
-                raise forms.ValidationError(
-                    {
-                        "serum_crag_date": (
-                            "Invalid. Must have been performed within 21 days "
-                            f"of CD4. Got {days}."
-                        )
-                    }
-                )
-
     def validate_lp_and_csf_crag(self) -> None:
         self.required_if(YES, field="lp_done", field_required="lp_date")
 
