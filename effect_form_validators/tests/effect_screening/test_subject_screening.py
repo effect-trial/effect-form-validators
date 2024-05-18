@@ -42,6 +42,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             "initials": "EW",
             "gender": FEMALE,
             "age_in_years": 25,
+            "parent_guardian_consent": NOT_APPLICABLE,
             "hiv_pos": YES,
             "hiv_confirmed_date": get_utcnow_as_date() - relativedelta(days=30),
             "hiv_confirmed_method": "historical_lab_result",
@@ -88,30 +89,135 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         except forms.ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_age_in_years_lt_18_raises(self):
-        for age in [17, 15, 1, 0]:
-            with self.subTest(age=age):
-                cleaned_data = self.get_cleaned_data()
-                cleaned_data.update({"age_in_years": age})
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-                with self.assertRaises(ValidationError) as cm:
-                    form_validator.validate()
-                self.assertIn("age_in_years", cm.exception.error_dict)
-                self.assertIn(
-                    "Invalid. Subject must be 18 years or older",
-                    str(cm.exception.error_dict.get("age_in_years")),
-                )
+    def test_age_in_years_lt_12_raises(self):
+        for age in [11, 10, 5, 1, 0, -1, -2, -20]:
+            for consent_answ in [YES, NO, NOT_APPLICABLE]:
+                with self.subTest(age=age, consent_answ=consent_answ):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "age_in_years": age,
+                            "parent_guardian_consent": consent_answ,
+                        }
+                    )
+                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("age_in_years", cm.exception.error_dict)
+                    self.assertIn(
+                        "Invalid. Please enter a valid age in years.",
+                        str(cm.exception.error_dict.get("age_in_years")),
+                    )
+
+    def test_age_in_years_gt_120_raises(self):
+        for age in [121, 122, 200, 999]:
+            for consent_answ in [YES, NO, NOT_APPLICABLE]:
+                with self.subTest(age=age, consent_answ=consent_answ):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "age_in_years": age,
+                            "parent_guardian_consent": consent_answ,
+                        }
+                    )
+                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("age_in_years", cm.exception.error_dict)
+                    self.assertIn(
+                        "Invalid. Please enter a valid age in years.",
+                        str(cm.exception.error_dict.get("age_in_years")),
+                    )
 
     def test_age_in_years_gte_18_ok(self):
-        for age in [18, 19, 29, 99]:
+        for age in [18, 19, 29, 99, 119]:
             with self.subTest(age=age):
                 cleaned_data = self.get_cleaned_data()
-                cleaned_data.update({"age_in_years": age})
+                cleaned_data.update(
+                    {
+                        "age_in_years": age,
+                        "parent_guardian_consent": NOT_APPLICABLE,
+                    }
+                )
                 form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
                 try:
                     form_validator.validate()
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_parent_guardian_consent_applicable_if_age_in_years_lt_18(self):
+        for age in [17, 16, 13, 12]:
+            with self.subTest(age=age):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "age_in_years": age,
+                        "parent_guardian_consent": NOT_APPLICABLE,
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("parent_guardian_consent", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is applicable.",
+                    str(cm.exception.error_dict.get("parent_guardian_consent")),
+                )
+
+    def test_age_in_years_lt_18_without_consent_yes_raises(self):
+        for age in [17, 16, 13, 12]:
+            with self.subTest(age=age):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "age_in_years": age,
+                        "parent_guardian_consent": NO,
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("parent_guardian_consent", cm.exception.error_dict)
+                self.assertIn(
+                    "STOP. You must have consent from parent",
+                    str(cm.exception.error_dict.get("parent_guardian_consent")),
+                )
+
+    def test_age_in_years_lt_18_with_consent_yes_ok(self):
+        for age in [17, 16, 13, 12]:
+            with self.subTest(age=age):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        "age_in_years": age,
+                        "parent_guardian_consent": YES,
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_age_in_years_gte_18_doesnt_require_consent(self):
+        for age in [18, 19, 29, 99, 119]:
+            for consent_answ in [YES, NO]:
+                with self.subTest(age=age, consent_answ=consent_answ):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            "age_in_years": age,
+                            "parent_guardian_consent": consent_answ,
+                        }
+                    )
+                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn("parent_guardian_consent", cm.exception.error_dict)
+                    self.assertIn(
+                        "This field is not applicable.",
+                        str(cm.exception.error_dict.get("parent_guardian_consent")),
+                    )
 
     def test_hiv_confirmed_date_required_if_hiv_pos_yes(self):
         cleaned_data = self.get_cleaned_data()
@@ -213,7 +319,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             form_validator.validate()
         self.assertIn("cd4_date", cm.exception.error_dict)
         self.assertIn(
-            "Invalid. Cannot be after report date",
+            "Invalid. Must be on or before report date/time. Got",
             str(cm.exception.error_dict.get("cd4_date")),
         )
 
@@ -227,7 +333,6 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "report_datetime": report_datetime,
                         "cd4_value": self.ELIGIBLE_CD4_VALUE,
                         "cd4_date": report_datetime.date() - relativedelta(days=days),
-                        # TODO: review below after #488 changes applied
                         "serum_crag_date": (
                             report_datetime.date() - relativedelta(days=days - 1)
                         ),
@@ -292,7 +397,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_serum_crag_before_cd4_date_raises(self):
+    def test_serum_crag_before_cd4_date_now_ok(self):
+        # test when eligible
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -303,16 +409,29 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-        with self.assertRaises(ValidationError) as cm:
+        try:
             form_validator.validate()
-        self.assertIn("serum_crag_date", cm.exception.error_dict)
-        self.assertIn(
-            "Invalid. Cannot be before CD4 date.",
-            str(cm.exception.error_dict.get("serum_crag_date")),
-        )
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_serum_crag_gt_21_days_after_cd4_date_raises(self):
-        for days in [22, 30, 60]:
+        # test can still save when ineligible
+        cd4_date = get_utcnow_as_date() - relativedelta(days=61)
+        cleaned_data.update(
+            {
+                "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                "cd4_date": cd4_date,
+                "serum_crag_value": POS,
+                "serum_crag_date": cd4_date - relativedelta(days=30),
+            }
+        )
+        form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_serum_crag_gt_21_days_before_cd4_date_ok(self):
+        for days in [-90, -60, -30, -22]:
             with self.subTest(days_after=days):
                 cleaned_data = self.get_cleaned_data()
                 cd4_date = get_utcnow_as_date() - relativedelta(days=7)
@@ -322,19 +441,50 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "cd4_date": cd4_date,
                         "serum_crag_value": POS,
                         "serum_crag_date": cd4_date + relativedelta(days=days),
+                        # avoid anything that will trigger lp validation
+                        "lp_done": NO,
+                        "lp_date": None,
+                        "lp_declined": YES,
+                        "csf_crag_value": NOT_APPLICABLE,
+                        "cm_in_csf": NOT_APPLICABLE,
                     }
                 )
                 form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
-                with self.assertRaises(ValidationError) as cm:
+                try:
                     form_validator.validate()
-                self.assertIn("serum_crag_date", cm.exception.error_dict)
-                self.assertIn(
-                    f"Invalid. Must have been performed within 21 days of CD4. Got {days}.",
-                    str(cm.exception.error_dict.get("serum_crag_date")),
-                )
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_serum_crag_lte_14_days_before_report_date_ok(self):
-        for days in [14, 13, 1, 0]:
+    def test_serum_crag_gt_21_days_after_cd4_date_ok(self):
+        for days in [22, 30, 60, 90]:
+            with self.subTest(days_after=days):
+                cleaned_data = self.get_cleaned_data()
+                cd4_date = get_utcnow_as_date() - relativedelta(days=7)
+                serum_crag_date = cd4_date + relativedelta(days=days)
+                report_datetime = serum_crag_date + relativedelta(days=1)
+                cleaned_data.update(
+                    {
+                        "report_datetime": report_datetime,
+                        "cd4_value": self.ELIGIBLE_CD4_VALUE,
+                        "cd4_date": cd4_date,
+                        "serum_crag_value": POS,
+                        "serum_crag_date": serum_crag_date,
+                        # avoid anything that will trigger lp validation
+                        "lp_done": NO,
+                        "lp_date": None,
+                        "lp_declined": YES,
+                        "csf_crag_value": NOT_APPLICABLE,
+                        "cm_in_csf": NOT_APPLICABLE,
+                    }
+                )
+                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_serum_crag_lte_21_days_before_report_date_ok(self):
+        for days in [21, 14, 13, 1, 0]:
             with self.subTest(days_before=days):
                 cleaned_data = self.get_cleaned_data()
                 report_datetime = get_utcnow()
@@ -354,8 +504,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_serum_crag_gt_14_days_before_report_date_ok(self):
-        for days in [15, 20, 21]:
+    def test_serum_crag_gt_21_days_before_report_date_ok(self):
+        for days in [22, 25, 30]:
             with self.subTest(days_before=days):
                 cleaned_data = self.get_cleaned_data()
                 report_datetime = get_utcnow()
@@ -459,7 +609,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             form_validator.validate()
         self.assertIn("lp_date", cm.exception.error_dict)
         self.assertIn(
-            "Invalid. Cannot be after report date",
+            "Invalid. Must be on or before report date/time. Got",
             str(cm.exception.error_dict.get("lp_date")),
         )
 
@@ -615,7 +765,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     form_validator.validate()
                 self.assertIn("cm_in_csf_date", cm.exception.error_dict)
                 self.assertIn(
-                    "Invalid. Cannot be before report date",
+                    "Invalid. Must be on or after report date/time. Got",
                     str(cm.exception.error_dict.get("cm_in_csf_date")),
                 )
 
@@ -914,3 +1064,55 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             form_validator.validate()
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_key_dates_after_report_datetime_raises(self):
+        for date_field in [
+            "hiv_confirmed_date",
+            "cd4_date",
+            "serum_crag_date",
+            "lp_date",
+            "preg_test_date",
+        ]:
+            for days_after in [1, 2, 10]:
+                with self.subTest(date_field=date_field, days_after=days_after):
+                    cleaned_data = self.get_cleaned_data()
+                    report_datetime = cleaned_data["report_datetime"]
+                    cleaned_data.update(
+                        {date_field: report_datetime.date() + relativedelta(days=days_after)}
+                    )
+                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    with self.assertRaises(ValidationError) as cm:
+                        form_validator.validate()
+                    self.assertIn(date_field, cm.exception.error_dict)
+                    self.assertIn(
+                        "Invalid. Must be on or before report date/time. Got ",
+                        str(cm.exception.error_dict.get(date_field)),
+                    )
+
+    def test_key_dates_on_or_before_report_datetime_ok(self):
+        for date_field in [
+            "hiv_confirmed_date",
+            "cd4_date",
+            "serum_crag_date",
+            "lp_date",
+            "preg_test_date",
+        ]:
+            for days_before in [0, 1]:
+                with self.subTest(date_field=date_field, days_before=days_before):
+                    cleaned_data = self.get_cleaned_data()
+                    report_datetime = cleaned_data["report_datetime"]
+                    date_value = report_datetime.date() - relativedelta(days=days_before)
+                    if date_field not in ["serum_crag_date", "lp_date"]:
+                        cleaned_data.update({date_field: date_value})
+                    else:
+                        cleaned_data.update(
+                            {
+                                "serum_crag_date": date_value,
+                                "lp_date": date_value - relativedelta(days=1),
+                            }
+                        )
+                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")

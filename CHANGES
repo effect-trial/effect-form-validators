@@ -1,6 +1,16 @@
 Changes
 =======
 
+0.1.42
+------
+- update to Subject Screening form validation (#488-10, #638)
+    - allow screening age < 18 (though requires consent, and will be ineligible) (#638)
+    - allow Serum CrAg date on/before CD4 date (#488-10)
+    - allow Serum CrAg date > 21 days apart from CD4 date (#488-10)
+    - tighten validation of dates against report_datetime
+- update Chest X-ray form validation to now allow x-ray date up to 7
+  days before consent date (#786-2)
+
 0.1.41
 ------
 - fix 'Server error when completing Chest X-Ray form' (#786)
