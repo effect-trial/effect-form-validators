@@ -89,8 +89,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         except forms.ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_age_in_years_lt_12_raises(self):
-        for age in [11, 10, 5, 1, 0, -1, -2, -20]:
+    def test_age_in_years_lt_0_raises(self):
+        for age in [-1, -2, -20]:
             for consent_answ in [YES, NO, NOT_APPLICABLE]:
                 with self.subTest(age=age, consent_answ=consent_answ):
                     cleaned_data = self.get_cleaned_data()
@@ -109,8 +109,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         str(cm.exception.error_dict.get("age_in_years")),
                     )
 
-    def test_age_in_years_gt_120_raises(self):
-        for age in [121, 122, 200, 999]:
+    def test_age_in_years_gte_120_raises(self):
+        for age in [120, 121, 122, 200, 999]:
             for consent_answ in [YES, NO, NOT_APPLICABLE]:
                 with self.subTest(age=age, consent_answ=consent_answ):
                     cleaned_data = self.get_cleaned_data()
@@ -146,7 +146,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_parent_guardian_consent_applicable_if_age_in_years_lt_18(self):
-        for age in [17, 16, 13, 12]:
+        for age in [17, 16, 13, 12, 10, 1, 0]:
             with self.subTest(age=age):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
@@ -165,7 +165,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                 )
 
     def test_age_in_years_lt_18_without_consent_yes_raises(self):
-        for age in [17, 16, 13, 12]:
+        for age in [17, 16, 13, 12, 10, 1, 0]:
             with self.subTest(age=age):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
@@ -184,7 +184,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                 )
 
     def test_age_in_years_lt_18_with_consent_yes_ok(self):
-        for age in [17, 16, 13, 12]:
+        for age in [17, 16, 13, 12, 11, 10, 5, 1, 0]:
             with self.subTest(age=age):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(

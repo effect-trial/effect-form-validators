@@ -112,7 +112,7 @@ class SubjectScreeningFormValidator(
         self.applicable_if(FEMALE, field="gender", field_applicable="breast_feeding")
 
     def validate_age(self) -> None:
-        if self.age_in_years is not None and not (12 <= self.age_in_years < 120):
+        if self.age_in_years is not None and not (0 <= self.age_in_years < 120):
             self.raise_validation_error(
                 {"age_in_years": "Invalid. Please enter a valid age in years."},
                 INVALID_ERROR,
