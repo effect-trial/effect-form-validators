@@ -3,6 +3,7 @@ Changes
 
 unreleased
 ----------
+- add Confirmed Serum Crag Date form validation (#488)
 - drop Python 3.11 support
 
 0.1.43
