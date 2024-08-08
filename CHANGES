@@ -1,6 +1,10 @@
 Changes
 =======
 
+unreleased
+----------
+- drop Python 3.11 support
+
 0.1.43
 ------
 - update to Subject Screening form validation to allow screening
