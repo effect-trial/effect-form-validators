@@ -146,3 +146,63 @@ class TestConfirmedSerumCragDateFormValidator(TestCaseMixin, TestCase):
                     form_validator.validate()
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_no_confirmed_serum_crag_date_and_no_note_raises(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            confirmed_serum_crag_date=None,
+            note="",
+        )
+
+        form_validator = ConfirmedSerumCragDateFormValidator(cleaned_data=cleaned_data)
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+
+        for field in ["confirmed_serum_crag_date", "note"]:
+            self.assertIn(field, cm.exception.error_dict)
+            self.assertIn(
+                "A confirmed serum/plasma CrAg date and/or note is required.",
+                str(cm.exception.error_dict.get(field)),
+            )
+
+    def test_serum_crag_date_only_ok(self):
+        eligibility_date = self.mock_subject_screening.eligibility_datetime.date()
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            confirmed_serum_crag_date=eligibility_date,
+            note="",
+        )
+
+        form_validator = ConfirmedSerumCragDateFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_note_only_ok(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            confirmed_serum_crag_date=None,
+            note="Reason date is missing",
+        )
+
+        form_validator = ConfirmedSerumCragDateFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_serum_crag_date_and_note_ok(self):
+        eligibility_date = self.mock_subject_screening.eligibility_datetime.date()
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            confirmed_serum_crag_date=eligibility_date,
+            note="Details about the date",
+            report_datetime=eligibility_date,
+        )
+
+        form_validator = ConfirmedSerumCragDateFormValidator(cleaned_data=cleaned_data)
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")

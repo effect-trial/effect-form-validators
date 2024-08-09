@@ -1,5 +1,5 @@
 from edc_crf.crf_form_validator_mixins import BaseFormValidatorMixin
-from edc_form_validators import INVALID_ERROR, FormValidator
+from edc_form_validators import INVALID_ERROR, REQUIRED_ERROR, FormValidator
 from edc_registration import get_registered_subject_model_cls
 from edc_screening.utils import get_subject_screening_model_cls
 from edc_sites.form_validator_mixin import SiteFormValidatorMixin
@@ -12,6 +12,18 @@ class ConfirmedSerumCragDateFormValidator(
 ):
     def clean(self):
         self.validate_confirmed_serum_crag_date()
+
+        if not self.cleaned_data.get(
+            "confirmed_serum_crag_date"
+        ) and not self.cleaned_data.get("note"):
+            err_msg = "A confirmed serum/plasma CrAg date and/or note is required."
+            raise self.raise_validation_error(
+                {
+                    "confirmed_serum_crag_date": err_msg,
+                    "note": err_msg,
+                },
+                REQUIRED_ERROR,
+            )
 
     @property
     def eligibility_date(self):
