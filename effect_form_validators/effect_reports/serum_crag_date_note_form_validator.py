@@ -11,15 +11,13 @@ class SerumCragDateNoteFormValidator(
     FormValidator,
 ):
     def clean(self):
-        self.validate_confirmed_serum_crag_date()
+        self.validate_serum_crag_date()
 
-        if not self.cleaned_data.get(
-            "confirmed_serum_crag_date"
-        ) and not self.cleaned_data.get("note"):
+        if not self.cleaned_data.get("serum_crag_date") and not self.cleaned_data.get("note"):
             err_msg = "A confirmed serum/plasma CrAg date and/or note is required."
             raise self.raise_validation_error(
                 {
-                    "confirmed_serum_crag_date": err_msg,
+                    "serum_crag_date": err_msg,
                     "note": err_msg,
                 },
                 REQUIRED_ERROR,
@@ -38,29 +36,25 @@ class SerumCragDateNoteFormValidator(
             screening_identifier=registered_subject.screening_identifier
         )
 
-    def validate_confirmed_serum_crag_date(self):
-        if self.cleaned_data.get("confirmed_serum_crag_date"):
-            if self.cleaned_data.get("confirmed_serum_crag_date") > self.eligibility_date:
+    def validate_serum_crag_date(self):
+        if self.cleaned_data.get("serum_crag_date"):
+            if self.cleaned_data.get("serum_crag_date") > self.eligibility_date:
                 raise self.raise_validation_error(
                     {
-                        "confirmed_serum_crag_date": (
+                        "serum_crag_date": (
                             "Invalid. Cannot be after date participant became eligible."
                         )
                     },
                     INVALID_ERROR,
                 )
-            elif (
-                self.eligibility_date - self.cleaned_data.get("confirmed_serum_crag_date")
-            ).days > 180:
+            elif (self.eligibility_date - self.cleaned_data.get("serum_crag_date")).days > 180:
                 raise self.raise_validation_error(
                     {
-                        "confirmed_serum_crag_date": (
+                        "serum_crag_date": (
                             "Invalid. Cannot be more than 180 days before screening."
                         )
                     },
                     INVALID_ERROR,
                 )
 
-        self.date_before_report_datetime_or_raise(
-            field="confirmed_serum_crag_date", inclusive=True
-        )
+        self.date_before_report_datetime_or_raise(field="serum_crag_date", inclusive=True)

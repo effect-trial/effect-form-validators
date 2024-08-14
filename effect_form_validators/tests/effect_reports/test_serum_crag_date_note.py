@@ -34,9 +34,7 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
 
     def get_cleaned_data(self, **kwargs) -> dict:
         return dict(
-            confirmed_serum_crag_date=(
-                self.eligibility_datetime - relativedelta(days=14)
-            ).date(),
+            serum_crag_date=(self.eligibility_datetime - relativedelta(days=14)).date(),
             note="",
             status=NEW,
             report_model="effect_reports.consentedserumcragdate",
@@ -51,55 +49,49 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_confirmed_serum_crag_date_after_eligibility_raises(self):
+    def test_serum_crag_date_after_eligibility_raises(self):
         eligibility_date = self.mock_subject_screening.eligibility_datetime.date()
         for days_after in [1, 7, 14, 364, 365, 366]:
             with self.subTest(days_after=days_after):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
-                    confirmed_serum_crag_date=(
-                        eligibility_date + relativedelta(days=days_after)
-                    ),
+                    serum_crag_date=(eligibility_date + relativedelta(days=days_after)),
                 )
 
                 form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
-                self.assertIn("confirmed_serum_crag_date", cm.exception.error_dict)
+                self.assertIn("serum_crag_date", cm.exception.error_dict)
                 self.assertIn(
                     "Invalid. Cannot be after date participant became eligible.",
-                    cm.exception.message_dict.get("confirmed_serum_crag_date"),
+                    cm.exception.message_dict.get("serum_crag_date"),
                 )
 
-    def test_confirmed_serum_crag_date_gt_180_days_before_eligibility_raises(self):
+    def test_serum_crag_date_gt_180_days_before_eligibility_raises(self):
         eligibility_date = self.mock_subject_screening.eligibility_datetime.date()
         for days_before in [181, 182, 200, 366]:
             with self.subTest(days_before=days_before):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
-                    confirmed_serum_crag_date=(
-                        eligibility_date - relativedelta(days=days_before)
-                    )
+                    serum_crag_date=(eligibility_date - relativedelta(days=days_before))
                 )
 
                 form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
-                self.assertIn("confirmed_serum_crag_date", cm.exception.error_dict)
+                self.assertIn("serum_crag_date", cm.exception.error_dict)
                 self.assertIn(
                     "Invalid. Cannot be more than 180 days before screening.",
-                    cm.exception.message_dict.get("confirmed_serum_crag_date"),
+                    cm.exception.message_dict.get("serum_crag_date"),
                 )
 
-    def test_confirmed_serum_crag_date_lte_180_days_before_eligibility_ok(self):
+    def test_serum_crag_date_lte_180_days_before_eligibility_ok(self):
         eligibility_date = self.mock_subject_screening.eligibility_datetime.date()
         for days_before in [0, 1, 7, 14, 20, 21, 179, 180]:
             with self.subTest(days_before=days_before):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
-                    confirmed_serum_crag_date=(
-                        eligibility_date - relativedelta(days=days_before)
-                    )
+                    serum_crag_date=(eligibility_date - relativedelta(days=days_before))
                 )
 
                 form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
@@ -108,32 +100,30 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_confirmed_serum_crag_date_gt_report_datetime_raises(self):
+    def test_serum_crag_date_gt_report_datetime_raises(self):
         eligibility_date = self.mock_subject_screening.eligibility_datetime.date()
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
-            confirmed_serum_crag_date=eligibility_date - relativedelta(days=7),
+            serum_crag_date=eligibility_date - relativedelta(days=7),
             report_datetime=eligibility_date - relativedelta(days=8),
         )
 
         form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
-        self.assertIn("confirmed_serum_crag_date", cm.exception.error_dict)
+        self.assertIn("serum_crag_date", cm.exception.error_dict)
         self.assertIn(
             "Invalid. Must be on or before report date/time.",
-            str(cm.exception.message_dict.get("confirmed_serum_crag_date")),
+            str(cm.exception.message_dict.get("serum_crag_date")),
         )
 
-    def test_confirmed_serum_crag_date_lte_report_datetime_ok(self):
+    def test_serum_crag_date_lte_report_datetime_ok(self):
         eligibility_date = self.mock_subject_screening.eligibility_datetime.date()
         for days_before in [0, 1, 7, 14, 21, 180]:
             with self.subTest(days_before=days_before):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
-                    confirmed_serum_crag_date=(
-                        eligibility_date - relativedelta(days=days_before)
-                    ),
+                    serum_crag_date=(eligibility_date - relativedelta(days=days_before)),
                     report_datetime=eligibility_date,
                 )
 
@@ -143,10 +133,10 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_no_confirmed_serum_crag_date_and_no_note_raises(self):
+    def test_no_serum_crag_date_and_no_note_raises(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
-            confirmed_serum_crag_date=None,
+            serum_crag_date=None,
             note="",
         )
 
@@ -154,7 +144,7 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
         with self.assertRaises(ValidationError) as cm:
             form_validator.validate()
 
-        for field in ["confirmed_serum_crag_date", "note"]:
+        for field in ["serum_crag_date", "note"]:
             self.assertIn(field, cm.exception.error_dict)
             self.assertIn(
                 "A confirmed serum/plasma CrAg date and/or note is required.",
@@ -165,7 +155,7 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
         eligibility_date = self.mock_subject_screening.eligibility_datetime.date()
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
-            confirmed_serum_crag_date=eligibility_date,
+            serum_crag_date=eligibility_date,
             note="",
         )
 
@@ -178,7 +168,7 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
     def test_note_only_ok(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
-            confirmed_serum_crag_date=None,
+            serum_crag_date=None,
             note="Reason date is missing",
         )
 
@@ -192,7 +182,7 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
         eligibility_date = self.mock_subject_screening.eligibility_datetime.date()
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
-            confirmed_serum_crag_date=eligibility_date,
+            serum_crag_date=eligibility_date,
             note="Details about the date",
             report_datetime=eligibility_date,
         )
