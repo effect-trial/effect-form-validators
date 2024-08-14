@@ -5,7 +5,7 @@ from edc_screening.utils import get_subject_screening_model_cls
 from edc_sites.form_validator_mixin import SiteFormValidatorMixin
 
 
-class ConfirmedSerumCragDateFormValidator(
+class SerumCragDateNoteFormValidator(
     BaseFormValidatorMixin,
     SiteFormValidatorMixin,
     FormValidator,
