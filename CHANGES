@@ -1,6 +1,10 @@
 Changes
 =======
 
+unreleased
+-----
+- add Django 5.1 support
+
 0.1.44
 ------
 - add Serum Crag Date Note form validation (#488)
