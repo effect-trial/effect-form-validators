@@ -3,6 +3,7 @@ Changes
 
 unreleased
 -----
+- drop Django 4.2 support
 - add Django 5.1 support
 
 0.1.44
