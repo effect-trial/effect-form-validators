@@ -61,9 +61,9 @@ deps =
 
 commands =
     pip install -U pip
+    python --version
     pip --version
     pip install -U edc-csf edc-microbiology
-    python --version
     pip freeze
     coverage run -a runtests.py
     coverage report
