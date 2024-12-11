@@ -91,10 +91,12 @@ class ArvHistoryFormValidator(CrfFormValidator):
         self.applicable_if(NO, field="has_defaulted", field_applicable="art_decision")
 
         # vl
-        self.required_if(YES, field="has_viral_load", field_required="viral_load_result")
-        self.required_if(YES, field="has_viral_load", field_required="viral_load_date")
+        self.required_if(
+            YES, field="has_viral_load_result", field_required="viral_load_result"
+        )
+        self.required_if(YES, field="has_viral_load_result", field_required="viral_load_date")
         self.applicable_if(
-            YES, field="has_viral_load", field_applicable="viral_load_date_estimated"
+            YES, field="has_viral_load_result", field_applicable="viral_load_date_estimated"
         )
         self.validate_date_against_report_datetime("viral_load_date")
 
