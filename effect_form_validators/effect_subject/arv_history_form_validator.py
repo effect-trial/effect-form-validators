@@ -216,6 +216,9 @@ class ArvHistoryFormValidator(CrfFormValidator):
         self.required_if(
             YES, field="has_viral_load_result", field_required="viral_load_result"
         )
+        self.applicable_if(
+            YES, field="has_viral_load_result", field_applicable="viral_load_quantifier"
+        )
         self.required_if(YES, field="has_viral_load_result", field_required="viral_load_date")
         self.applicable_if(
             YES, field="has_viral_load_result", field_applicable="viral_load_date_estimated"
