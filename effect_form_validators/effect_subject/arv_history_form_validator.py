@@ -221,7 +221,9 @@ class ArvHistoryFormValidator(CrfFormValidator):
         )
 
         self.applicable_if(
-            YES, field="has_viral_load_result", field_applicable="viral_load_quantifier"
+            YES,
+            field="has_viral_load_result",
+            field_applicable="viral_load_quantifier",
         )
         lower_detection_limit_values = [20, 50, 1000]
         if (
@@ -242,9 +244,15 @@ class ArvHistoryFormValidator(CrfFormValidator):
                 INVALID_ERROR,
             )
 
-        self.required_if(YES, field="has_viral_load_result", field_required="viral_load_date")
+        self.required_if(
+            YES,
+            field="has_viral_load_result",
+            field_required="viral_load_date",
+        )
         self.applicable_if(
-            YES, field="has_viral_load_result", field_applicable="viral_load_date_estimated"
+            YES,
+            field="has_viral_load_result",
+            field_applicable="viral_load_date_estimated",
         )
         self.validate_date_against_report_datetime("viral_load_date")
 
