@@ -1000,6 +1000,80 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
+    def test_viral_load_quantifier_LT_with_invalid_lower_detection_limit_value_raises(self):
+        for invalid_ldl_value in [-1, 0, 1, 19, 21, 49, 51, 999, 1001]:
+            with self.subTest(invalid_ldl_value=invalid_ldl_value):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        # Viral load
+                        "has_viral_load_result": YES,
+                        "viral_load_result": invalid_ldl_value,
+                        "viral_load_quantifier": LT,
+                        "viral_load_date": get_utcnow_as_date(),
+                        "viral_load_date_estimated": NO,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("viral_load_quantifier", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. "
+                    "Viral load quantifier `<` (less than) only valid with `LDL` (lower than "
+                    f"detection limit) values `20, 50, 1000`. Got `{invalid_ldl_value}`",
+                    str(cm.exception.error_dict.get("viral_load_quantifier")),
+                )
+
+    def test_viral_load_quantifier_LT_with_valid_lower_detection_limit_ok(self):
+        for valid_ldl_value in [20, 50, 1000]:
+            with self.subTest(valid_ldl_value=valid_ldl_value):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        # Viral load
+                        "has_viral_load_result": YES,
+                        "viral_load_result": valid_ldl_value,
+                        "viral_load_quantifier": LT,
+                        "viral_load_date": get_utcnow_as_date(),
+                        "viral_load_date_estimated": NO,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_quantifier_EQ_or_GT_with_valid_lower_detection_limit_ok(self):
+        for vl_quantifier in [EQ, GT]:
+            for valid_ldl_value in [20, 50, 1000]:
+                with self.subTest(
+                    vl_quantifier=vl_quantifier, valid_ldl_value=valid_ldl_value
+                ):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            # Viral load
+                            "has_viral_load_result": YES,
+                            "viral_load_result": valid_ldl_value,
+                            "viral_load_quantifier": vl_quantifier,
+                            "viral_load_date": get_utcnow_as_date(),
+                            "viral_load_date_estimated": NO,
+                        }
+                    )
+                    form_validator = ArvHistoryFormValidator(
+                        cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                    )
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
     def test_viral_load_date_not_required_if_has_viral_load_result_NO(self):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
