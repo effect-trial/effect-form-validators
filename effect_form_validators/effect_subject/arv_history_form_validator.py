@@ -225,7 +225,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
             field="has_viral_load_result",
             field_applicable="viral_load_quantifier",
         )
-        lower_detection_limit_values = [20, 50, 1000]
+        lower_detection_limit_values = [20, 50]
         if (
             self.cleaned_data.get("viral_load_quantifier") == LT
             and self.cleaned_data.get("viral_load_result") is not None

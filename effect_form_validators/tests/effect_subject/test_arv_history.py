@@ -972,7 +972,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             {
                 # Viral load
                 "has_viral_load_result": YES,
-                "viral_load_result": 1000,
+                "viral_load_result": 20,
                 "viral_load_quantifier": NOT_APPLICABLE,
                 "viral_load_date": get_utcnow_as_date(),
                 "viral_load_date_estimated": NO,
@@ -1001,7 +1001,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_viral_load_quantifier_LT_with_invalid_lower_detection_limit_value_raises(self):
-        for invalid_ldl_value in [-1, 0, 1, 19, 21, 49, 51, 999, 1001]:
+        for invalid_ldl_value in [-1, 0, 1, 19, 21, 49, 51, 999, 1000, 1001]:
             with self.subTest(invalid_ldl_value=invalid_ldl_value):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
@@ -1023,12 +1023,12 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 self.assertIn(
                     "Invalid. "
                     "Viral load quantifier `<` (less than) only valid with `LDL` (lower than "
-                    f"detection limit) values `20, 50, 1000`. Got `{invalid_ldl_value}`",
+                    f"detection limit) values `20, 50`. Got `{invalid_ldl_value}`",
                     str(cm.exception.error_dict.get("viral_load_quantifier")),
                 )
 
     def test_viral_load_quantifier_LT_with_valid_lower_detection_limit_ok(self):
-        for valid_ldl_value in [20, 50, 1000]:
+        for valid_ldl_value in [20, 50]:
             with self.subTest(valid_ldl_value=valid_ldl_value):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
@@ -1051,7 +1051,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
 
     def test_viral_load_quantifier_EQ_or_GT_with_valid_lower_detection_limit_ok(self):
         for vl_quantifier in [EQ, GT]:
-            for valid_ldl_value in [20, 50, 1000]:
+            for valid_ldl_value in [20, 50]:
                 with self.subTest(
                     vl_quantifier=vl_quantifier, valid_ldl_value=valid_ldl_value
                 ):
