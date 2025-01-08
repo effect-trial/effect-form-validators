@@ -237,7 +237,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
                         "Invalid. "
                         "Viral load quantifier `<` (less than) only valid with `LDL` (lower "
                         "than detection limit) values "
-                        f"`{', '.join(map(str, lower_detection_limit_values))}`. "
+                        f"`{', '.join(map(str, sorted(lower_detection_limit_values)))}`. "
                         f"Got `{self.cleaned_data.get('viral_load_result')}`."
                     )
                 },

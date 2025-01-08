@@ -45,6 +45,9 @@ class ArvHistoryWithoutSubjectScreeningMockFormValidator(FormValidatorTestMixin,
 
 
 class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
+
+    valid_ldl_values = [20, 50]
+
     def setUp(self) -> None:
         super().setUp()
 
@@ -1028,7 +1031,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 )
 
     def test_viral_load_quantifier_LT_with_valid_lower_detection_limit_ok(self):
-        for valid_ldl_value in [20, 50]:
+        for valid_ldl_value in self.valid_ldl_values:
             with self.subTest(valid_ldl_value=valid_ldl_value):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
@@ -1051,7 +1054,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
 
     def test_viral_load_quantifier_EQ_or_GT_with_valid_lower_detection_limit_ok(self):
         for vl_quantifier in [EQ, GT]:
-            for valid_ldl_value in [20, 50]:
+            for valid_ldl_value in self.valid_ldl_values:
                 with self.subTest(
                     vl_quantifier=vl_quantifier, valid_ldl_value=valid_ldl_value
                 ):
