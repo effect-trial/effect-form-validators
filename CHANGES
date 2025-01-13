@@ -5,7 +5,7 @@ Changes
 -----
 - updates to ARV History validation (#731)
     - add validation for (newly introduced) viral_load_quantifier
-    - fix validation where viral load details not required even if
+    - fix validation where viral load details were not required even if
       participant has_viral_load_result
 - drop Django 4.2 support
 - add Django 5.1 support
