@@ -1,7 +1,7 @@
 Changes
 =======
 
-unreleased
+0.1.45
 -----
 - updates to ARV History validation (#731)
     - add validation for (newly introduced) viral_load_quantifier
