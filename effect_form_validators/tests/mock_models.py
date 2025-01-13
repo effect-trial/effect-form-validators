@@ -5,7 +5,6 @@ class AdherenceMockModel(MockModel):
     def __init__(self, subject_identifier: str, *args, **kwargs):
         kwargs["mock_name"] = "Adherence"
         super().__init__(*args, **kwargs)
-        self._meta.label_lower = "effect_subject.adherence"
         self.subject_identifier = subject_identifier
 
 

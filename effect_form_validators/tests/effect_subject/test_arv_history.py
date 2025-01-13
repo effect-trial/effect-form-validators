@@ -3,7 +3,16 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.choices import DATE_ESTIMATED_NA
-from edc_constants.constants import DEFAULTED, NO, NOT_APPLICABLE, YES
+from edc_constants.constants import (
+    DEFAULTED,
+    EQ,
+    GT,
+    LT,
+    NO,
+    NOT_APPLICABLE,
+    NOT_ESTIMATED,
+    YES,
+)
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
 
@@ -36,6 +45,9 @@ class ArvHistoryWithoutSubjectScreeningMockFormValidator(FormValidatorTestMixin,
 
 
 class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
+
+    valid_ldl_values = [20, 50]
+
     def setUp(self) -> None:
         super().setUp()
 
@@ -81,6 +93,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 # Viral load
                 "has_viral_load_result": NO,
                 "viral_load_result": None,
+                "viral_load_quantifier": NOT_APPLICABLE,
                 "viral_load_date": None,
                 "viral_load_date_estimated": NOT_APPLICABLE,
                 # CD4 count
@@ -856,6 +869,341 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                     form_validator.validate()
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_result_not_required_if_has_viral_load_result_NO(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                # Viral load
+                "has_viral_load_result": NO,
+                "viral_load_result": 1000,
+                "viral_load_quantifier": NOT_APPLICABLE,
+                "viral_load_date": None,
+                "viral_load_date_estimated": NOT_APPLICABLE,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("viral_load_result", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("viral_load_result")),
+        )
+
+        cleaned_data.update({"viral_load_result": None})
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_result_required_if_has_viral_load_result_YES(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                # Viral load
+                "has_viral_load_result": YES,
+                "viral_load_result": None,
+                "viral_load_quantifier": EQ,
+                "viral_load_date": get_utcnow_as_date(),
+                "viral_load_date_estimated": NO,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("viral_load_result", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required",
+            str(cm.exception.error_dict.get("viral_load_result")),
+        )
+
+        cleaned_data.update({"viral_load_result": 1000})
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_quantifier_not_applicable_if_has_viral_load_result_NO(self):
+        cleaned_data = self.get_cleaned_data()
+
+        for vl_quantifier in [EQ, GT, LT]:
+            with self.subTest(vl_quantifier=vl_quantifier):
+                cleaned_data.update(
+                    {
+                        # Viral load
+                        "has_viral_load_result": NO,
+                        "viral_load_result": None,
+                        "viral_load_quantifier": vl_quantifier,
+                        "viral_load_date": None,
+                        "viral_load_date_estimated": NOT_APPLICABLE,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("viral_load_quantifier", cm.exception.error_dict)
+                self.assertIn(
+                    "This field is not applicable",
+                    str(cm.exception.error_dict.get("viral_load_quantifier")),
+                )
+
+        cleaned_data.update({"viral_load_quantifier": NOT_APPLICABLE})
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_quantifier_applicable_if_has_viral_load_result_YES(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                # Viral load
+                "has_viral_load_result": YES,
+                "viral_load_result": 20,
+                "viral_load_quantifier": NOT_APPLICABLE,
+                "viral_load_date": get_utcnow_as_date(),
+                "viral_load_date_estimated": NO,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("viral_load_quantifier", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable",
+            str(cm.exception.error_dict.get("viral_load_quantifier")),
+        )
+
+        for vl_quantifier in [EQ, GT, LT]:
+            with self.subTest(vl_quantifier=vl_quantifier):
+                cleaned_data.update({"viral_load_quantifier": vl_quantifier})
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_quantifier_LT_with_invalid_lower_detection_limit_value_raises(self):
+        for invalid_ldl_value in [-1, 0, 1, 19, 21, 49, 51, 999, 1000, 1001]:
+            with self.subTest(invalid_ldl_value=invalid_ldl_value):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        # Viral load
+                        "has_viral_load_result": YES,
+                        "viral_load_result": invalid_ldl_value,
+                        "viral_load_quantifier": LT,
+                        "viral_load_date": get_utcnow_as_date(),
+                        "viral_load_date_estimated": NO,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                with self.assertRaises(ValidationError) as cm:
+                    form_validator.validate()
+                self.assertIn("viral_load_quantifier", cm.exception.error_dict)
+                self.assertIn(
+                    "Invalid. "
+                    "Viral load quantifier `<` (less than) only valid with `LDL` (lower than "
+                    f"detection limit) values `20, 50`. Got `{invalid_ldl_value}`",
+                    str(cm.exception.error_dict.get("viral_load_quantifier")),
+                )
+
+    def test_viral_load_quantifier_LT_with_valid_lower_detection_limit_ok(self):
+        for valid_ldl_value in self.valid_ldl_values:
+            with self.subTest(valid_ldl_value=valid_ldl_value):
+                cleaned_data = self.get_cleaned_data()
+                cleaned_data.update(
+                    {
+                        # Viral load
+                        "has_viral_load_result": YES,
+                        "viral_load_result": valid_ldl_value,
+                        "viral_load_quantifier": LT,
+                        "viral_load_date": get_utcnow_as_date(),
+                        "viral_load_date_estimated": NO,
+                    }
+                )
+                form_validator = ArvHistoryFormValidator(
+                    cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                )
+                try:
+                    form_validator.validate()
+                except ValidationError as e:
+                    self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_quantifier_EQ_or_GT_with_valid_lower_detection_limit_ok(self):
+        for vl_quantifier in [EQ, GT]:
+            for valid_ldl_value in self.valid_ldl_values:
+                with self.subTest(
+                    vl_quantifier=vl_quantifier, valid_ldl_value=valid_ldl_value
+                ):
+                    cleaned_data = self.get_cleaned_data()
+                    cleaned_data.update(
+                        {
+                            # Viral load
+                            "has_viral_load_result": YES,
+                            "viral_load_result": valid_ldl_value,
+                            "viral_load_quantifier": vl_quantifier,
+                            "viral_load_date": get_utcnow_as_date(),
+                            "viral_load_date_estimated": NO,
+                        }
+                    )
+                    form_validator = ArvHistoryFormValidator(
+                        cleaned_data=cleaned_data, model=ArvHistoryMockModel
+                    )
+                    try:
+                        form_validator.validate()
+                    except ValidationError as e:
+                        self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_date_not_required_if_has_viral_load_result_NO(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                # Viral load
+                "has_viral_load_result": NO,
+                "viral_load_result": None,
+                "viral_load_quantifier": NOT_APPLICABLE,
+                "viral_load_date": get_utcnow_as_date(),
+                "viral_load_date_estimated": NOT_APPLICABLE,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("viral_load_date", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not required",
+            str(cm.exception.error_dict.get("viral_load_date")),
+        )
+
+        cleaned_data.update({"viral_load_date": None})
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_date_required_if_has_viral_load_result_YES(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                # Viral load
+                "has_viral_load_result": YES,
+                "viral_load_result": 1001,
+                "viral_load_quantifier": EQ,
+                "viral_load_date": None,
+                "viral_load_date_estimated": NOT_ESTIMATED,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("viral_load_date", cm.exception.error_dict)
+        self.assertIn(
+            "This field is required",
+            str(cm.exception.error_dict.get("viral_load_date")),
+        )
+
+        cleaned_data.update({"viral_load_date": get_utcnow_as_date()})
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_date_estimated_not_applicable_if_has_viral_load_result_NO(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                # Viral load
+                "has_viral_load_result": NO,
+                "viral_load_result": None,
+                "viral_load_quantifier": NOT_APPLICABLE,
+                "viral_load_date": None,
+                "viral_load_date_estimated": NOT_ESTIMATED,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("viral_load_date_estimated", cm.exception.error_dict)
+        self.assertIn(
+            "This field is not applicable",
+            str(cm.exception.error_dict.get("viral_load_date_estimated")),
+        )
+
+        cleaned_data.update({"viral_load_date_estimated": NOT_APPLICABLE})
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
+
+    def test_viral_load_date_estimated_applicable_if_has_viral_load_result_YES(self):
+        cleaned_data = self.get_cleaned_data()
+        cleaned_data.update(
+            {
+                # Viral load
+                "has_viral_load_result": YES,
+                "viral_load_result": 1001,
+                "viral_load_quantifier": EQ,
+                "viral_load_date": get_utcnow_as_date(),
+                "viral_load_date_estimated": NOT_APPLICABLE,
+            }
+        )
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        with self.assertRaises(ValidationError) as cm:
+            form_validator.validate()
+        self.assertIn("viral_load_date_estimated", cm.exception.error_dict)
+        self.assertIn(
+            "This field is applicable",
+            str(cm.exception.error_dict.get("viral_load_date_estimated")),
+        )
+
+        cleaned_data.update({"viral_load_date_estimated": NOT_ESTIMATED})
+        form_validator = ArvHistoryFormValidator(
+            cleaned_data=cleaned_data, model=ArvHistoryMockModel
+        )
+        try:
+            form_validator.validate()
+        except ValidationError as e:
+            self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_arv_history_cd4_date_after_hiv_dx_date_ok(self):
         hiv_dx_date = self.screening_datetime.date() - relativedelta(days=7)

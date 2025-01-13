@@ -1,6 +1,15 @@
 Changes
 =======
 
+0.1.45
+-----
+- updates to ARV History validation (#731)
+    - add validation for (newly introduced) viral_load_quantifier
+    - fix validation where viral load details were not required even if
+      participant has_viral_load_result
+- drop Django 4.2 support
+- add Django 5.1 support
+
 0.1.44
 ------
 - add Serum Crag Date Note form validation (#488)

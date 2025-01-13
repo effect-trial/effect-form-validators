@@ -1,4 +1,4 @@
-from edc_constants.constants import DEFAULTED, NO, NOT_APPLICABLE, YES
+from edc_constants.constants import DEFAULTED, LT, NO, NOT_APPLICABLE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_screening.utils import get_subject_screening_model_cls
@@ -90,19 +90,7 @@ class ArvHistoryFormValidator(CrfFormValidator):
         # art decision
         self.applicable_if(NO, field="has_defaulted", field_applicable="art_decision")
 
-        # vl
-        self.required_if(YES, field="has_viral_load", field_required="viral_load_result")
-        self.required_if(YES, field="has_viral_load", field_required="viral_load_date")
-        self.applicable_if(
-            YES, field="has_viral_load", field_applicable="viral_load_date_estimated"
-        )
-        self.validate_date_against_report_datetime("viral_load_date")
-
-        # self.date_not_before(
-        #     "hiv_diagnosis_date",
-        #     "viral_load_date",
-        #     "Invalid. Cannot be before HIV diagnosis date.",
-        # )
+        self.validate_viral_load()
 
         self.validate_cd4_date()
 
@@ -223,6 +211,56 @@ class ArvHistoryFormValidator(CrfFormValidator):
             field_required="art_doses_missed",
             field_required_evaluate_as_int=True,
         )
+
+    def validate_viral_load(self):
+        self.required_if(
+            YES,
+            field="has_viral_load_result",
+            field_required="viral_load_result",
+            field_required_evaluate_as_int=True,
+        )
+
+        self.applicable_if(
+            YES,
+            field="has_viral_load_result",
+            field_applicable="viral_load_quantifier",
+        )
+        lower_detection_limit_values = [20, 50]
+        if (
+            self.cleaned_data.get("viral_load_quantifier") == LT
+            and self.cleaned_data.get("viral_load_result") is not None
+            and self.cleaned_data.get("viral_load_result") not in lower_detection_limit_values
+        ):
+            self.raise_validation_error(
+                {
+                    "viral_load_quantifier": (
+                        "Invalid. "
+                        "Viral load quantifier `<` (less than) only valid with `LDL` (lower "
+                        "than detection limit) values "
+                        f"`{', '.join(map(str, sorted(lower_detection_limit_values)))}`. "
+                        f"Got `{self.cleaned_data.get('viral_load_result')}`."
+                    )
+                },
+                INVALID_ERROR,
+            )
+
+        self.required_if(
+            YES,
+            field="has_viral_load_result",
+            field_required="viral_load_date",
+        )
+        self.applicable_if(
+            YES,
+            field="has_viral_load_result",
+            field_applicable="viral_load_date_estimated",
+        )
+        self.validate_date_against_report_datetime("viral_load_date")
+
+        # self.date_not_before(
+        #     "hiv_diagnosis_date",
+        #     "viral_load_date",
+        #     "Invalid. Cannot be before HIV diagnosis date.",
+        # )
 
     def validate_cd4_date(self):
         self.validate_date_against_report_datetime("cd4_date")
