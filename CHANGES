@@ -1,6 +1,11 @@
 Changes
 =======
 
+unreleased
+------
+- fix `Server error saving Signs and Symptoms [...] forms opened from
+  admin site` (#840)
+
 0.1.45
 -----
 - updates to ARV History validation (#731)
