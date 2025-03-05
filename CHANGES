@@ -5,6 +5,7 @@ unreleased
 ------
 - fix `Server error saving Signs and Symptoms [...] forms opened from
   admin site` (#840)
+- update test setup to use `func_main2` / `test_settings.py`
 
 0.1.45
 -----
