@@ -1,7 +1,7 @@
 Changes
 =======
 
-unreleased
+1.0.0
 ------
 - fix `Server error saving Signs and Symptoms [...] forms opened from
   admin site` (#840)
