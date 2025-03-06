@@ -17,7 +17,7 @@ from ..mixins import TestCaseMixin
 
 class ParticipantTreatmentMockModel(MockModel):
     @classmethod
-    def related_visit_model_attr(cls):
+    def related_visit_model_attr(cls) -> str:
         return "subject_visit"
 
 

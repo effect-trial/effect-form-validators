@@ -22,7 +22,7 @@ from ..mixins import TestCaseMixin
 
 class SignsAndSymptomsMockModel(MockModel):
     @classmethod
-    def related_visit_model_attr(cls):
+    def related_visit_model_attr(cls) -> str:
         return "subject_visit"
 
 
@@ -74,7 +74,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
 
     def test_cleaned_data_ok(self):
         self.subject_visit.assessment_type = IN_PERSON
-        form_validator = SignsAndSymptomsFormValidator(cleaned_data=self.get_cleaned_data())
+        form_validator = SignsAndSymptomsFormValidator(
+            cleaned_data=self.get_cleaned_data(), model=SignsAndSymptomsMockModel
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -238,7 +240,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                             urinary_lam_performed=NOT_APPLICABLE,
                         )
                         form_validator = SignsAndSymptomsFormValidator(
-                            cleaned_data=cleaned_data
+                            cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
                         )
                         try:
                             form_validator.validate()
@@ -248,7 +250,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                         # Try with answer, where form validator expects NA
                         cleaned_data.update({fld: answer})
                         form_validator = SignsAndSymptomsFormValidator(
-                            cleaned_data=cleaned_data
+                            cleaned_data=cleaned_data, model=SignsAndSymptomsMockModel
                         )
                         with self.assertRaises(ValidationError) as cm:
                             form_validator.validate()

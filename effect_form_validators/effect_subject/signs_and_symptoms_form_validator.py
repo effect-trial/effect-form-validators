@@ -51,7 +51,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
         self.validate_reporting_fieldset()
 
     def in_person_visit(self):
-        return self.cleaned_data.get("subject_visit").assessment_type == IN_PERSON
+        return self.related_visit.assessment_type == IN_PERSON
 
     @staticmethod
     def _get_sisx_display_value(key):
@@ -65,7 +65,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
                     "Invalid. Cannot be 'Unknown' "
                     f"if this is an '{get_display(ASSESSMENT_TYPES, IN_PERSON)}' visit."
                 )
-            elif self.cleaned_data.get("subject_visit").assessment_who == PATIENT:
+            elif self.related_visit.assessment_who == PATIENT:
                 error_msg = (
                     "Invalid. Cannot be 'Unknown' "
                     f"if spoke to '{get_display(ASSESSMENT_WHO_CHOICES, PATIENT)}'."
