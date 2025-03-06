@@ -3,8 +3,9 @@ Changes
 
 1.0.0
 ------
-- fix `Server error saving Signs and Symptoms [...] forms opened from
-  admin site` (#840)
+- fix 'Server error saving Signs and Symptoms / TB Diagnostics forms
+  opened from admin site' (#840)
+- fix 'Signs and symptoms QA reports server error' (#842)
 - update test setup to use `func_main2` / `test_settings.py`
 
 0.1.45
