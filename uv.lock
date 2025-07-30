@@ -1468,7 +1468,7 @@ lint = [
     { name = "ruff", specifier = ">=0.12.5" },
 ]
 test = [
-    { name = "coverage", specifier = ">=7.10.1" },
+    { name = "coverage", extras = ["toml"], specifier = ">=7.10.1" },
     { name = "django-admin-rangefilter", specifier = ">=0.13.3" },
     { name = "django-crypto-fields", specifier = ">=1.0.1" },
     { name = "django-logentry-admin", specifier = ">=1.1.0" },
