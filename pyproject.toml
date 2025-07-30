@@ -1,9 +1,53 @@
 [build-system]
-requires = ["setuptools>=60", "setuptools-scm>=8.0"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.8.2,<0.9.0"]
+build-backend = "uv_build"
 
-[tool.setuptools_scm]
-version_file = "_version.py"
+[tool.uv.build-backend]
+module-root = "src"
+source-include = ["effect_*/templates/**", "effect_*/locale/**", "locale/**"]
+source-exclude = ["effect_*/tests/**", "effect_*/notebooks/**", "tests/**"]
+namespace = false
+
+[project]
+name = "effect-form-validators"
+version = "1.1.1"
+description = "Form validation classes for the EFFECT trial"
+readme = "README.rst"
+keywords = [
+    "django",
+    "clinicedc",
+    "form validators",
+    "EFFECT EDC",
+    "EDC",
+    "clinical trials",
+    "META Trial",
+    "ISRCTN30579828",
+]
+authors = [
+    { name = "Erik van Widenfelt", email = "ew2789@gmail.com" },
+    { name = "Jonathan Willitts", email = "j.willitts@ucl.ac.uk" }
+]
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 5.2",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+license = "GPL-3.0-or-later"
+license-files = ["LICEN[CS]E*"]
+requires-python = '>=3.12'
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/effect-trial/effect-form-validators"
+# Documentation = "https://readthedocs.org"
+Repository = "https://github.com/effect-trial/effect-form-validators.git"
+Changelog = "https://github.com/effect-trial/effect-form-validators/blob/main/CHANGELOG"
+
 
 [tool.black]
 line-length = 95
@@ -32,58 +76,225 @@ exclude_lines = [
   "if TYPE_CHECKING:",
 ]
 
-[tool.tox]
-legacy_tox_ini = """
-[tox]
-envlist =
-    py{312,313}-dj{52,dev},
-    lint
-    pre-commit
+[dependency-groups]
 
-isolated_build = true
+lint = [
+    "black>=25.1.0",
+    "deptry>=0.23.0",
+    "flake8>=7.3.0",
+    "isort>=6.0.1",
+    "ruff>=0.12.5",
+]
+test = [
+    "effect-form-validators>=1.1.1",
+    "edc-csf>=1.0.0",
+    "coverage>=7.10.1",
+    "tox-uv>=1.26.2",
+    "faker>=37.4.2",
+    "model-bakery>=1.20.5",
+    "time-machine>=2.16.0",
+    "django-admin-rangefilter>=0.13.3",
+    "django-crypto-fields>=1.0.1",
+    "django-logentry-admin>=1.1.0",
+    "django-multisite2>=2.1.0",
+    "django-pandas>=0.6.7",
+    "django-revision>=1.0.0",
+    "django-simple-history>=3.10.1",
+    "django-webtest>=1.9.13",
+    "edc-action-item>=1.0.3",
+    "edc-appointment>=1.1.1",
+    "edc-auth>=1.0.2",
+    "edc-consent>=1.0.3",
+    "edc-constants>=1.0.1",
+    "edc-dashboard>=1.0.3",
+    "edc-data-manager>=1.0.0",
+    "edc-document-status>=1.0.0",
+    "edc-facility>=1.0.2",
+    "edc-form-validators>=1.0.0",
+    "edc-identifier>=1.0.0",
+    "edc-list-data>=1.0.0",
+    "edc-locator>=1.0.2",
+    "edc-metadata>=1.0.5",
+    "edc-model-admin>=1.0.3",
+    "edc-model-form>=1.0.0",
+    "edc-notification>=1.0.1",
+    "edc-offstudy>=1.0.1",
+    "edc-pharmacy>=1.2.3",
+    "edc-prn>=1.1.1",
+    "edc-protocol>=1.0.1",
+    "edc-registration>=1.0.1",
+    "edc-screening>=1.1.0",
+    "edc-search>=1.0.1",
+    "edc-sites>=1.1.0",
+    "edc-test-settings>=1.1.2",
+    "edc-timepoint>=1.0.1",
+    "edc-view-utils>=1.0.1",
+    "edc-visit-tracking>=1.0.2",
+    "tqdm>=4.67.1",
+    "edc-crf>=1.0.1",
+    "edc-qareports>=1.0.4",
+    "edc-visit-schedule>=4.1.1",
+    "edc-unblinding>=1.0.2",
+    "edc-subject-dashboard>=1.0.1",
+    "edc-review-dashboard>=1.0.2",
+    "edc-reportable>=2.0.2",
+    "edc-refusal>=1.0.1",
+    "edc-randomization>=1.0.4",
+    "edc-pylabels>=1.0.1",
+    "edc-protocol-incident>=1.0.1",
+    "edc-pdutils>=1.0.2",
+    "edc-pdf-reports>=1.0.2",
+    "edc-navbar>=1.0.0",
+    "edc-label>=1.0.0",
+    "edc-lab-dashboard>=1.0.2",
+    "edc-lab>=1.0.5",
+    "edc-form-runners>=1.0.0",
+    "edc-fieldsets>=1.0.1",
+    "edc-export>=1.0.4",
+    "edc-dx-review>=1.0.1",
+    "edc-dx>=1.0.1",
+    "edc-device>=1.0.1",
+    "edc-adherence>=1.0.1",
+    "edc-adverse-event>=1.0.3",
+    "django-mock-queries>=2.3.0",
+    "edc-model>=1.0.0",
+    "edc-microbiology>=1.0.0",
+    "edc-model-to-dataframe>=1.0.1",
+    "edc-vitals>=1.1.2",
+]
 
-[gh-actions]
-python =
-    3.12: py312, lint, pre-commit
-    3.13: py313
+develop = [
+    "django-mock-queries>=2.3.0",
+    "edc-test-settings>=1.1.2",
+    'effect-form-validators',
+    'django-audit-fields',
+    'django-crypto-fields',
+    'django-revision',
+    'django-multisite2',
+    'django-pandas',
+    'edc-adherence',
+    'edc-adverse-event',
+    'edc-appointment',
+    'edc-auth',
+    'edc-consent',
+    'edc-constants',
+    'edc-crf',
+    'edc-csf',
+    'edc-dashboard',
+    'edc-facility',
+    'edc-form-validators',
+    'edc-identifier',
+    'edc-lab',
+    'edc-locator',
+    'edc-metadata',
+    'edc-microbiology',
+    'edc-model',
+    'edc-model-admin',
+    'edc-model-form',
+    'edc-model-to-dataframe',
+    'edc-offstudy',
+    'edc-pdutils',
+    'edc-prn',
+    'edc-protocol',
+    'edc-randomization',
+    'edc-registration',
+    'edc-reportable',
+    'edc-screening',
+    'edc-sites',
+    'edc-utils',
+    'edc-visit-schedule',
+    'edc-visit-tracking',
+    'edc-vitals',
+]
 
-[gh-actions:env]
-DJANGO =
-    5.2: dj52
-    dev: djdev, lint, pre-commit
-
-[testenv]
-deps =
-    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/tox.txt
-    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/test_utils.txt
-    -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/edc.txt
-    dj51: Django>=5.2,<5.3
-    djdev: https://github.com/django/django/tarball/main
-
-commands =
-    pip install -U pip
-    python --version
-    pip --version
-    pip install -U edc-csf edc-microbiology
-    pip freeze
-    coverage run -a runtests.py
-    coverage report
-
-[testenv:lint]
-deps = -r https://raw.githubusercontent.com/clinicedc/edc/develop/requirements.tests/lint.txt
-commands =
-    python --version
-    pip --version
-    pip freeze
-    isort --profile=black --check --diff .
-    black --check --diff .
-    flake8 .
-
-[testenv:pre-commit]
-deps = pre-commit
-commands =
-    python --version
-    pip --version
-    pip freeze
-    pre-commit run --all-files
-"""
+[tool.uv.sources]
+# effect-edc = { path = "../effect-edc", editable = true }
+effect-form-validators = { workspace = true }
+#edc-csf = { path = "../edc-csf", editable = true }
+#django-audit-fields = { path = "../django-audit-fields", editable = true }
+#django-crypto-fields = { path = "../django-crypto-fields", editable = true }
+#django-revision = { path = "../django-revision", editable = true }
+#django-multisite2 = { path = "../django-multisite2", editable = true }
+#django-simple-history = { path = "../django-simple-history", editable = true }
+#django-logentry-admin = { path = "../django-logentry-admin", editable = true }
+#edc-action-item = { path = "../edc-action-item", editable = true }
+#edc-adherence = { path = "../edc-adherence", editable = true }
+#edc-adverse-event = { path = "../edc-adverse-event", editable = true }
+#edc-analytics = { path = "../edc-analytics", editable = true }
+#edc-appconfig = { path = "../edc-appconfig", editable = true }
+#edc-appointment = { path = "../edc-appointment", editable = true }
+#edc-auth = { path = "../edc-auth", editable = true }
+#edc-consent = { path = "../edc-consent", editable = true }
+#edc-constants = { path = "../edc-constants", editable = true }
+#edc-crf = { path = "../edc-crf", editable = true }
+#edc-csf = { path = "../edc-csf", editable = true }
+#edc-dashboard = { path = "../edc-dashboard", editable = true }
+#edc-data-manager = { path = "../edc-data-manager", editable = true }
+#edc-device = { path = "../edc-device", editable = true }
+#edc-document-status = { path = "../edc-document-status", editable = true }
+#edc-dx = { path = "../edc-dx", editable = true }
+#edc-dx-review = { path = "../edc-dx-review", editable = true }
+#edc-egfr = { path = "../edc-egfr", editable = true }
+#edc-export = { path = "../edc-export", editable = true }
+#edc-facility = { path = "../edc-facility", editable = true }
+#edc-fieldsets = { path = "../edc-fieldsets", editable = true }
+#edc-form-describer = { path = "../edc-form-describer", editable = true }
+#edc-form-label = { path = "../edc-form-label", editable = true }
+#edc-form-runners = { path = "../edc-form-runners", editable = true }
+#edc-form-validators = { path = "../edc-form-validators", editable = true }
+#edc-glucose = { path = "../edc-glucose", editable = true }
+#edc-he = { path = "../edc-he", editable = true }
+#edc-identifier = { path = "../edc-identifier", editable = true }
+#edc-lab = { path = "../edc-lab", editable = true }
+#edc-lab-dashboard = { path = "../edc-lab-dashboard", editable = true }
+#edc-lab-panel = { path = "../edc-lab-panel", editable = true }
+#edc-lab-results = { path = "../edc-lab-results", editable = true }
+#edc-label = { path = "../edc-label", editable = true }
+#edc-list-data = { path = "../edc-list-data", editable = true }
+#edc-listboard = { path = "../edc-listboard", editable = true }
+#edc-locator = { path = "../edc-locator", editable = true }
+#edc-ltfu = { path = "../edc-ltfu", editable = true }
+#edc-metadata = { path = "../edc-metadata", editable = true }
+#edc-microbiology = { path = "../edc-microbiology", editable = true }
+#edc-microscopy = { path = "../edc-microscopy", editable = true }
+#edc-mnsi = { path = "../edc-mnsi", editable = true }
+#edc-model = { path = "../edc-model", editable = true }
+#edc-model-admin = { path = "../edc-model-admin", editable = true }
+#edc-model-fields = { path = "../edc-model-fields", editable = true }
+#edc-model-form = { path = "../edc-model-form", editable = true }
+#edc-model-to-dataframe = { path = "../edc-model-to-dataframe", editable = true }
+#edc-navbar = { path = "../edc-navbar", editable = true }
+#edc-next-appointment = { path = "../edc-next-appointment", editable = true }
+#edc-notification = { path = "../edc-notification", editable = true }
+#edc-offstudy = { path = "../edc-offstudy", editable = true }
+#edc-pdf-reports = { path = "../edc-pdf-reports", editable = true }
+#edc-pdutils = { path = "../edc-pdutils", editable = true }
+#edc-pharmacy = { path = "../edc-pharmacy", editable = true }
+#edc-pharmacy-dashboard = { path = "../edc-pharmacy-dashboard", editable = true }
+#edc-phq9 = { path = "../edc-phq9", editable = true }
+#edc-prn = { path = "../edc-prn", editable = true }
+#edc-protocol = { path = "../edc-protocol", editable = true }
+#edc-protocol-incident = { path = "../edc-protocol-incident", editable = true }
+#edc-pylabels = { path = "../edc-pylabels", editable = true }
+#edc-qareports = { path = "../edc-qareports", editable = true }
+#edc-qol = { path = "../edc-qol", editable = true }
+#edc-randomization = { path = "../edc-randomization", editable = true }
+#edc-refusal = { path = "../edc-refusal", editable = true }
+#edc-registration = { path = "../edc-registration", editable = true }
+#edc-review-dashboard = { path = "../edc-review-dashboard", editable = true }
+#edc-rx = { path = "../edc-rx", editable = true }
+#edc-screening = { path = "../edc-screening", editable = true }
+#edc-search = { path = "../edc-search", editable = true }
+#edc-sites = { path = "../edc-sites", editable = true }
+#edc-subject-dashboard = { path = "../edc-subject-dashboard", editable = true }
+#edc-test-settings = { path = "../edc-test-settings", editable = true }
+#edc-test-utils = { path = "../edc-test-utils", editable = true }
+#edc-timepoint = { path = "../edc-timepoint", editable = true }
+#edc-transfer = { path = "../edc-transfer", editable = true }
+#edc-unblinding = { path = "../edc-unblinding", editable = true }
+#edc-utils = { path = "../edc-utils", editable = true }
+#edc-view-utils = { path = "../edc-view-utils", editable = true }
+#edc-visit-schedule = { path = "../edc-visit-schedule", editable = true }
+#edc-visit-tracking = { path = "../edc-visit-tracking", editable = true }
+#edc-vitals = { path = "../edc-vitals", editable = true }
+#edc-reportable = { path = "../edc-reportable", editable = true }
