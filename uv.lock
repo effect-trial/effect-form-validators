@@ -1458,7 +1458,7 @@ develop = [
     { name = "edc-visit-schedule" },
     { name = "edc-visit-tracking" },
     { name = "edc-vitals" },
-    { name = "effect-form-validators" },
+    { name = "effect-form-validators", editable = "." },
 ]
 lint = [
     { name = "black", specifier = ">=25.1.0" },
@@ -1537,7 +1537,7 @@ test = [
     { name = "edc-visit-schedule", specifier = ">=4.1.1" },
     { name = "edc-visit-tracking", specifier = ">=1.0.2" },
     { name = "edc-vitals", specifier = ">=1.1.2" },
-    { name = "effect-form-validators", specifier = ">=1.1.1" },
+    { name = "effect-form-validators", editable = "." },
     { name = "faker", specifier = ">=37.4.2" },
     { name = "model-bakery", specifier = ">=1.20.5" },
     { name = "time-machine", specifier = ">=2.16.0" },
