@@ -1,0 +1,2 @@
+Sphinx==8.2.3
+sphinx-github-changelog>=1.7.1

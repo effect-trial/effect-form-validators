@@ -76,7 +76,18 @@ exclude_lines = [
   "if TYPE_CHECKING:",
 ]
 
+[tool.rstcheck]
+ignore_messages = [
+    "No directive entry for \"changelog\"",
+    "Unknown directive type \"changelog\""
+]
+
 [dependency-groups]
+
+docs = [
+    "sphinx>=8.2.3",
+    "sphinx-github-changelog>=1.7.1",
+]
 
 lint = [
     "black>=25.1.0",
