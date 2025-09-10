@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from edc_constants.constants import CONFIRMED
 from edc_crf.crf_form_validator_mixins import BaseFormValidatorMixin
 from edc_form_validators import INVALID_ERROR, FormValidator
