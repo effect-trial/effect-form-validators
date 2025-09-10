@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from edc_constants.constants import YES
 from edc_form_validators import INVALID_ERROR
 from edc_form_validators.form_validator import FormValidator

@@ -1,4 +1,6 @@
-from edc_form_validators import FormValidator
+from __future__ import annotations
+
+from edc_form_validators.form_validator import FormValidator
 
 from ..form_validator_mixins import EffectSubjectConsentFormValidatorMixin
 

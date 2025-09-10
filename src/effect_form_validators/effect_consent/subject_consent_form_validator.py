@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from edc_consent.form_validators import SubjectConsentFormValidatorMixin
 from edc_form_validators import FormValidator
 
