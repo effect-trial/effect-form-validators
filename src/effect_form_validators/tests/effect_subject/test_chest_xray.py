@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 
 from dateutil.relativedelta import relativedelta
@@ -28,7 +30,7 @@ class ChestXrayFormValidator(FormValidatorTestMixin, Base):
     def previous_chest_xray_date(self) -> datetime.date:
         return (self.consent_datetime - relativedelta(months=1)).date()
 
-    def get_consent_datetime_or_raise(self, **kwargs) -> datetime:
+    def get_consent_datetime_or_raise(self, **kwargs) -> datetime:  # noqa: ARG002
         return self.consent_datetime
 
 

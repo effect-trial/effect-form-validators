@@ -3,16 +3,8 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.choices import DATE_ESTIMATED_NA
-from edc_constants.constants import (
-    DEFAULTED,
-    EQ,
-    GT,
-    LT,
-    NO,
-    NOT_APPLICABLE,
-    NOT_ESTIMATED,
-    YES,
-)
+from edc_constants.constants import (DEFAULTED, EQ, GT, LT, NO, NOT_APPLICABLE, NOT_ESTIMATED,
+                                     YES)
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
 
@@ -45,8 +37,7 @@ class ArvHistoryWithoutSubjectScreeningMockFormValidator(FormValidatorTestMixin,
 
 
 class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
-
-    valid_ldl_values = [20, 50]
+    valid_ldl_values = (20, 50)
 
     def setUp(self) -> None:
         super().setUp()
@@ -394,7 +385,8 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                     cleaned_data.update(
                         {
                             "ever_on_art": YES,
-                            "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
+                            "initial_art_date": self.hiv_dx_date
+                            + relativedelta(days=7),
                             "initial_art_date_estimated": NO,
                             "initial_art_regimen": MockSet(
                                 self.arv_regimens_choice_abc_3tc_ftc
@@ -526,8 +518,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertIn("is_adherent", cm.exception.error_dict)
         self.assertIn(
-            "Invalid. "
-            "Participant not reported as defaulted from their current ART regimen.",
+            "Invalid. Participant not reported as defaulted from their current ART regimen.",
             str(cm.exception.error_dict.get("is_adherent")),
         )
 
@@ -540,7 +531,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                         "ever_on_art": YES,
                         "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
                         "initial_art_date_estimated": NO,
-                        "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                        "initial_art_regimen": MockSet(
+                            self.arv_regimens_choice_abc_3tc_ftc
+                        ),
                         "has_switched_art_regimen": NO,
                         "has_defaulted": YES,
                         "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
@@ -742,7 +735,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                         "ever_on_art": YES,
                         "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
                         "initial_art_date_estimated": NO,
-                        "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                        "initial_art_regimen": MockSet(
+                            self.arv_regimens_choice_abc_3tc_ftc
+                        ),
                         "has_switched_art_regimen": NO,
                         "has_defaulted": NO,
                         "defaulted_date": None,
@@ -794,7 +789,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                         "ever_on_art": YES,
                         "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
                         "initial_art_date_estimated": NO,
-                        "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                        "initial_art_regimen": MockSet(
+                            self.arv_regimens_choice_abc_3tc_ftc
+                        ),
                         "has_switched_art_regimen": NO,
                         "has_defaulted": YES,
                         "defaulted_date": self.hiv_dx_date + relativedelta(days=14),
@@ -852,7 +849,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                         "ever_on_art": YES,
                         "initial_art_date": self.hiv_dx_date + relativedelta(days=7),
                         "initial_art_date_estimated": NO,
-                        "initial_art_regimen": MockSet(self.arv_regimens_choice_abc_3tc_ftc),
+                        "initial_art_regimen": MockSet(
+                            self.arv_regimens_choice_abc_3tc_ftc
+                        ),
                         "has_switched_art_regimen": NO,
                         "has_defaulted": NO,
                         "defaulted_date": None,
@@ -870,7 +869,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_result_not_required_if_has_viral_load_result_NO(self):
+    def test_viral_load_result_not_required_if_has_viral_load_result_NO(
+        self,
+    ):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -902,7 +903,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_result_required_if_has_viral_load_result_YES(self):
+    def test_viral_load_result_required_if_has_viral_load_result_YES(
+        self,
+    ):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -934,7 +937,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_quantifier_not_applicable_if_has_viral_load_result_NO(self):
+    def test_viral_load_quantifier_not_applicable_if_has_viral_load_result_NO(
+        self,
+    ):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
 
         for vl_quantifier in [EQ, GT, LT]:
@@ -969,7 +974,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_quantifier_applicable_if_has_viral_load_result_YES(self):
+    def test_viral_load_quantifier_applicable_if_has_viral_load_result_YES(
+        self,
+    ):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1003,7 +1010,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_quantifier_LT_with_invalid_lower_detection_limit_value_raises(self):
+    def test_viral_load_quantifier_LT_with_invalid_lower_detection_limit_value_raises(
+        self,
+    ):  # noqa: N802
         for invalid_ldl_value in [-1, 0, 1, 19, 21, 49, 51, 999, 1000, 1001]:
             with self.subTest(invalid_ldl_value=invalid_ldl_value):
                 cleaned_data = self.get_cleaned_data()
@@ -1030,7 +1039,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                     str(cm.exception.error_dict.get("viral_load_quantifier")),
                 )
 
-    def test_viral_load_quantifier_LT_with_valid_lower_detection_limit_ok(self):
+    def test_viral_load_quantifier_LT_with_valid_lower_detection_limit_ok(
+        self,
+    ):  # noqa: N802
         for valid_ldl_value in self.valid_ldl_values:
             with self.subTest(valid_ldl_value=valid_ldl_value):
                 cleaned_data = self.get_cleaned_data()
@@ -1052,7 +1063,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_quantifier_EQ_or_GT_with_valid_lower_detection_limit_ok(self):
+    def test_viral_load_quantifier_EQ_or_GT_with_valid_lower_detection_limit_ok(
+        self,
+    ):  # noqa: N802
         for vl_quantifier in [EQ, GT]:
             for valid_ldl_value in self.valid_ldl_values:
                 with self.subTest(
@@ -1077,7 +1090,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                     except ValidationError as e:
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_date_not_required_if_has_viral_load_result_NO(self):
+    def test_viral_load_date_not_required_if_has_viral_load_result_NO(
+        self,
+    ):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1109,7 +1124,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_date_required_if_has_viral_load_result_YES(self):
+    def test_viral_load_date_required_if_has_viral_load_result_YES(self):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1141,7 +1156,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_date_estimated_not_applicable_if_has_viral_load_result_NO(self):
+    def test_viral_load_date_estimated_not_applicable_if_has_viral_load_result_NO(
+        self,
+    ):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1173,7 +1190,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_date_estimated_applicable_if_has_viral_load_result_YES(self):
+    def test_viral_load_date_estimated_applicable_if_has_viral_load_result_YES(
+        self,
+    ):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1334,8 +1353,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertIn("cd4_value", cm.exception.error_dict)
         self.assertIn(
-            "Invalid. Cannot differ from screening CD4 count "
-            "(79) if collected on same date.",
+            "Invalid. Cannot differ from screening CD4 count (79) if collected on same date.",
             cm.exception.error_dict.get("cd4_value")[0].message,
         )
 

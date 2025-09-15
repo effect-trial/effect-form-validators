@@ -41,9 +41,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
 ]
-dependencies = [
-    "clinicedc>=2.0.1",
-]
+dependencies = ["clinicedc>=2.0.1"]
 
 [project.urls]
 Homepage = "https://github.com/effect-trial/effect-form-validators"
@@ -51,17 +49,66 @@ Homepage = "https://github.com/effect-trial/effect-form-validators"
 Repository = "https://github.com/effect-trial/effect-form-validators.git"
 Changelog = "https://github.com/effect-trial/effect-form-validators/blob/main/CHANGELOG"
 
-
-[tool.black]
+[tool.ruff]
 line-length = 95
-target-version = ["py312"]
-extend-exclude = '''^(.*\/)*\b(migrations|\.venv)\b($|\/.*$)'''
+indent-width = 4
+target-version = "py312"
+exclude = ["migrations", ".tox", ".venv"]
 
-[tool.isort]
-profile = "black"
-py_version = "312"
-skip = [".tox", ".eggs", "migrations", "_version.py", ".venv"]
+[tool.ruff.lint]
+select = [
+    "A",
+    "ARG",
+    "B",
+    "C90",
+    "COM",
+    "DJ",
+    "DTZ",
+    "E",
+    "F",
+    "FA",
+    "FURB",
+    "I",
+    "INT",
+    "N",
+    "PD",
+    "PERF",
+    "PL",
+    "PLR",
+    "PTH",
+    "RET",
+    "RUF",
+    "S",
+    "SIM",
+    "T20",
+    "TRY",
+    "UP",
+    "W",
+    # "FIX",
+]
+ignore = [
+    "DJ008",
+    "DJ007",
+    "DJ006",
+    "COM812",
+    "PLC0206",
+    "TRY003", # temporarily
+    "PLR0913", # temporarily
+    "ARG001", # temporarily
+    "DJ012", # temporarily
+]
 
+[tool.ruff.lint.per-file-ignores]
+    "__init__.py" = ["F401"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 12
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 [tool.coverage.run]
 parallel = false
 branch = true
@@ -93,10 +140,6 @@ docs = [
 ]
 
 lint = [
-    "black>=25.1.0",
-    "deptry>=0.23.0",
-    "flake8>=7.3.0",
-    "isort>=6.0.1",
     "ruff>=0.12.5",
 ]
 test = [
@@ -106,7 +149,6 @@ test = [
     "edc-dx-review>=1.0.1",
     "edc-dx>=1.0.1",
     "edc-microbiology>=1.0.0",
-    "edc-vitals>=1.1.2",
     "edc-test-settings>=1.1.2",
     "coverage[toml]>=7.10.1",
     "tox-uv>=1.26.2",
@@ -127,6 +169,7 @@ test = [
 ]
 
 develop = [
+    "clinicedc>=2.0.1",
     "django-mock-queries>=2.3.0",
     "edc-test-settings>=1.1.2",
     'effect-form-validators',
@@ -137,24 +180,17 @@ develop = [
     'django-pandas',
     'edc-csf',
     'edc-microbiology',
-    'edc-vitals',
     "arrow>=1.3.0",
 ]
 
 [tool.uv.sources]
-# effect-edc = { path = "../effect-edc", editable = true }
 effect-form-validators = { workspace = true }
-clinicedc = { path = "../clinicedc/clinicedc", editable = true }
+clinicedc = { path = "../clinicedc", editable = true }
 edc-csf = { path = "../edc-csf", editable = true }
 edc-dx = { path = "../edc-dx", editable = true }
 edc-dx-review = { path = "../edc-dx-review", editable = true }
-edc-egfr = { path = "../edc-egfr", editable = true }
-edc-glucose = { path = "../edc-glucose", editable = true }
 edc-microbiology = { path = "../edc-microbiology", editable = true }
-# edc-rx = { path = "../edc-rx", editable = true }
 edc-test-settings = { path = "../edc-test-settings", editable = true }
-edc-test-utils = { path = "../edc-test-utils", editable = true }
-edc-vitals = { path = "../edc-vitals", editable = true }
 django-audit-fields = { path = "../django-audit-fields", editable = true }
 django-crypto-fields = { path = "../django-crypto-fields", editable = true }
 django-revision = { path = "../django-revision", editable = true }

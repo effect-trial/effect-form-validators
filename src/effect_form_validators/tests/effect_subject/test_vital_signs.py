@@ -1,5 +1,3 @@
-from typing import Optional
-
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel
@@ -25,8 +23,8 @@ class VitalSignsFormValidator(FormValidatorTestMixin, Base):
 class TestVitalSignsFormValidator(TestCaseMixin, TestCase):
     def get_cleaned_data(
         self,
-        visit_code: Optional[str] = None,
-        visit_code_sequence: Optional[int] = None,
+        visit_code: str | None = None,
+        visit_code_sequence: int | None = None,
         **kwargs,
     ) -> dict:
         cleaned_data = super().get_cleaned_data(

@@ -21,7 +21,7 @@ class DiagnosesFormValidator(FormValidatorTestMixin, Base):
 
 
 class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
-    reportable_fields = ["reportable_as_ae", "patient_admitted"]
+    reportable_fields = ("reportable_as_ae", "patient_admitted")
 
     def setUp(self) -> None:
         super().setUp()
@@ -58,7 +58,9 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_gi_side_effects_details_required_if_gi_side_effects_YES(self):
+    def test_gi_side_effects_details_required_if_gi_side_effects_YES(
+        self,
+    ):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -93,7 +95,9 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_gi_side_effects_details_not_required_if_gi_side_effects_NO(self):
+    def test_gi_side_effects_details_not_required_if_gi_side_effects_NO(
+        self,
+    ):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -126,7 +130,7 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_m2m_diagnoses_NA_raises_if_has_diagnoses_YES(self):
+    def test_m2m_diagnoses_NA_raises_if_has_diagnoses_YES(self):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -144,8 +148,7 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertIn("diagnoses", cm.exception.error_dict)
         self.assertIn(
-            "Invalid selection. "
-            "Cannot be N/A if there are significant diagnoses to report.",
+            "Invalid selection. Cannot be N/A if there are significant diagnoses to report.",
             str(cm.exception.error_dict.get("diagnoses")),
         )
 
@@ -164,7 +167,7 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_m2m_diagnoses_expects_NA_if_has_diagnoses_NO(self):
+    def test_m2m_diagnoses_expects_NA_if_has_diagnoses_NO(self):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -199,7 +202,7 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_diagnoses_other_required_if_diagnoses_OTHER(self):
+    def test_diagnoses_other_required_if_diagnoses_OTHER(self):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -236,7 +239,7 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_diagnoses_other_not_required_if_diagnoses_not_OTHER(self):
+    def test_diagnoses_other_not_required_if_diagnoses_not_OTHER(self):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -273,7 +276,7 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fields_applicable_if_gi_side_effects_YES(self):
+    def test_reporting_fields_applicable_if_gi_side_effects_YES(self):  # noqa: N802
         for reporting_fld_answer in [YES, NO]:
             with self.subTest(
                 reporting_fld_answer=reporting_fld_answer,
@@ -320,7 +323,7 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fields_not_applicable_if_gi_side_effects_NO(self):
+    def test_reporting_fields_not_applicable_if_gi_side_effects_NO(self):  # noqa: N802
         for reporting_fld in self.reportable_fields:
             for reporting_fld_answer in [YES, NO]:
                 with self.subTest(
@@ -356,7 +359,7 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
                     except ValidationError as e:
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fields_applicable_if_has_diagnoses_YES(self):
+    def test_reporting_fields_applicable_if_has_diagnoses_YES(self):  # noqa: N802
         for reporting_fld_answer in [YES, NO]:
             with self.subTest(
                 reporting_fld_answer=reporting_fld_answer,
@@ -403,7 +406,7 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fields_not_applicable_if_has_diagnoses_NO(self):
+    def test_reporting_fields_not_applicable_if_has_diagnoses_NO(self):  # noqa: N802
         for reporting_fld in self.reportable_fields:
             for reporting_fld_answer in [YES, NO]:
                 with self.subTest(

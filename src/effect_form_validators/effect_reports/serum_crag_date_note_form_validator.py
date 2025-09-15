@@ -7,6 +7,8 @@ from edc_registration import get_registered_subject_model_cls
 from edc_screening.utils import get_subject_screening_model_cls
 from edc_sites.form_validator_mixin import SiteFormValidatorMixin
 
+SIX_MONTHS = 180
+
 
 class SerumCragDateNoteFormValidator(
     BaseFormValidatorMixin,
@@ -46,7 +48,9 @@ class SerumCragDateNoteFormValidator(
                     },
                     INVALID_ERROR,
                 )
-            elif (self.eligibility_date - self.cleaned_data.get("serum_crag_date")).days > 180:
+            if (
+                self.eligibility_date - self.cleaned_data.get("serum_crag_date")
+            ).days > SIX_MONTHS:
                 raise self.raise_validation_error(
                     {
                         "serum_crag_date": (
@@ -56,7 +60,9 @@ class SerumCragDateNoteFormValidator(
                     INVALID_ERROR,
                 )
 
-        self.date_before_report_datetime_or_raise(field="serum_crag_date", inclusive=True)
+        self.date_before_report_datetime_or_raise(
+            field="serum_crag_date", inclusive=True
+        )
 
     def validate_status(self):
         if (
@@ -71,7 +77,7 @@ class SerumCragDateNoteFormValidator(
                 },
                 INVALID_ERROR,
             )
-        elif (
+        if (
             not self.cleaned_data.get("serum_crag_date")
             and self.cleaned_data.get("status") == CONFIRMED
         ):

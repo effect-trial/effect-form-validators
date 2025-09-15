@@ -96,27 +96,6 @@ class ArvHistoryFormValidator(CrfFormValidator):
 
         self.validate_cd4_against_screening_cd4_data()
 
-    # self.required_if(
-    #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
-    # )
-    #
-    # if self.cleaned_data.get("has_previous_arv_regimen") == NO:
-    #     self.date_equal(
-    #         "initial_art_date",
-    #         "current_art_regimen_start_date",
-    #         "Invalid. Expected current regimen date to equal initiation date.",
-    #     )
-    #
-    # self.required_if(
-    #     YES, field="has_previous_arv_regimen", field_required="previous_arv_regimen"
-    # )
-    #
-    # self.required_if(
-    #     OTHER,
-    #     field="previous_arv_regimen",
-    #     field_required="other_previous_arv_regimen",
-    # )
-
     def validate_hiv_dx_date_against_screening_cd4_date(self):
         if (
             self.cleaned_data.get("hiv_dx_date")
@@ -175,7 +154,9 @@ class ArvHistoryFormValidator(CrfFormValidator):
         )
 
         # adherent
-        self.applicable_if(YES, NO, field="has_defaulted", field_applicable="is_adherent")
+        self.applicable_if(
+            YES, NO, field="has_defaulted", field_applicable="is_adherent"
+        )
         if (
             self.cleaned_data.get("has_defaulted") != YES
             and self.cleaned_data.get("is_adherent") == DEFAULTED
@@ -229,7 +210,8 @@ class ArvHistoryFormValidator(CrfFormValidator):
         if (
             self.cleaned_data.get("viral_load_quantifier") == LT
             and self.cleaned_data.get("viral_load_result") is not None
-            and self.cleaned_data.get("viral_load_result") not in lower_detection_limit_values
+            and self.cleaned_data.get("viral_load_result")
+            not in lower_detection_limit_values
         ):
             self.raise_validation_error(
                 {
@@ -255,12 +237,6 @@ class ArvHistoryFormValidator(CrfFormValidator):
             field_applicable="viral_load_date_estimated",
         )
         self.validate_date_against_report_datetime("viral_load_date")
-
-        # self.date_not_before(
-        #     "hiv_diagnosis_date",
-        #     "viral_load_date",
-        #     "Invalid. Cannot be before HIV diagnosis date.",
-        # )
 
     def validate_cd4_date(self):
         self.validate_date_against_report_datetime("cd4_date")
@@ -290,7 +266,10 @@ class ArvHistoryFormValidator(CrfFormValidator):
                 INVALID_ERROR,
             )
 
-        if arv_history_cd4_date and arv_history_cd4_date < self.subject_screening.cd4_date:
+        if (
+            arv_history_cd4_date
+            and arv_history_cd4_date < self.subject_screening.cd4_date
+        ):
             self.raise_validation_error(
                 {
                     "cd4_date": (

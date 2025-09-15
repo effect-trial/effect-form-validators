@@ -1,25 +1,16 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Optional
 
 from dateutil.relativedelta import relativedelta
 from django.test import TestCase
 from django_mock_queries.query import MockModel
 from edc_utils import get_utcnow
-from edc_visit_schedule.constants import (
-    DAY01,
-    DAY03,
-    DAY09,
-    DAY14,
-    WEEK04,
-    WEEK10,
-    WEEK16,
-    WEEK24,
-)
+from edc_visit_schedule.constants import (DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16,
+                                          WEEK24)
 
 
 class TestCaseMixin(TestCase):
-    visit_schedule = [
+    visit_schedule = (
         DAY01,
         DAY03,
         DAY09,
@@ -28,7 +19,7 @@ class TestCaseMixin(TestCase):
         WEEK10,
         WEEK16,
         WEEK24,
-    ]
+    )
 
     def setUp(self) -> None:
         """Setup appointment and subject_visit Mock models"""
@@ -63,9 +54,9 @@ class TestCaseMixin(TestCase):
 
     def get_cleaned_data(
         self,
-        visit_code: Optional[str] = None,
-        report_datetime: Optional[datetime] = None,
-        visit_code_sequence: Optional[int] = None,
+        visit_code: str | None = None,
+        report_datetime: datetime | None = None,
+        visit_code_sequence: int | None = None,
     ) -> dict:
         """Returns dict of subject_visit and report_datetime.
 

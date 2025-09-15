@@ -1,18 +1,8 @@
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
-from edc_constants.constants import (
-    HEADACHE,
-    IN_PERSON,
-    NEXT_OF_KIN,
-    NO,
-    NOT_APPLICABLE,
-    OTHER,
-    PATIENT,
-    TELEPHONE,
-    UNKNOWN,
-    YES,
-)
+from edc_constants.constants import (HEADACHE, IN_PERSON, NEXT_OF_KIN, NO, NOT_APPLICABLE,
+                                     OTHER, PATIENT, TELEPHONE, UNKNOWN, YES)
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 
 from effect_form_validators.effect_subject import SignsAndSymptomsFormValidator as Base
@@ -31,7 +21,7 @@ class SignsAndSymptomsFormValidator(FormValidatorTestMixin, Base):
 
 
 class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
-    reportable_fields = ["reportable_as_ae", "patient_admitted"]
+    reportable_fields = ("reportable_as_ae", "patient_admitted")
 
     def setUp(self) -> None:
         super().setUp()
@@ -125,7 +115,11 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertIn("any_sx", cm.exception.error_dict)
         self.assertEqual(
-            {"any_sx": ["Invalid. Cannot be 'Unknown' if this is an 'In person' visit."]},
+            {
+                "any_sx": [
+                    "Invalid. Cannot be 'Unknown' if this is an 'In person' visit."
+                ]
+            },
             cm.exception.message_dict,
         )
 
@@ -286,7 +280,11 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     form_validator.validate()
                 self.assertIn("headache_duration", cm.exception.error_dict)
                 self.assertEqual(
-                    {"headache_duration": ["Invalid. Headache duration cannot be <= 0"]},
+                    {
+                        "headache_duration": [
+                            "Invalid. Headache duration cannot be <= 0"
+                        ]
+                    },
                     cm.exception.message_dict,
                 )
 
@@ -313,7 +311,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fieldset_not_applicable_at_baseline_if_si_sx_NO(self):
+    def test_reporting_fieldset_not_applicable_at_baseline_if_si_sx_NO(
+        self,
+    ):  # noqa: N802
         for reporting_fld in self.reportable_fields:
             for response in [YES, NO]:
                 with self.subTest(reporting_fld=reporting_fld, response=response):
@@ -347,7 +347,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     except ValidationError as e:
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fieldset_not_applicable_on_d3_if_si_sx_NO(self):
+    def test_reporting_fieldset_not_applicable_on_d3_if_si_sx_NO(self):  # noqa: N802
         self.subject_visit.assessment_type = TELEPHONE
 
         for reporting_fld in self.reportable_fields:
@@ -383,7 +383,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     except ValidationError as e:
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fieldset_applicable_at_baseline_if_si_sx_YES(self):
+    def test_reporting_fieldset_applicable_at_baseline_if_si_sx_YES(self):  # noqa: N802
         for response in [YES, NO]:
             with self.subTest(response=response):
                 cleaned_data = self.get_cleaned_data()
@@ -436,7 +436,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fieldset_applicable_on_d3_if_si_sx_YES(self):
+    def test_reporting_fieldset_applicable_on_d3_if_si_sx_YES(self):  # noqa: N802
         self.subject_visit.assessment_type = TELEPHONE
 
         for response in [YES, NO]:

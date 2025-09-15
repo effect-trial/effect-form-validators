@@ -16,10 +16,12 @@ class HospitalizationFormValidator(FormValidatorTestMixin, Base):
     pass
 
 
-class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixin, TestCase):
+class TestHospitalizationFormValidation(
+    FormValidatorTestCaseMixin, TestCaseMixin, TestCase
+):
     form_validator_cls = HospitalizationFormValidator
 
-    def get_cleaned_data(self, **kwargs) -> dict:
+    def get_cleaned_data(self, **kwargs) -> dict:  # noqa: ARG002
         return {
             "report_datetime": get_utcnow(),
             "have_details": YES,
@@ -273,7 +275,9 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
                             "csf_positive_cm": csf_answer,
                         }
                     )
-                    form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
+                    form_validator = HospitalizationFormValidator(
+                        cleaned_data=cleaned_data
+                    )
                     with self.assertRaises(forms.ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("csf_positive_cm", cm.exception.error_dict)

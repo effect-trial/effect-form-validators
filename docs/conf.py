@@ -7,7 +7,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = "effect-form-validators"
-copyright = "2025, Jonathan Willitts"
+copyright = "2025, Jonathan Willitts"  # noqa: A001
 author = "Jonathan Willitts"
 release = "1.1.2"
 
