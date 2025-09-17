@@ -1,14 +1,28 @@
 from django import forms
 from edc_appointment.constants import MISSED_APPT
 from edc_constants.choices import ALIVE_DEAD_UNKNOWN_NA_MISSED
-from edc_constants.constants import (ALIVE, HOSPITAL_NOTES, IN_PERSON, NEXT_OF_KIN,
-                                     NOT_APPLICABLE, OTHER, OUTPATIENT_CARDS, PATIENT,
-                                     PATIENT_REPRESENTATIVE, TELEPHONE, UNKNOWN, YES)
+from edc_constants.constants import (
+    ALIVE,
+    HOSPITAL_NOTES,
+    IN_PERSON,
+    NEXT_OF_KIN,
+    NOT_APPLICABLE,
+    OTHER,
+    OUTPATIENT_CARDS,
+    PATIENT,
+    PATIENT_REPRESENTATIVE,
+    TELEPHONE,
+    UNKNOWN,
+    YES,
+)
 from edc_constants.utils import get_display
 from edc_form_validators import INVALID_ERROR
 from edc_visit_schedule.utils import is_baseline
-from edc_visit_tracking.choices import (ASSESSMENT_TYPES, ASSESSMENT_WHO_CHOICES,
-                                        VISIT_INFO_SOURCE2)
+from edc_visit_tracking.choices import (
+    ASSESSMENT_TYPES,
+    ASSESSMENT_WHO_CHOICES,
+    VISIT_INFO_SOURCE2,
+)
 from edc_visit_tracking.constants import MISSED_VISIT
 from edc_visit_tracking.form_validators import VisitFormValidator
 

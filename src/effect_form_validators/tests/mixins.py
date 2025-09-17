@@ -5,8 +5,16 @@ from dateutil.relativedelta import relativedelta
 from django.test import TestCase
 from django_mock_queries.query import MockModel
 from edc_utils import get_utcnow
-from edc_visit_schedule.constants import (DAY01, DAY03, DAY09, DAY14, WEEK04, WEEK10, WEEK16,
-                                          WEEK24)
+from edc_visit_schedule.constants import (
+    DAY01,
+    DAY03,
+    DAY09,
+    DAY14,
+    WEEK04,
+    WEEK10,
+    WEEK16,
+    WEEK24,
+)
 
 
 class TestCaseMixin(TestCase):

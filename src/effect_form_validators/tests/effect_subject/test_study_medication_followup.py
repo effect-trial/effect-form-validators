@@ -4,8 +4,15 @@ from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 from django_mock_queries.query import MockModel, MockSet
-from edc_constants.constants import (NO, NOT_APPLICABLE, OTHER, PER_PROTOCOL, TODAY, TOMORROW,
-                                     YES)
+from edc_constants.constants import (
+    NO,
+    NOT_APPLICABLE,
+    OTHER,
+    PER_PROTOCOL,
+    TODAY,
+    TOMORROW,
+    YES,
+)
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow
 from edc_visit_schedule.constants import DAY01, DAY03, DAY14, WEEK10

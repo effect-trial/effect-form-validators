@@ -1,10 +1,22 @@
 from datetime import timedelta
 
 from django import forms
-from edc_constants.constants import (HEADACHE, IN_PERSON, NO, NOT_APPLICABLE, OTHER, PATIENT,
-                                     UNKNOWN, VISUAL_LOSS, YES)
-from edc_constants.disease_constants import (CN_PALSY_LEFT_OTHER, CN_PALSY_RIGHT_OTHER,
-                                             FOCAL_NEUROLOGIC_DEFICIT_OTHER)
+from edc_constants.constants import (
+    HEADACHE,
+    IN_PERSON,
+    NO,
+    NOT_APPLICABLE,
+    OTHER,
+    PATIENT,
+    UNKNOWN,
+    VISUAL_LOSS,
+    YES,
+)
+from edc_constants.disease_constants import (
+    CN_PALSY_LEFT_OTHER,
+    CN_PALSY_RIGHT_OTHER,
+    FOCAL_NEUROLOGIC_DEFICIT_OTHER,
+)
 from edc_constants.utils import get_display
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR

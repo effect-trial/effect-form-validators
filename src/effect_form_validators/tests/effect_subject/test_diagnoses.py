@@ -58,9 +58,9 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_gi_side_effects_details_required_if_gi_side_effects_YES(
+    def test_gi_side_effects_details_required_if_gi_side_effects_YES(  # noqa: N802
         self,
-    ):  # noqa: N802
+    ):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -95,9 +95,9 @@ class TestDiagnosesFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_gi_side_effects_details_not_required_if_gi_side_effects_NO(
+    def test_gi_side_effects_details_not_required_if_gi_side_effects_NO(  # noqa: N802
         self,
-    ):  # noqa: N802
+    ):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {

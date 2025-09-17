@@ -8,9 +8,11 @@ from edc_form_validators import FormValidator
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow
 
-from effect_form_validators.effect_subject import (FluconMissedDosesFormValidator,
-                                                   FlucytMissedDosesFormValidator,
-                                                   MissedDosesFormValidatorMixin)
+from effect_form_validators.effect_subject import (
+    FluconMissedDosesFormValidator,
+    FlucytMissedDosesFormValidator,
+    MissedDosesFormValidatorMixin,
+)
 
 from ...mixins import TestCaseMixin
 from ...mock_models import AdherenceMockModel
