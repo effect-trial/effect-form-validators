@@ -21,9 +21,7 @@ from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
 
 from effect_form_validators.constants import UNABLE_TO_CONTACT
-from effect_form_validators.effect_screening import (
-    SubjectScreeningFormValidator as Base,
-)
+from effect_form_validators.effect_screening import SubjectScreeningFormValidator as Base
 
 from ..mixins import TestCaseMixin
 
@@ -36,7 +34,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
     form_validator_cls = SubjectScreeningFormValidator
     ELIGIBLE_CD4_VALUE = 99
 
-    def get_cleaned_data(self, **kwargs) -> dict:
+    def get_cleaned_data(self, **kwargs) -> dict:  # noqa: ARG002
         return {
             "report_datetime": get_utcnow(),
             "initials": "EW",
@@ -100,7 +98,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                             "parent_guardian_consent": consent_answ,
                         }
                     )
-                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    form_validator = SubjectScreeningFormValidator(
+                        cleaned_data=cleaned_data
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("age_in_years", cm.exception.error_dict)
@@ -120,7 +120,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                             "parent_guardian_consent": consent_answ,
                         }
                     )
-                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    form_validator = SubjectScreeningFormValidator(
+                        cleaned_data=cleaned_data
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("age_in_years", cm.exception.error_dict)
@@ -139,7 +141,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "parent_guardian_consent": NOT_APPLICABLE,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -155,7 +159,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "parent_guardian_consent": NOT_APPLICABLE,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("parent_guardian_consent", cm.exception.error_dict)
@@ -174,7 +180,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "parent_guardian_consent": NO,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("parent_guardian_consent", cm.exception.error_dict)
@@ -193,7 +201,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "parent_guardian_consent": YES,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -210,7 +220,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                             "parent_guardian_consent": consent_answ,
                         }
                     )
-                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    form_validator = SubjectScreeningFormValidator(
+                        cleaned_data=cleaned_data
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("parent_guardian_consent", cm.exception.error_dict)
@@ -286,8 +298,13 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         )
 
     def test_hiv_confirmed_method_not_applicable_if_hiv_pos_no(self):
-        for hiv_confirmed_method_response in ["site_rapid_test", "historical_lab_result"]:
-            with self.subTest(hiv_confirmed_method_response=hiv_confirmed_method_response):
+        for hiv_confirmed_method_response in [
+            "site_rapid_test",
+            "historical_lab_result",
+        ]:
+            with self.subTest(
+                hiv_confirmed_method_response=hiv_confirmed_method_response
+            ):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
                     {
@@ -296,7 +313,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "hiv_confirmed_method": hiv_confirmed_method_response,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(forms.ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("hiv_confirmed_method", cm.exception.error_dict)
@@ -336,10 +355,13 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "serum_crag_date": (
                             report_datetime.date() - relativedelta(days=days - 1)
                         ),
-                        "lp_date": report_datetime.date() - relativedelta(days=days - 1),
+                        "lp_date": report_datetime.date()
+                        - relativedelta(days=days - 1),
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except forms.ValidationError as e:
@@ -352,12 +374,16 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                 cleaned_data.update(
                     {
                         "hiv_pos": YES,
-                        "hiv_confirmed_date": get_utcnow_as_date() - relativedelta(days=7),
+                        "hiv_confirmed_date": get_utcnow_as_date()
+                        - relativedelta(days=7),
                         "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                        "cd4_date": get_utcnow_as_date() - relativedelta(days=cd4_days_ago),
+                        "cd4_date": get_utcnow_as_date()
+                        - relativedelta(days=cd4_days_ago),
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except forms.ValidationError as e:
@@ -449,7 +475,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "cm_in_csf": NOT_APPLICABLE,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -477,7 +505,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "cm_in_csf": NOT_APPLICABLE,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -494,11 +524,14 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "cd4_value": self.ELIGIBLE_CD4_VALUE,
                         "cd4_date": report_datetime.date() - relativedelta(days=days),
                         "serum_crag_value": POS,
-                        "serum_crag_date": report_datetime.date() - relativedelta(days=days),
+                        "serum_crag_date": report_datetime.date()
+                        - relativedelta(days=days),
                         "lp_date": report_datetime.date() - relativedelta(days=days),
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -515,10 +548,13 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "cd4_value": self.ELIGIBLE_CD4_VALUE,
                         "cd4_date": report_datetime.date() - relativedelta(days=days),
                         "serum_crag_value": POS,
-                        "serum_crag_date": report_datetime.date() - relativedelta(days=days),
+                        "serum_crag_date": report_datetime.date()
+                        - relativedelta(days=days),
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -540,7 +576,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "lp_declined": NOT_APPLICABLE,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("lp_date", cm.exception.error_dict)
@@ -565,7 +603,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "lp_declined": NOT_APPLICABLE,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -600,7 +640,8 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                 "serum_crag_value": POS,
                 "serum_crag_date": cleaned_data.get("report_datetime").date(),
                 "lp_done": YES,
-                "lp_date": cleaned_data.get("report_datetime").date() + relativedelta(days=1),
+                "lp_date": cleaned_data.get("report_datetime").date()
+                + relativedelta(days=1),
                 "lp_declined": NOT_APPLICABLE,
             }
         )
@@ -644,7 +685,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "csf_crag_value": csf_crag_value,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("csf_crag_value", cm.exception.error_dict)
@@ -684,7 +727,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "csf_crag_value": csf_crag_value,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -708,7 +753,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "cm_in_csf_date": lp_date - relativedelta(days=days),
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("cm_in_csf_date", cm.exception.error_dict)
@@ -735,7 +782,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "cm_in_csf_date": lp_date + relativedelta(days=days),
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -745,7 +794,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         for days in [1, 2, 10]:
             with self.subTest(days_before=days):
                 cleaned_data = self.get_cleaned_data()
-                lp_date = cleaned_data.get("report_datetime").date() - relativedelta(days=10)
+                lp_date = cleaned_data.get("report_datetime").date() - relativedelta(
+                    days=10
+                )
                 cleaned_data.update(
                     {
                         "cd4_value": self.ELIGIBLE_CD4_VALUE,
@@ -760,7 +811,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         - relativedelta(days=days),
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("cm_in_csf_date", cm.exception.error_dict)
@@ -788,7 +841,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         + relativedelta(days=days),
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -820,7 +875,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "pregnant": answ,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("pregnant", cm.exception.error_dict)
@@ -873,7 +930,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "breast_feeding": answ,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("breast_feeding", cm.exception.error_dict)
@@ -916,7 +975,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                         "unsuitable_reason": UNABLE_TO_CONTACT,
                     }
                 )
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("unsuitable_reason", cm.exception.error_dict)
@@ -926,13 +987,17 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                 )
 
                 cleaned_data.update({"unsuitable_reason": NOT_APPLICABLE})
-                form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                form_validator = SubjectScreeningFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_unsuitable_reason_other_not_required_if_unsuitable_reason_is_not_other(self):
+    def test_unsuitable_reason_other_not_required_if_unsuitable_reason_is_not_other(
+        self,
+    ):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1018,7 +1083,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                             "unsuitable_agreed": agreed_answ,
                         }
                     )
-                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    form_validator = SubjectScreeningFormValidator(
+                        cleaned_data=cleaned_data
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn("unsuitable_agreed", cm.exception.error_dict)
@@ -1078,9 +1145,14 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                     cleaned_data = self.get_cleaned_data()
                     report_datetime = cleaned_data["report_datetime"]
                     cleaned_data.update(
-                        {date_field: report_datetime.date() + relativedelta(days=days_after)}
+                        {
+                            date_field: report_datetime.date()
+                            + relativedelta(days=days_after)
+                        }
                     )
-                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    form_validator = SubjectScreeningFormValidator(
+                        cleaned_data=cleaned_data
+                    )
                     with self.assertRaises(ValidationError) as cm:
                         form_validator.validate()
                     self.assertIn(date_field, cm.exception.error_dict)
@@ -1101,7 +1173,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                 with self.subTest(date_field=date_field, days_before=days_before):
                     cleaned_data = self.get_cleaned_data()
                     report_datetime = cleaned_data["report_datetime"]
-                    date_value = report_datetime.date() - relativedelta(days=days_before)
+                    date_value = report_datetime.date() - relativedelta(
+                        days=days_before
+                    )
                     if date_field not in ["serum_crag_date", "lp_date"]:
                         cleaned_data.update({date_field: date_value})
                     else:
@@ -1111,7 +1185,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                                 "lp_date": date_value - relativedelta(days=1),
                             }
                         )
-                    form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
+                    form_validator = SubjectScreeningFormValidator(
+                        cleaned_data=cleaned_data
+                    )
                     try:
                         form_validator.validate()
                     except ValidationError as e:

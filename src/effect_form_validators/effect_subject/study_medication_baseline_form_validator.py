@@ -9,7 +9,8 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
     def clean(self) -> None:
         if not is_baseline(instance=self.related_visit):
             self.raise_validation_error(
-                {"__all__": "This form may only be completed at baseline"}, INVALID_ERROR
+                {"__all__": "This form may only be completed at baseline"},
+                INVALID_ERROR,
             )
 
         # TODO: Validate vital signs (inc weight) has already been collected
@@ -21,17 +22,22 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
         self.required_if(
             NO, field="flucon_initiated", field_required="flucon_not_initiated_reason"
         )
-        self.required_if(YES, field="flucon_initiated", field_required="flucon_dose_datetime")
+        self.required_if(
+            YES, field="flucon_initiated", field_required="flucon_dose_datetime"
+        )
 
-        if self.report_datetime and self.cleaned_data.get("flucon_dose_datetime"):
-            if (
+        if (
+            self.report_datetime
+            and self.cleaned_data.get("flucon_dose_datetime")
+            and (
                 self.report_datetime.date()
                 != self.cleaned_data.get("flucon_dose_datetime").date()
-            ):
-                dte_as_str = formatted_date(self.report_datetime.date())
-                self.raise_validation_error(
-                    {"flucon_dose_datetime": f"Expected {dte_as_str}"}, INVALID_ERROR
-                )
+            )
+        ):
+            dte_as_str = formatted_date(self.report_datetime.date())
+            self.raise_validation_error(
+                {"flucon_dose_datetime": f"Expected {dte_as_str}"}, INVALID_ERROR
+            )
 
         self.required_if(
             YES,
@@ -40,7 +46,9 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
             field_required_evaluate_as_int=True,
         )
 
-        self.applicable_if(YES, field="flucon_initiated", field_applicable="flucon_next_dose")
+        self.applicable_if(
+            YES, field="flucon_initiated", field_applicable="flucon_next_dose"
+        )
 
         if (
             self.cleaned_data.get("flucon_initiated") == YES
@@ -58,7 +66,7 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
         self.required_if_true(
             condition=(
                 self.cleaned_data.get("flucon_dose") is not None
-                and self.cleaned_data.get("flucon_dose") != 1200
+                and self.cleaned_data.get("flucon_dose") != 1200  # noqa: PLR2004
             ),
             field_required="flucon_notes",
             required_msg="Fluconazole dose not 1200 mg/d.",
@@ -72,16 +80,21 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
             NO, field="flucyt_initiated", field_required="flucyt_not_initiated_reason"
         )
 
-        self.required_if(YES, field="flucyt_initiated", field_required="flucyt_dose_datetime")
-        if self.report_datetime and self.cleaned_data.get("flucyt_dose_datetime"):
-            if (
+        self.required_if(
+            YES, field="flucyt_initiated", field_required="flucyt_dose_datetime"
+        )
+        if (
+            self.report_datetime
+            and self.cleaned_data.get("flucyt_dose_datetime")
+            and (
                 self.report_datetime.date()
                 != self.cleaned_data.get("flucyt_dose_datetime").date()
-            ):
-                dte_as_str = formatted_date(self.report_datetime.date())
-                self.raise_validation_error(
-                    {"flucyt_dose_datetime": f"Expected {dte_as_str}"}, INVALID_ERROR
-                )
+            )
+        ):
+            dte_as_str = formatted_date(self.report_datetime.date())
+            self.raise_validation_error(
+                {"flucyt_dose_datetime": f"Expected {dte_as_str}"}, INVALID_ERROR
+            )
 
         # TODO: 'flucyt_dose_expected' to be calculated or validated against vital signs weight
 
@@ -101,22 +114,23 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
                 field_required_evaluate_as_int=True,
             )
 
-        if self.cleaned_data.get("flucyt_dose") is not None:
-            if sum(
-                self.cleaned_data.get(fld)
-                for fld in dose_fields
-                if self.cleaned_data.get(fld) is not None
-            ) != self.cleaned_data.get("flucyt_dose"):
-                error_msg = (
-                    "Invalid. "
-                    "Expected sum of individual doses to match prescribed flucytosine "
-                    f"dose ({self.cleaned_data.get('flucyt_dose')} mg/d)."
-                )
-                self.raise_validation_error(
-                    {fld: error_msg for fld in dose_fields}, INVALID_ERROR
-                )
+        if self.cleaned_data.get("flucyt_dose") is not None and sum(
+            self.cleaned_data.get(fld)
+            for fld in dose_fields
+            if self.cleaned_data.get(fld) is not None
+        ) != self.cleaned_data.get("flucyt_dose"):
+            error_msg = (
+                "Invalid. "
+                "Expected sum of individual doses to match prescribed flucytosine "
+                f"dose ({self.cleaned_data.get('flucyt_dose')} mg/d)."
+            )
+            self.raise_validation_error(
+                {fld: error_msg for fld in dose_fields}, INVALID_ERROR
+            )
 
-        self.applicable_if(YES, field="flucyt_initiated", field_applicable="flucyt_next_dose")
+        self.applicable_if(
+            YES, field="flucyt_initiated", field_applicable="flucyt_next_dose"
+        )
 
         if self.cleaned_data.get("flucyt_dose_datetime"):
             if (

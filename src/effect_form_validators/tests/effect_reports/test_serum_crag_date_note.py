@@ -27,12 +27,14 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
         )
         self.addCleanup(subject_screening_patcher.stop)
         self.mock_subject_screening = subject_screening_patcher.start()
-        self.mock_subject_screening.return_value = MockModel(mock_name="SubjectScreening")
+        self.mock_subject_screening.return_value = MockModel(
+            mock_name="SubjectScreening"
+        )
         self.mock_subject_screening.eligibility_datetime.date.return_value = (
             self.eligibility_datetime.date()
         )
 
-    def get_cleaned_data(self, **kwargs) -> dict:
+    def get_cleaned_data(self, **kwargs) -> dict:  # noqa: ARG002
         return dict(
             serum_crag_date=(self.eligibility_datetime - relativedelta(days=14)).date(),
             note="",
@@ -43,7 +45,9 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
         )
 
     def test_cleaned_data_ok(self):
-        form_validator = SerumCragDateNoteFormValidator(cleaned_data=self.get_cleaned_data())
+        form_validator = SerumCragDateNoteFormValidator(
+            cleaned_data=self.get_cleaned_data()
+        )
         try:
             form_validator.validate()
         except ValidationError as e:
@@ -59,7 +63,9 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
                     status=CONFIRMED,
                 )
 
-                form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
+                form_validator = SerumCragDateNoteFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("serum_crag_date", cm.exception.error_dict)
@@ -74,11 +80,15 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
             with self.subTest(days_before=days_before):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
-                    serum_crag_date=(eligibility_date - relativedelta(days=days_before)),
+                    serum_crag_date=(
+                        eligibility_date - relativedelta(days=days_before)
+                    ),
                     status=CONFIRMED,
                 )
 
-                form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
+                form_validator = SerumCragDateNoteFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
                 self.assertIn("serum_crag_date", cm.exception.error_dict)
@@ -93,11 +103,15 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
             with self.subTest(days_before=days_before):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
-                    serum_crag_date=(eligibility_date - relativedelta(days=days_before)),
+                    serum_crag_date=(
+                        eligibility_date - relativedelta(days=days_before)
+                    ),
                     status=CONFIRMED,
                 )
 
-                form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
+                form_validator = SerumCragDateNoteFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -128,11 +142,15 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
                     report_datetime=eligibility_date,
-                    serum_crag_date=(eligibility_date - relativedelta(days=days_before)),
+                    serum_crag_date=(
+                        eligibility_date - relativedelta(days=days_before)
+                    ),
                     status=CONFIRMED,
                 )
 
-                form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
+                form_validator = SerumCragDateNoteFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:
@@ -148,7 +166,9 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
                     status=status,
                 )
 
-                form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
+                form_validator = SerumCragDateNoteFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
 
@@ -199,7 +219,9 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
                     note="",
                 )
 
-                form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
+                form_validator = SerumCragDateNoteFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
 
@@ -231,7 +253,9 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
     def test_serum_crag_date_and_status_not_confirmed_and_note_raises(self):
         for status in [PENDING, NOT_AVAILABLE]:
             with self.subTest(status=status):
-                eligibility_date = self.mock_subject_screening.eligibility_datetime.date()
+                eligibility_date = (
+                    self.mock_subject_screening.eligibility_datetime.date()
+                )
                 cleaned_data = self.get_cleaned_data()
                 cleaned_data.update(
                     serum_crag_date=eligibility_date,
@@ -239,7 +263,9 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
                     note="Some details in note",
                 )
 
-                form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
+                form_validator = SerumCragDateNoteFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 with self.assertRaises(ValidationError) as cm:
                     form_validator.validate()
 
@@ -255,7 +281,9 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
                     note="Details of missing date",
                 )
 
-                form_validator = SerumCragDateNoteFormValidator(cleaned_data=cleaned_data)
+                form_validator = SerumCragDateNoteFormValidator(
+                    cleaned_data=cleaned_data
+                )
                 try:
                     form_validator.validate()
                 except ValidationError as e:

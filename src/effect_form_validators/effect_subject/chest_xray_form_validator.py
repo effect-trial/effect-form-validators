@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Optional
 
 from dateutil.relativedelta import relativedelta
 from edc_constants.constants import NO, NORMAL, OTHER, YES
@@ -47,7 +46,7 @@ class ChestXrayFormValidator(CrfFormValidator):
                     },
                     INVALID_ERROR,
                 )
-            elif xray_performed == NO and self.cleaned_data.get("chest_xray") != NO:
+            if xray_performed == NO and self.cleaned_data.get("chest_xray") != NO:
                 raise self.raise_validation_error(
                     {
                         "chest_xray": (
@@ -78,7 +77,8 @@ class ChestXrayFormValidator(CrfFormValidator):
                 )
             elif (
                 self.previous_chest_xray_date
-                and self.cleaned_data.get("chest_xray_date") < self.previous_chest_xray_date
+                and self.cleaned_data.get("chest_xray_date")
+                < self.previous_chest_xray_date
             ):
                 self.raise_validation_error(
                     {
@@ -91,7 +91,7 @@ class ChestXrayFormValidator(CrfFormValidator):
                 )
 
     @property
-    def previous_chest_xray_date(self) -> Optional[date]:
+    def previous_chest_xray_date(self) -> date | None:
         """Returns the date of a previous chest xray, if it exists."""
         try:
             exclude_opts = dict(id=self.instance.id)

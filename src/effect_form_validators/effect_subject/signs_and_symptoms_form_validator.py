@@ -25,7 +25,7 @@ from edc_visit_tracking.choices import ASSESSMENT_TYPES, ASSESSMENT_WHO_CHOICES
 
 
 class SignsAndSymptomsFormValidator(CrfFormValidator):
-    reportable_fields = ["reportable_as_ae", "patient_admitted"]
+    reportable_fields = ("reportable_as_ae", "patient_admitted")
 
     def clean(self) -> None:
         self.validate_any_sx_unknown()
@@ -34,7 +34,9 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
 
         self.validate_headache_duration()
 
-        self.m2m_other_specify(OTHER, m2m_field="current_sx", field_other="current_sx_other")
+        self.m2m_other_specify(
+            OTHER, m2m_field="current_sx", field_other="current_sx_other"
+        )
 
         self.applicable_if(YES, field="any_sx", field_applicable="cm_sx")
 
@@ -128,7 +130,13 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
                 data=self.cleaned_data, duration_dh_field="headache_duration"
             )
             <= timedelta(
-                days=0, seconds=0, microseconds=0, milliseconds=0, minutes=0, hours=0, weeks=0
+                days=0,
+                seconds=0,
+                microseconds=0,
+                milliseconds=0,
+                minutes=0,
+                hours=0,
+                weeks=0,
             )
         ):
             self.raise_validation_error(

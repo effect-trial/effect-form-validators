@@ -107,14 +107,13 @@ class SubjectVisitFormValidator(VisitFormValidator):
         self.not_applicable(
             MISSED_APPT, field="appt_status", field_applicable="assessment_type"
         )
-        if self.cleaned_data.get("appt_status") != MISSED_APPT:
-            if (
-                self.cleaned_data.get("assessment_type") == IN_PERSON
-                and self.cleaned_data.get("assessment_who") != PATIENT
-            ):
-                raise forms.ValidationError(
-                    {"assessment_who": "Invalid. Expected 'Patient' if 'In person' visit"}
-                )
+        if self.cleaned_data.get("appt_status") != MISSED_APPT and (
+            self.cleaned_data.get("assessment_type") == IN_PERSON
+            and self.cleaned_data.get("assessment_who") != PATIENT
+        ):
+            raise forms.ValidationError(
+                {"assessment_who": "Invalid. Expected 'Patient' if 'In person' visit"}
+            )
 
         self.validate_other_specify(field="assessment_who")
 
@@ -128,19 +127,23 @@ class SubjectVisitFormValidator(VisitFormValidator):
         'assessment_type' and 'assessment_who' answers.
         """
         return (
-            info_source == PATIENT
-            and any(
-                (
-                    assessment_type == IN_PERSON and assessment_who == PATIENT,
-                    assessment_type == TELEPHONE and assessment_who == PATIENT,
+            (
+                info_source == PATIENT
+                and any(
+                    (
+                        assessment_type == IN_PERSON and assessment_who == PATIENT,
+                        assessment_type == TELEPHONE and assessment_who == PATIENT,
+                    )
                 )
             )
-            or info_source == PATIENT_REPRESENTATIVE
-            and any(
-                (
-                    assessment_type == TELEPHONE and assessment_who == NEXT_OF_KIN,
-                    assessment_type == TELEPHONE and assessment_who == OTHER,
-                    assessment_type == OTHER,
+            or (
+                info_source == PATIENT_REPRESENTATIVE
+                and any(
+                    (
+                        assessment_type == TELEPHONE and assessment_who == NEXT_OF_KIN,
+                        assessment_type == TELEPHONE and assessment_who == OTHER,
+                        assessment_type == OTHER,
+                    )
                 )
             )
             or info_source in [HOSPITAL_NOTES, OUTPATIENT_CARDS, OTHER]
@@ -199,7 +202,9 @@ class SubjectVisitFormValidator(VisitFormValidator):
             is_baseline(instance=self.cleaned_data.get("appointment"))
             and self.cleaned_data.get("hospitalized") == YES
         ):
-            raise forms.ValidationError({"hospitalized": "Invalid. Expected NO at baseline"})
+            raise forms.ValidationError(
+                {"hospitalized": "Invalid. Expected NO at baseline"}
+            )
 
         if self.cleaned_data.get("hospitalized") == UNKNOWN and (
             self.cleaned_data.get("assessment_who") == PATIENT

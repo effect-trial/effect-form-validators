@@ -45,8 +45,7 @@ class ArvHistoryWithoutSubjectScreeningMockFormValidator(FormValidatorTestMixin,
 
 
 class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
-
-    valid_ldl_values = [20, 50]
+    valid_ldl_values = (20, 50)
 
     def setUp(self) -> None:
         super().setUp()
@@ -526,8 +525,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertIn("is_adherent", cm.exception.error_dict)
         self.assertIn(
-            "Invalid. "
-            "Participant not reported as defaulted from their current ART regimen.",
+            "Invalid. Participant not reported as defaulted from their current ART regimen.",
             str(cm.exception.error_dict.get("is_adherent")),
         )
 
@@ -870,7 +868,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_result_not_required_if_has_viral_load_result_NO(self):
+    def test_viral_load_result_not_required_if_has_viral_load_result_NO(  # noqa: N802
+        self,
+    ):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -902,7 +902,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_result_required_if_has_viral_load_result_YES(self):
+    def test_viral_load_result_required_if_has_viral_load_result_YES(  # noqa: N802
+        self,
+    ):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -934,7 +936,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_quantifier_not_applicable_if_has_viral_load_result_NO(self):
+    def test_viral_load_quantifier_not_applicable_if_has_viral_load_result_NO(  # noqa: N802
+        self,
+    ):
         cleaned_data = self.get_cleaned_data()
 
         for vl_quantifier in [EQ, GT, LT]:
@@ -969,7 +973,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_quantifier_applicable_if_has_viral_load_result_YES(self):
+    def test_viral_load_quantifier_applicable_if_has_viral_load_result_YES(  # noqa: N802
+        self,
+    ):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1003,7 +1009,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_quantifier_LT_with_invalid_lower_detection_limit_value_raises(self):
+    def test_viral_load_quantifier_LT_with_invalid_lower_detection_limit_value_raises(  # noqa: N802
+        self,
+    ):
         for invalid_ldl_value in [-1, 0, 1, 19, 21, 49, 51, 999, 1000, 1001]:
             with self.subTest(invalid_ldl_value=invalid_ldl_value):
                 cleaned_data = self.get_cleaned_data()
@@ -1030,7 +1038,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                     str(cm.exception.error_dict.get("viral_load_quantifier")),
                 )
 
-    def test_viral_load_quantifier_LT_with_valid_lower_detection_limit_ok(self):
+    def test_viral_load_quantifier_LT_with_valid_lower_detection_limit_ok(  # noqa: N802
+        self,
+    ):
         for valid_ldl_value in self.valid_ldl_values:
             with self.subTest(valid_ldl_value=valid_ldl_value):
                 cleaned_data = self.get_cleaned_data()
@@ -1052,7 +1062,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_quantifier_EQ_or_GT_with_valid_lower_detection_limit_ok(self):
+    def test_viral_load_quantifier_EQ_or_GT_with_valid_lower_detection_limit_ok(  # noqa: N802
+        self,
+    ):
         for vl_quantifier in [EQ, GT]:
             for valid_ldl_value in self.valid_ldl_values:
                 with self.subTest(
@@ -1077,7 +1089,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                     except ValidationError as e:
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_date_not_required_if_has_viral_load_result_NO(self):
+    def test_viral_load_date_not_required_if_has_viral_load_result_NO(  # noqa: N802
+        self,
+    ):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1109,7 +1123,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_date_required_if_has_viral_load_result_YES(self):
+    def test_viral_load_date_required_if_has_viral_load_result_YES(self):  # noqa: N802
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1141,7 +1155,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_date_estimated_not_applicable_if_has_viral_load_result_NO(self):
+    def test_viral_load_date_estimated_not_applicable_if_has_viral_load_result_NO(  # noqa: N802
+        self,
+    ):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1173,7 +1189,9 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
         except ValidationError as e:
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_viral_load_date_estimated_applicable_if_has_viral_load_result_YES(self):
+    def test_viral_load_date_estimated_applicable_if_has_viral_load_result_YES(  # noqa: N802
+        self,
+    ):
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
@@ -1334,8 +1352,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             form_validator.validate()
         self.assertIn("cd4_value", cm.exception.error_dict)
         self.assertIn(
-            "Invalid. Cannot differ from screening CD4 count "
-            "(79) if collected on same date.",
+            "Invalid. Cannot differ from screening CD4 count (79) if collected on same date.",
             cm.exception.error_dict.get("cd4_value")[0].message,
         )
 

@@ -31,7 +31,7 @@ class SignsAndSymptomsFormValidator(FormValidatorTestMixin, Base):
 
 
 class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
-    reportable_fields = ["reportable_as_ae", "patient_admitted"]
+    reportable_fields = ("reportable_as_ae", "patient_admitted")
 
     def setUp(self) -> None:
         super().setUp()
@@ -313,7 +313,9 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fieldset_not_applicable_at_baseline_if_si_sx_NO(self):
+    def test_reporting_fieldset_not_applicable_at_baseline_if_si_sx_NO(  # noqa: N802
+        self,
+    ):
         for reporting_fld in self.reportable_fields:
             for response in [YES, NO]:
                 with self.subTest(reporting_fld=reporting_fld, response=response):
@@ -347,7 +349,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     except ValidationError as e:
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fieldset_not_applicable_on_d3_if_si_sx_NO(self):
+    def test_reporting_fieldset_not_applicable_on_d3_if_si_sx_NO(self):  # noqa: N802
         self.subject_visit.assessment_type = TELEPHONE
 
         for reporting_fld in self.reportable_fields:
@@ -383,7 +385,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                     except ValidationError as e:
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fieldset_applicable_at_baseline_if_si_sx_YES(self):
+    def test_reporting_fieldset_applicable_at_baseline_if_si_sx_YES(self):  # noqa: N802
         for response in [YES, NO]:
             with self.subTest(response=response):
                 cleaned_data = self.get_cleaned_data()
@@ -436,7 +438,7 @@ class TestSignsAndSymptomsFormValidation(TestCaseMixin, TestCase):
                 except ValidationError as e:
                     self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
-    def test_reporting_fieldset_applicable_on_d3_if_si_sx_YES(self):
+    def test_reporting_fieldset_applicable_on_d3_if_si_sx_YES(self):  # noqa: N802
         self.subject_visit.assessment_type = TELEPHONE
 
         for response in [YES, NO]:

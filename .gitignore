@@ -1,3 +1,4 @@
+.idea
 _version.py
 .DS_Store
 django_crypto_fields
