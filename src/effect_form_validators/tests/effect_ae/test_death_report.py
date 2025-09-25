@@ -1,3 +1,4 @@
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.test import TestCase
@@ -12,7 +13,6 @@ from edc_constants.constants import (
     YES,
 )
 from edc_form_validators import FormValidatorTestCaseMixin
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow
 
 from effect_form_validators.effect_ae import DeathReportFormValidator as Base
