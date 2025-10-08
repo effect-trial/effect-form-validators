@@ -3,10 +3,11 @@ from unittest.mock import patch
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
+from django.utils import timezone
 from django_mock_queries.query import MockModel
 from edc_constants.constants import NO, NOT_APPLICABLE, TODAY, TOMORROW, YES
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import formatted_date, get_utcnow
+from edc_utils.text import formatted_date
 from edc_visit_schedule.constants import DAY01
 
 from effect_form_validators.effect_subject import StudyMedicationBaselineFormValidator as Base
@@ -48,9 +49,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         cleaned_data = super().get_cleaned_data(
             visit_code=visit_code,
             visit_code_sequence=visit_code_sequence,
-            report_datetime=kwargs.get(
-                "report_datetime", get_utcnow().replace(hour=14)
-            ),
+            report_datetime=kwargs.get("report_datetime", timezone.now().replace(hour=14)),
         )
         cleaned_data.update(
             {
@@ -202,7 +201,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             {
                 "flucon_initiated": NO,
                 "flucon_not_initiated_reason": "Some reason",
-                "flucon_dose_datetime": get_utcnow() + relativedelta(minutes=1),
+                "flucon_dose_datetime": timezone.now() + relativedelta(minutes=1),
                 "flucon_dose": None,
                 "flucon_notes": "",
             }
@@ -220,7 +219,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
 
     def test_flucon_flucyt_dose_datetime_equal_report_datetime_ok(self):
         self.mock_is_baseline.return_value = True
-        report_datetime = get_utcnow().replace(hour=15) - relativedelta(days=14)
+        report_datetime = timezone.now().replace(hour=15) - relativedelta(days=14)
         cleaned_data = self.get_cleaned_data(
             visit_code=DAY01,
             visit_code_sequence=0,
@@ -242,15 +241,13 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
 
     def test_flucon_dose_datetime_before_report_datetime_raises(self):
         self.mock_is_baseline.return_value = True
-        report_datetime = get_utcnow()
+        report_datetime = timezone.now()
         cleaned_data = self.get_cleaned_data(
             visit_code=DAY01,
             visit_code_sequence=0,
             report_datetime=report_datetime,
         )
-        cleaned_data.update(
-            {"flucon_dose_datetime": report_datetime - relativedelta(days=1)}
-        )
+        cleaned_data.update({"flucon_dose_datetime": report_datetime - relativedelta(days=1)})
         form_validator = StudyMedicationBaselineFormValidator(
             cleaned_data=cleaned_data, model=StudyMedicationMockModel
         )
@@ -264,15 +261,13 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
 
     def test_flucon_dose_datetime_after_report_datetime_raises(self):
         self.mock_is_baseline.return_value = True
-        report_datetime = get_utcnow()
+        report_datetime = timezone.now()
         cleaned_data = self.get_cleaned_data(
             visit_code=DAY01,
             visit_code_sequence=0,
             report_datetime=report_datetime,
         )
-        cleaned_data.update(
-            {"flucon_dose_datetime": report_datetime + relativedelta(days=1)}
-        )
+        cleaned_data.update({"flucon_dose_datetime": report_datetime + relativedelta(days=1)})
         form_validator = StudyMedicationBaselineFormValidator(
             cleaned_data=cleaned_data, model=StudyMedicationMockModel
         )
@@ -331,9 +326,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = True
         for next_dose in [TODAY, TOMORROW]:
             with self.subTest(next_dose=next_dose):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucon_initiated": NO,
@@ -517,9 +510,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = True
         for answer in [YES, NOT_APPLICABLE]:
             with self.subTest(flucyt_initiated=answer):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucyt_initiated": answer,
@@ -561,16 +552,12 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = True
         for answer in [NO, NOT_APPLICABLE]:
             with self.subTest(flucyt_initiated=answer):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucyt_initiated": answer,
-                        "flucyt_not_initiated_reason": (
-                            "Some reason" if answer == NO else ""
-                        ),
-                        "flucyt_dose_datetime": get_utcnow() + relativedelta(minutes=1),
+                        "flucyt_not_initiated_reason": ("Some reason" if answer == NO else ""),
+                        "flucyt_dose_datetime": timezone.now() + relativedelta(minutes=1),
                     }
                 )
                 form_validator = StudyMedicationBaselineFormValidator(
@@ -586,15 +573,13 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
 
     def test_flucyt_dose_datetime_before_report_datetime_raises(self):
         self.mock_is_baseline.return_value = True
-        report_datetime = get_utcnow()
+        report_datetime = timezone.now()
         cleaned_data = self.get_cleaned_data(
             visit_code=DAY01,
             visit_code_sequence=0,
             report_datetime=report_datetime,
         )
-        cleaned_data.update(
-            {"flucyt_dose_datetime": report_datetime - relativedelta(days=1)}
-        )
+        cleaned_data.update({"flucyt_dose_datetime": report_datetime - relativedelta(days=1)})
         form_validator = StudyMedicationBaselineFormValidator(
             cleaned_data=cleaned_data, model=StudyMedicationMockModel
         )
@@ -608,15 +593,13 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
 
     def test_flucyt_dose_datetime_after_report_datetime_raises(self):
         self.mock_is_baseline.return_value = True
-        report_datetime = get_utcnow()
+        report_datetime = timezone.now()
         cleaned_data = self.get_cleaned_data(
             visit_code=DAY01,
             visit_code_sequence=0,
             report_datetime=report_datetime,
         )
-        cleaned_data.update(
-            {"flucyt_dose_datetime": report_datetime + relativedelta(days=1)}
-        )
+        cleaned_data.update({"flucyt_dose_datetime": report_datetime + relativedelta(days=1)})
         form_validator = StudyMedicationBaselineFormValidator(
             cleaned_data=cleaned_data, model=StudyMedicationMockModel
         )
@@ -647,15 +630,11 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = True
         for answer in [NO, NOT_APPLICABLE]:
             with self.subTest(flucyt_initiated=answer):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucyt_initiated": answer,
-                        "flucyt_not_initiated_reason": (
-                            "Some reason" if answer == NO else ""
-                        ),
+                        "flucyt_not_initiated_reason": ("Some reason" if answer == NO else ""),
                         "flucyt_dose_datetime": None,
                         "flucyt_dose": 100,
                     }
@@ -675,9 +654,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = True
         for dose_field in self.flucyt_individual_dose_fields:
             with self.subTest(dose_field=dose_field):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update({dose_field: None})
                 form_validator = StudyMedicationBaselineFormValidator(
                     cleaned_data=cleaned_data, model=StudyMedicationMockModel
@@ -742,9 +719,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         for schedule in dose_schedules:
             with self.subTest(schedule=schedule):
                 dose_0400, dose_1000, dose_1600, dose_2200 = schedule
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucyt_dose_expected": 4000,
@@ -810,9 +785,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         for schedule in dose_schedules:
             with self.subTest(schedule=schedule):
                 dose_0400, dose_1000, dose_1600, dose_2200 = schedule
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucyt_dose_expected": 4000,
@@ -843,9 +816,7 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         for schedule in dose_schedules:
             with self.subTest(schedule=schedule):
                 dose_0400, dose_1000, dose_1600, dose_2200 = schedule
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucyt_dose": 4000,
@@ -984,14 +955,10 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = True
         for hour, minute in [(13, 0), (13, 1), (15, 59), (16, 0), (16, 1), (17, 5)]:
             with self.subTest(hour=hour, min=minute):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
-                        "flucyt_dose_datetime": cleaned_data.get(
-                            "report_datetime"
-                        ).replace(
+                        "flucyt_dose_datetime": cleaned_data.get("report_datetime").replace(
                             hour=hour,
                             minute=minute,
                             second=0,
@@ -1017,14 +984,10 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = True
         for hour, minute in [(7, 0), (9, 59), (10, 0), (10, 1), (12, 0), (12, 59)]:
             with self.subTest(hour=hour, min=minute):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
-                        "flucyt_dose_datetime": cleaned_data.get(
-                            "report_datetime"
-                        ).replace(
+                        "flucyt_dose_datetime": cleaned_data.get("report_datetime").replace(
                             hour=hour,
                             minute=minute,
                             second=0,
@@ -1055,14 +1018,10 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             (12, 59),
         ]:
             with self.subTest(hour=hour, min=minute):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
-                        "flucyt_dose_datetime": cleaned_data.get(
-                            "report_datetime"
-                        ).replace(
+                        "flucyt_dose_datetime": cleaned_data.get("report_datetime").replace(
                             hour=hour,
                             minute=minute,
                             second=0,
@@ -1099,14 +1058,10 @@ class TestStudyMedicationBaselineFormValidation(TestCaseMixin, TestCase):
             (23, 59),
         ]:
             with self.subTest(hour=hour, min=minute):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY01, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY01, visit_code_sequence=0)
                 cleaned_data.update(
                     {
-                        "flucyt_dose_datetime": cleaned_data.get(
-                            "report_datetime"
-                        ).replace(
+                        "flucyt_dose_datetime": cleaned_data.get("report_datetime").replace(
                             hour=hour,
                             minute=minute,
                             second=0,

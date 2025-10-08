@@ -22,9 +22,7 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
         self.required_if(
             NO, field="flucon_initiated", field_required="flucon_not_initiated_reason"
         )
-        self.required_if(
-            YES, field="flucon_initiated", field_required="flucon_dose_datetime"
-        )
+        self.required_if(YES, field="flucon_initiated", field_required="flucon_dose_datetime")
 
         if (
             self.report_datetime
@@ -46,9 +44,7 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
             field_required_evaluate_as_int=True,
         )
 
-        self.applicable_if(
-            YES, field="flucon_initiated", field_applicable="flucon_next_dose"
-        )
+        self.applicable_if(YES, field="flucon_initiated", field_applicable="flucon_next_dose")
 
         if (
             self.cleaned_data.get("flucon_initiated") == YES
@@ -80,9 +76,7 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
             NO, field="flucyt_initiated", field_required="flucyt_not_initiated_reason"
         )
 
-        self.required_if(
-            YES, field="flucyt_initiated", field_required="flucyt_dose_datetime"
-        )
+        self.required_if(YES, field="flucyt_initiated", field_required="flucyt_dose_datetime")
         if (
             self.report_datetime
             and self.cleaned_data.get("flucyt_dose_datetime")
@@ -124,13 +118,9 @@ class StudyMedicationBaselineFormValidator(CrfFormValidator):
                 "Expected sum of individual doses to match prescribed flucytosine "
                 f"dose ({self.cleaned_data.get('flucyt_dose')} mg/d)."
             )
-            self.raise_validation_error(
-                {fld: error_msg for fld in dose_fields}, INVALID_ERROR
-            )
+            self.raise_validation_error({fld: error_msg for fld in dose_fields}, INVALID_ERROR)
 
-        self.applicable_if(
-            YES, field="flucyt_initiated", field_applicable="flucyt_next_dose"
-        )
+        self.applicable_if(YES, field="flucyt_initiated", field_applicable="flucyt_next_dose")
 
         if self.cleaned_data.get("flucyt_dose_datetime"):
             if (

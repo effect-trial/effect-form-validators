@@ -34,9 +34,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
 
         self.validate_headache_duration()
 
-        self.m2m_other_specify(
-            OTHER, m2m_field="current_sx", field_other="current_sx_other"
-        )
+        self.m2m_other_specify(OTHER, m2m_field="current_sx", field_other="current_sx_other")
 
         self.applicable_if(YES, field="any_sx", field_applicable="cm_sx")
 

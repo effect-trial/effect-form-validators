@@ -311,9 +311,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         for flucon_answer in [NO, NOT_APPLICABLE]:
             for flucyt_answer in [NO, NOT_APPLICABLE]:
-                with self.subTest(
-                    flucon_modified=flucon_answer, flucyt_answer=flucyt_answer
-                ):
+                with self.subTest(flucon_modified=flucon_answer, flucyt_answer=flucyt_answer):
                     cleaned_data = self.get_cleaned_data(
                         visit_code=DAY03, visit_code_sequence=0
                     )
@@ -409,9 +407,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         for answer in [YES, NO]:
             with self.subTest(flucon_modified=answer):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY03, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "modifications": NO,
@@ -703,9 +699,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         for answer in [YES, NO]:
             with self.subTest(flucon_modified=answer):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY03, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "modifications": NO,
@@ -780,9 +774,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         for answer in [NO, NOT_APPLICABLE]:
             with self.subTest(flucyt_modified=answer):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY03, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucyt_modified": answer,
@@ -863,9 +855,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         for answer in [NO, NOT_APPLICABLE]:
             with self.subTest(flucyt_modified=answer):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY03, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucyt_modified": answer,
@@ -888,9 +878,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         self.mock_is_baseline.return_value = False
         for dose_field in self.flucyt_individual_dose_fields:
             with self.subTest(dose_field=dose_field):
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY03, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update({dose_field: None})
                 form_validator = StudyMedicationFollowupFormValidator(
                     cleaned_data=cleaned_data, model=StudyMedicationMockModel
@@ -967,9 +955,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         for schedule in dose_schedules:
             with self.subTest(schedule=schedule):
                 dose_0400, dose_1000, dose_1600, dose_2200 = schedule
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY03, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucyt_dose": 4000,
@@ -999,9 +985,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         for schedule in dose_schedules:
             with self.subTest(schedule=schedule):
                 dose_0400, dose_1000, dose_1600, dose_2200 = schedule
-                cleaned_data = self.get_cleaned_data(
-                    visit_code=DAY03, visit_code_sequence=0
-                )
+                cleaned_data = self.get_cleaned_data(visit_code=DAY03, visit_code_sequence=0)
                 cleaned_data.update(
                     {
                         "flucyt_dose": 4000,

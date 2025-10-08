@@ -37,9 +37,7 @@ class DiagnosesFormValidator(CrfFormValidator):
                     "Cannot be N/A if there are significant diagnoses to report."
                 ),
             )
-        self.m2m_other_specify(
-            OTHER, m2m_field="diagnoses", field_other="diagnoses_other"
-        )
+        self.m2m_other_specify(OTHER, m2m_field="diagnoses", field_other="diagnoses_other")
 
     def validate_reporting_fieldset(self: Any) -> None:
         condition = (
@@ -47,6 +45,4 @@ class DiagnosesFormValidator(CrfFormValidator):
             or self.cleaned_data.get("has_diagnoses") == YES
         )
         for reportable_field in self.reportable_fields:
-            self.applicable_if_true(
-                condition=condition, field_applicable=reportable_field
-            )
+            self.applicable_if_true(condition=condition, field_applicable=reportable_field)

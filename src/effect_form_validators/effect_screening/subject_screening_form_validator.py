@@ -38,12 +38,8 @@ class SubjectScreeningFormValidator(
             field="hiv_pos",
             field_required="hiv_confirmed_date",
         )
-        self.date_before_report_datetime_or_raise(
-            field="hiv_confirmed_date", inclusive=True
-        )
-        self.applicable_if(
-            YES, field="hiv_pos", field_applicable="hiv_confirmed_method"
-        )
+        self.date_before_report_datetime_or_raise(field="hiv_confirmed_date", inclusive=True)
+        self.applicable_if(YES, field="hiv_pos", field_applicable="hiv_confirmed_method")
 
     def validate_cd4(self) -> None:
         self.date_before_report_datetime_or_raise(field="cd4_date", inclusive=True)
@@ -57,19 +53,14 @@ class SubjectScreeningFormValidator(
                     )
                 }
             )
-        self.date_before_report_datetime_or_raise(
-            field="serum_crag_date", inclusive=True
-        )
+        self.date_before_report_datetime_or_raise(field="serum_crag_date", inclusive=True)
 
     def validate_lp_and_csf_crag(self) -> None:
         self.required_if(YES, field="lp_done", field_required="lp_date")
 
-        if self.cleaned_data.get("lp_date") and self.cleaned_data.get(
-            "serum_crag_date"
-        ):
+        if self.cleaned_data.get("lp_date") and self.cleaned_data.get("serum_crag_date"):
             days = (
-                self.cleaned_data.get("serum_crag_date")
-                - self.cleaned_data.get("lp_date")
+                self.cleaned_data.get("serum_crag_date") - self.cleaned_data.get("lp_date")
             ).days
 
             if days > THREE_DAYS:
@@ -96,10 +87,7 @@ class SubjectScreeningFormValidator(
         if (
             self.cleaned_data.get("cm_in_csf_date")
             and self.cleaned_data.get("lp_date")
-            and (
-                self.cleaned_data.get("lp_date")
-                > self.cleaned_data.get("cm_in_csf_date")
-            )
+            and (self.cleaned_data.get("lp_date") > self.cleaned_data.get("cm_in_csf_date"))
         ):
             raise forms.ValidationError(
                 {"cm_in_csf_date": "Invalid. Cannot be before LP date"}
@@ -113,13 +101,9 @@ class SubjectScreeningFormValidator(
             and self.cleaned_data.get("pregnant") != NOT_APPLICABLE
         ):
             raise forms.ValidationError({"pregnant": "Invalid. Subject is male"})
-        if self.cleaned_data.get("gender") == MALE and self.cleaned_data.get(
-            "preg_test_date"
-        ):
+        if self.cleaned_data.get("gender") == MALE and self.cleaned_data.get("preg_test_date"):
             raise forms.ValidationError({"preg_test_date": "Invalid. Subject is male"})
-        self.date_before_report_datetime_or_raise(
-            field="preg_test_date", inclusive=True
-        )
+        self.date_before_report_datetime_or_raise(field="preg_test_date", inclusive=True)
         self.applicable_if(FEMALE, field="gender", field_applicable="breast_feeding")
 
     def validate_age(self) -> None:

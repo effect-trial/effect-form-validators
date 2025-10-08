@@ -60,9 +60,7 @@ class SerumCragDateNoteFormValidator(
                     INVALID_ERROR,
                 )
 
-        self.date_before_report_datetime_or_raise(
-            field="serum_crag_date", inclusive=True
-        )
+        self.date_before_report_datetime_or_raise(field="serum_crag_date", inclusive=True)
 
     def validate_status(self):
         if (

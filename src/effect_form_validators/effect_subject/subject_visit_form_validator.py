@@ -202,9 +202,7 @@ class SubjectVisitFormValidator(VisitFormValidator):
             is_baseline(instance=self.cleaned_data.get("appointment"))
             and self.cleaned_data.get("hospitalized") == YES
         ):
-            raise forms.ValidationError(
-                {"hospitalized": "Invalid. Expected NO at baseline"}
-            )
+            raise forms.ValidationError({"hospitalized": "Invalid. Expected NO at baseline"})
 
         if self.cleaned_data.get("hospitalized") == UNKNOWN and (
             self.cleaned_data.get("assessment_who") == PATIENT
