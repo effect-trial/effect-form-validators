@@ -636,9 +636,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_require_help_not_applicable_if_not_w10_and_w24(self):
-        for visit_code in [
-            vc for vc in self.visit_schedule if vc not in [WEEK10, WEEK24]
-        ]:
+        for visit_code in [vc for vc in self.visit_schedule if vc not in [WEEK10, WEEK24]]:
             for visit_code_sequence in [0, 1]:
                 with self.subTest(
                     visit_code=visit_code,
@@ -746,9 +744,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                         self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
     def test_any_other_problems_not_applicable_if_not_w10_and_w24(self):
-        for visit_code in [
-            vc for vc in self.visit_schedule if vc not in [WEEK10, WEEK24]
-        ]:
+        for visit_code in [vc for vc in self.visit_schedule if vc not in [WEEK10, WEEK24]]:
             for visit_code_sequence in [0, 1]:
                 with self.subTest(
                     visit_code=visit_code,
@@ -1013,9 +1009,7 @@ class TestMentalStatusFormValidation(TestCaseMixin, TestCase):
                 with self.subTest(mrs_score=mrs_score, ecog_score=ecog_score):
                     cleaned_data = self.get_cleaned_data(visit_code=WEEK10)
                     reportable_answ = (
-                        NOT_APPLICABLE
-                        if (mrs_score == "0" and ecog_score == "0")
-                        else NO
+                        NOT_APPLICABLE if (mrs_score == "0" and ecog_score == "0") else NO
                     )
                     cleaned_data.update(
                         {

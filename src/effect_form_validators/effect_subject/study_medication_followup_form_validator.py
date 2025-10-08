@@ -17,9 +17,7 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
         self.validate_flucyt()
 
     def validate_modifications(self) -> None:
-        self.m2m_required_if(
-            YES, field="modifications", m2m_field="modifications_reason"
-        )
+        self.m2m_required_if(YES, field="modifications", m2m_field="modifications_reason")
 
         self.m2m_single_selection_if(PER_PROTOCOL, m2m_field="modifications_reason")
 
@@ -51,9 +49,7 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
             inverse=False,
         )
 
-        self.required_if(
-            YES, field="flucon_modified", field_required="flucon_dose_datetime"
-        )
+        self.required_if(YES, field="flucon_modified", field_required="flucon_dose_datetime")
         # TODO: what are we trying to check/prevent here? Is this right?
         if (
             self.report_datetime
@@ -74,9 +70,7 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
         # TODO: Validate dose against visit/protocol, if differs, require flucon_notes
         #   - differs could be not modified, or modified to value not expected
 
-        self.applicable_if(
-            YES, field="flucon_modified", field_applicable="flucon_next_dose"
-        )
+        self.applicable_if(YES, field="flucon_modified", field_applicable="flucon_next_dose")
 
         self.not_required_if(
             NOT_APPLICABLE,
@@ -95,9 +89,7 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
             inverse=False,
         )
 
-        self.required_if(
-            YES, field="flucyt_modified", field_required="flucyt_dose_datetime"
-        )
+        self.required_if(YES, field="flucyt_modified", field_required="flucyt_dose_datetime")
         # TODO: what are we trying to check/prevent here? Is this right?
         if (
             self.report_datetime
@@ -138,16 +130,12 @@ class StudyMedicationFollowupFormValidator(CrfFormValidator):
                 "Expected sum of individual doses to match prescribed flucytosine "
                 f"dose ({self.cleaned_data.get('flucyt_dose')} mg/d)."
             )
-            self.raise_validation_error(
-                {fld: error_msg for fld in dose_fields}, INVALID_ERROR
-            )
+            self.raise_validation_error({fld: error_msg for fld in dose_fields}, INVALID_ERROR)
 
         # TODO: Validate dose against visit/protocol, if differs, require flucyt_notes
         #   - differs could be not modified, or modified to value not expected
 
-        self.applicable_if(
-            YES, field="flucyt_modified", field_applicable="flucyt_next_dose"
-        )
+        self.applicable_if(YES, field="flucyt_modified", field_applicable="flucyt_next_dose")
 
         self.not_required_if(
             NOT_APPLICABLE,

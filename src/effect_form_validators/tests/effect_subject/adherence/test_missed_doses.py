@@ -187,9 +187,7 @@ class TestConcreteMissedDosesFormValidators(TestCaseMixin, TestCase):
             "flucyt_missed_doses_form_validator.get_assignment_description_for_subject"
         )
         self.addCleanup(assignment_descr_patcher.stop)
-        self.mock_get_assignment_description_for_subject = (
-            assignment_descr_patcher.start()
-        )
+        self.mock_get_assignment_description_for_subject = assignment_descr_patcher.start()
         self.mock_get_assignment_description_for_subject.return_value = (
             "2 weeks fluconazole plus flucytosine"
         )
@@ -200,9 +198,7 @@ class TestConcreteMissedDosesFormValidators(TestCaseMixin, TestCase):
         cleaned_data = super().get_cleaned_data(**kwargs)
         cleaned_data.update(
             {
-                "adherence": AdherenceMockModel(
-                    subject_identifier=self.subject_identifier
-                ),
+                "adherence": AdherenceMockModel(subject_identifier=self.subject_identifier),
                 "day_missed": None,
                 "missed_reason": "",
                 "missed_reason_other": "",
@@ -216,9 +212,7 @@ class TestConcreteMissedDosesFormValidators(TestCaseMixin, TestCase):
     def test_cleaned_data_ok(self):
         for missed_dose_form_validator in self.missed_dose_validators:
             with self.subTest(fv=missed_dose_form_validator):
-                cleaned_data = self.get_cleaned_data(
-                    form_validator=missed_dose_form_validator
-                )
+                cleaned_data = self.get_cleaned_data(form_validator=missed_dose_form_validator)
                 form_validator = missed_dose_form_validator(
                     cleaned_data=cleaned_data, model=MissedDosesMockModel
                 )
@@ -230,9 +224,7 @@ class TestConcreteMissedDosesFormValidators(TestCaseMixin, TestCase):
     def test_missed_dose_ok(self):
         for missed_dose_form_validator in self.missed_dose_validators:
             with self.subTest(fv=missed_dose_form_validator):
-                cleaned_data = self.get_cleaned_data(
-                    form_validator=missed_dose_form_validator
-                )
+                cleaned_data = self.get_cleaned_data(form_validator=missed_dose_form_validator)
                 cleaned_data.update(
                     {
                         "day_missed": 3,

@@ -39,9 +39,7 @@ class MentalStatusFormValidator(CrfFormValidator):
                 )
             elif self.cleaned_data.get("ecog_score") == "5":
                 self.raise_validation_error(
-                    {
-                        "ecog_score": "Invalid. ECOG cannot be '[5] Deceased' at baseline."
-                    },
+                    {"ecog_score": "Invalid. ECOG cannot be '[5] Deceased' at baseline."},
                     INVALID_ERROR,
                 )
             elif (
@@ -77,9 +75,7 @@ class MentalStatusFormValidator(CrfFormValidator):
         if scheduled_w10_or_w24:
             require_help_response = self.cleaned_data.get("require_help")
             any_other_problems_response = self.cleaned_data.get("any_other_problems")
-            modified_rankin_score_response = self.cleaned_data.get(
-                "modified_rankin_score"
-            )
+            modified_rankin_score_response = self.cleaned_data.get("modified_rankin_score")
             ecog_score_response = self.cleaned_data.get("ecog_score")
             error_msg = {}
 
@@ -115,27 +111,19 @@ class MentalStatusFormValidator(CrfFormValidator):
                     and self.cleaned_data.get("behaviour_change") == NO
                     and self.cleaned_data.get("confusion") == NO
                     and self.cleaned_data.get("require_help") in [NOT_APPLICABLE, NO]
-                    and self.cleaned_data.get("any_other_problems")
-                    in [NOT_APPLICABLE, NO]
+                    and self.cleaned_data.get("any_other_problems") in [NOT_APPLICABLE, NO]
                     and self.cleaned_data.get("modified_rankin_score") == "0"
                     and self.cleaned_data.get("ecog_score") == "0"
-                    and self.cleaned_data.get("glasgow_coma_score")
-                    == GLASGOW_COMA_SCORE
+                    and self.cleaned_data.get("glasgow_coma_score") == GLASGOW_COMA_SCORE
                 ):
-                    self.raise_not_applicable(
-                        field=fld, msg="No symptoms were reported."
-                    )
+                    self.raise_not_applicable(field=fld, msg="No symptoms were reported.")
 
             elif self.cleaned_data.get(fld) == NOT_APPLICABLE:
                 # ae and hospitalization ARE reportable if any symptoms
                 if self.cleaned_data.get("recent_seizure") == YES:
-                    self.raise_applicable(
-                        field=fld, msg="A recent seizure was reported."
-                    )
+                    self.raise_applicable(field=fld, msg="A recent seizure was reported.")
                 elif self.cleaned_data.get("behaviour_change") == YES:
-                    self.raise_applicable(
-                        field=fld, msg="Behaviour change was reported."
-                    )
+                    self.raise_applicable(field=fld, msg="Behaviour change was reported.")
                 elif self.cleaned_data.get("confusion") == YES:
                     self.raise_applicable(field=fld, msg="Confusion reported.")
                 elif self.cleaned_data.get("require_help") == YES:

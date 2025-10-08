@@ -1,11 +1,11 @@
 from .adherence import (
-                        AdherenceStageFourFormValidator,
-                        AdherenceStageOneFormValidator,
-                        AdherenceStageThreeFormValidator,
-                        AdherenceStageTwoFormValidator,
-                        FluconMissedDosesFormValidator,
-                        FlucytMissedDosesFormValidator,
-                        MissedDosesFormValidatorMixin,
+    AdherenceStageFourFormValidator,
+    AdherenceStageOneFormValidator,
+    AdherenceStageThreeFormValidator,
+    AdherenceStageTwoFormValidator,
+    FluconMissedDosesFormValidator,
+    FlucytMissedDosesFormValidator,
+    MissedDosesFormValidatorMixin,
 )
 from .arv_history_form_validator import ArvHistoryFormValidator
 from .arv_treatment_form_validator import ArvTreatmentFormValidator
