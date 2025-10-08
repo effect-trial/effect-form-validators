@@ -16,11 +16,13 @@ class LpCsfFormValidator(
     CrfFormValidator,
 ):
     csf_culture_panel = None
+    assay_datetime_field: str = "csf_culture_assay_datetime"
+    requisition_field: str = "csf_requisition"
 
     def clean(self):
         self.validate_lp()
         self.validate_csf_assessment()
-        self.validate_csf_culture("csf_requisition")
+        self.validate_csf_culture(self.requisition_field)
 
     def validate_csf_assessment(self: Any):
         for fld in [
@@ -37,8 +39,8 @@ class LpCsfFormValidator(
     def validate_csf_culture(self: Any, requisition: str):
         self.require_together(
             field=requisition,
-            field_required="csf_culture_assay_datetime",
+            field_required=self.assay_datetime_field,
         )
         self.validate_requisition(
-            requisition, "csf_culture_assay_datetime", self.csf_culture_panel
+            requisition, self.assay_datetime_field, self.csf_culture_panel
         )

@@ -60,10 +60,7 @@ class ChestXrayFormValidator(CrfFormValidator):
     def validate_chest_xray_date(self):
         if self.report_datetime and self.cleaned_data.get("chest_xray_date"):
             episode_start_date_lower = to_local(
-                self.get_consent_datetime_or_raise(
-                    report_datetime=self.cleaned_data.get("report_datetime")
-                )
-                - relativedelta(days=7)
+                self.get_consent_datetime_or_raise() - relativedelta(days=7)
             ).date()
             if self.cleaned_data.get("chest_xray_date") < episode_start_date_lower:
                 self.raise_validation_error(
@@ -77,8 +74,7 @@ class ChestXrayFormValidator(CrfFormValidator):
                 )
             elif (
                 self.previous_chest_xray_date
-                and self.cleaned_data.get("chest_xray_date")
-                < self.previous_chest_xray_date
+                and self.cleaned_data.get("chest_xray_date") < self.previous_chest_xray_date
             ):
                 self.raise_validation_error(
                     {
