@@ -1,5 +1,5 @@
+from clinicedc_constants import YES
 from edc_adverse_event.form_validators import DeathReportFormValidator as FormValidator
-from edc_constants.constants import YES
 
 
 class DeathReportFormValidator(FormValidator):

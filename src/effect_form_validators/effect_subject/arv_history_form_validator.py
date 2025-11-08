@@ -1,4 +1,4 @@
-from edc_constants.constants import DEFAULTED, LT, NO, NOT_APPLICABLE, YES
+from clinicedc_constants import DEFAULTED, LT, NO, NOT_APPLICABLE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_screening.utils import get_subject_screening_model_cls

@@ -1,4 +1,4 @@
-from edc_constants.constants import CONTROL
+from clinicedc_constants import CONTROL
 from edc_form_validators import FormValidator
 from edc_randomization.utils import (
     get_assignment_description_for_subject,

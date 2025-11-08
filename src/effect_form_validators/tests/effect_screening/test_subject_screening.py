@@ -1,8 +1,4 @@
-from dateutil.relativedelta import relativedelta
-from django import forms
-from django.core.exceptions import ValidationError
-from django.test import TestCase
-from edc_constants.constants import (
+from clinicedc_constants import (
     DECEASED,
     FEMALE,
     MALE,
@@ -16,6 +12,10 @@ from edc_constants.constants import (
     POS,
     YES,
 )
+from dateutil.relativedelta import relativedelta
+from django import forms
+from django.core.exceptions import ValidationError
+from django.test import TestCase
 from edc_form_validators import FormValidatorTestCaseMixin
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date

@@ -1,11 +1,11 @@
 from unittest.mock import patch
 
+from clinicedc_constants import NO, NOT_APPLICABLE, TODAY, TOMORROW, YES
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
 from django.utils import timezone
 from django_mock_queries.query import MockModel
-from edc_constants.constants import NO, NOT_APPLICABLE, TODAY, TOMORROW, YES
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils.text import formatted_date
 from edc_visit_schedule.constants import DAY01

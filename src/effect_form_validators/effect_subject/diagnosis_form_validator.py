@@ -1,6 +1,6 @@
 from typing import Any
 
-from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, YES
+from clinicedc_constants import NO, NOT_APPLICABLE, OTHER, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 
 

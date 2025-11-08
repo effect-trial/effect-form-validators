@@ -1,7 +1,4 @@
-from django import forms
-from edc_appointment.constants import MISSED_APPT
-from edc_constants.choices import ALIVE_DEAD_UNKNOWN_NA_MISSED
-from edc_constants.constants import (
+from clinicedc_constants import (
     ALIVE,
     HOSPITAL_NOTES,
     IN_PERSON,
@@ -15,6 +12,9 @@ from edc_constants.constants import (
     UNKNOWN,
     YES,
 )
+from django import forms
+from edc_appointment.constants import MISSED_APPT
+from edc_constants.choices import ALIVE_DEAD_UNKNOWN_NA_MISSED
 from edc_constants.utils import get_display
 from edc_form_validators import INVALID_ERROR
 from edc_visit_schedule.utils import is_baseline

@@ -1,9 +1,4 @@
-from dateutil.relativedelta import relativedelta
-from django.core.exceptions import ValidationError
-from django.test import TestCase, override_settings
-from django_mock_queries.query import MockModel, MockSet
-from edc_constants.choices import DATE_ESTIMATED_NA
-from edc_constants.constants import (
+from clinicedc_constants import (
     DEFAULTED,
     EQ,
     GT,
@@ -13,6 +8,11 @@ from edc_constants.constants import (
     NOT_ESTIMATED,
     YES,
 )
+from dateutil.relativedelta import relativedelta
+from django.core.exceptions import ValidationError
+from django.test import TestCase, override_settings
+from django_mock_queries.query import MockModel, MockSet
+from edc_constants.choices import DATE_ESTIMATED_NA
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
 

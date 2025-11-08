@@ -1,6 +1,6 @@
 from typing import Any
 
-from edc_constants.constants import OTHER
+from clinicedc_constants import OTHER
 
 
 class MissedDosesFormValidatorMixin:

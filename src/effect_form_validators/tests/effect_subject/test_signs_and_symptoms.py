@@ -1,7 +1,4 @@
-from django.core.exceptions import ValidationError
-from django.test import TestCase
-from django_mock_queries.query import MockModel, MockSet
-from edc_constants.constants import (
+from clinicedc_constants import (
     HEADACHE,
     IN_PERSON,
     NEXT_OF_KIN,
@@ -13,6 +10,9 @@ from edc_constants.constants import (
     UNKNOWN,
     YES,
 )
+from django.core.exceptions import ValidationError
+from django.test import TestCase
+from django_mock_queries.query import MockModel, MockSet
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 
 from effect_form_validators.effect_subject import SignsAndSymptomsFormValidator as Base

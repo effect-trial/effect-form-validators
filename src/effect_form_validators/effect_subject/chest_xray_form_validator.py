@@ -1,7 +1,7 @@
 from datetime import date
 
+from clinicedc_constants import NO, NORMAL, OTHER, YES
 from dateutil.relativedelta import relativedelta
-from edc_constants.constants import NO, NORMAL, OTHER, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_utils.date import to_local

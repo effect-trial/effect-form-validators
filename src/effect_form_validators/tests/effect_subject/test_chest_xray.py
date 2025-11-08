@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from clinicedc_constants import NO, NORMAL, OTHER, YES
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel, MockSet
-from edc_constants.constants import NO, NORMAL, OTHER, YES
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow
 

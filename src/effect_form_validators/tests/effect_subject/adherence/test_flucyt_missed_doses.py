@@ -1,8 +1,8 @@
 from unittest.mock import patch
 
+from clinicedc_constants import CONTROL, INTERVENTION, REFUSED
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from edc_constants.constants import CONTROL, INTERVENTION, REFUSED
 from edc_utils import get_utcnow
 
 from effect_form_validators.effect_subject import FlucytMissedDosesFormValidator
