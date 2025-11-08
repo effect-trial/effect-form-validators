@@ -1,10 +1,4 @@
-from clinicedc_tests.mixins import FormValidatorTestMixin
-from dateutil.relativedelta import relativedelta
-from django import forms
-from django.test import TestCase
-from django_mock_queries.query import MockModel, MockSet
-from edc_constants.choices import DATE_ESTIMATED_NA
-from edc_constants.constants import (
+from clinicedc_constants import (
     NO,
     NOT_APPLICABLE,
     NOT_ESTIMATED,
@@ -12,6 +6,12 @@ from edc_constants.constants import (
     UNKNOWN,
     YES,
 )
+from clinicedc_tests.mixins import FormValidatorTestMixin
+from dateutil.relativedelta import relativedelta
+from django import forms
+from django.test import TestCase
+from django_mock_queries.query import MockModel, MockSet
+from edc_constants.choices import DATE_ESTIMATED_NA
 from edc_form_validators import FormValidatorTestCaseMixin
 from edc_utils import get_utcnow
 

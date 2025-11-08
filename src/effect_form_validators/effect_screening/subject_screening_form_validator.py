@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+from clinicedc_constants import FEMALE, MALE, NO, NOT_APPLICABLE, OTHER, PENDING, POS, YES
 from django import forms
-from edc_constants.constants import FEMALE, MALE, NO, NOT_APPLICABLE, OTHER, PENDING, POS, YES
 from edc_form_validators import INVALID_ERROR, FormValidator
 from edc_prn.modelform_mixins import PrnFormValidatorMixin
 from edc_screening.form_validator_mixins import SubjectScreeningFormValidatorMixin

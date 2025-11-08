@@ -1,9 +1,9 @@
 from unittest.mock import patch
 
+from clinicedc_constants import INTERVENTION, OTHER, REFUSED, TOXICITY
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel
-from edc_constants.constants import INTERVENTION, OTHER, REFUSED, TOXICITY
 from edc_form_validators import FormValidator
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow

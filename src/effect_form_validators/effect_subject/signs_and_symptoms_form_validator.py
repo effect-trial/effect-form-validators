@@ -1,7 +1,9 @@
 from datetime import timedelta
 
-from django import forms
-from edc_constants.constants import (
+from clinicedc_constants import (
+    CN_PALSY_LEFT_OTHER,
+    CN_PALSY_RIGHT_OTHER,
+    FOCAL_NEUROLOGIC_DEFICIT_OTHER,
     HEADACHE,
     IN_PERSON,
     NO,
@@ -12,12 +14,8 @@ from edc_constants.constants import (
     VISUAL_LOSS,
     YES,
 )
-from edc_constants.disease_constants import (
-    CN_PALSY_LEFT_OTHER,
-    CN_PALSY_RIGHT_OTHER,
-    FOCAL_NEUROLOGIC_DEFICIT_OTHER,
-)
-from edc_constants.utils import get_display
+from clinicedc_utils import get_display_from_choices
+from django import forms
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_model.utils import timedelta_from_duration_dh_field
@@ -62,13 +60,13 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
         if self.cleaned_data.get("any_sx") == UNKNOWN:
             if self.in_person_visit():
                 error_msg = (
-                    "Invalid. Cannot be 'Unknown' "
-                    f"if this is an '{get_display(ASSESSMENT_TYPES, IN_PERSON)}' visit."
+                    "Invalid. Cannot be 'Unknown' if this is an "
+                    f"'{get_display_from_choices(ASSESSMENT_TYPES, IN_PERSON)}' visit."
                 )
             elif self.related_visit.assessment_who == PATIENT:
                 error_msg = (
-                    "Invalid. Cannot be 'Unknown' "
-                    f"if spoke to '{get_display(ASSESSMENT_WHO_CHOICES, PATIENT)}'."
+                    "Invalid. Cannot be 'Unknown' if spoke to "
+                    f"'{get_display_from_choices(ASSESSMENT_WHO_CHOICES, PATIENT)}'."
                 )
 
             if error_msg:
@@ -169,7 +167,7 @@ class SignsAndSymptomsFormValidator(CrfFormValidator):
                 field_applicable=fld,
                 not_applicable_msg=(
                     "Invalid. This field is not applicable if this is not "
-                    f"an '{get_display(ASSESSMENT_TYPES, IN_PERSON)}' visit."
+                    f"an '{get_display_from_choices(ASSESSMENT_TYPES, IN_PERSON)}' visit."
                 ),
             )
 

@@ -1,4 +1,4 @@
-from edc_constants.constants import NO, NOT_APPLICABLE, OTHER, PER_PROTOCOL, YES
+from clinicedc_constants import NO, NOT_APPLICABLE, OTHER, PER_PROTOCOL, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_utils.text import formatted_date

@@ -1,7 +1,7 @@
+from clinicedc_constants import NO, YES
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel
-from edc_constants.constants import NO, YES
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_visit_schedule.constants import DAY01, DAY14
 

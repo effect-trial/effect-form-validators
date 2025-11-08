@@ -1,4 +1,4 @@
-from edc_constants.constants import NO, NOT_APPLICABLE, YES
+from clinicedc_constants import NO, NOT_APPLICABLE, YES
 from edc_crf.crf_form_validator import CrfFormValidator
 from edc_form_validators import INVALID_ERROR
 from edc_visit_schedule.constants import WEEK10, WEEK24

@@ -1,8 +1,8 @@
 from datetime import timedelta
 
+from clinicedc_constants import NO, NOT_APPLICABLE, UNKNOWN, YES
 from django import forms
 from django.test import TestCase
-from edc_constants.constants import NO, NOT_APPLICABLE, UNKNOWN, YES
 from edc_form_validators import FormValidatorTestCaseMixin
 from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_utils import get_utcnow, get_utcnow_as_date
