@@ -9,12 +9,12 @@ from clinicedc_constants import (
     TOMORROW,
     YES,
 )
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase, tag
+from django.utils import timezone
 from django_mock_queries.query import MockModel, MockSet
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import get_utcnow
 from edc_visit_schedule.constants import DAY01, DAY03, DAY14, WEEK10
 
 from effect_form_validators.effect_subject import StudyMedicationFollowupFormValidator as Base
@@ -80,7 +80,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         cleaned_data = super().get_cleaned_data(
             visit_code=visit_code,
             visit_code_sequence=visit_code_sequence,
-            report_datetime=kwargs.get("report_datetime", get_utcnow()),
+            report_datetime=kwargs.get("report_datetime", timezone.now()),
         )
         cleaned_data.update(
             {
@@ -90,12 +90,12 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 "modifications_reason_other": "",
                 # Flucon
                 "flucon_modified": YES,
-                "flucon_dose_datetime": get_utcnow() + relativedelta(minutes=1),
+                "flucon_dose_datetime": timezone.now() + relativedelta(minutes=1),
                 "flucon_dose": 800,
                 "flucon_notes": "",
                 # Flucyt
                 "flucyt_modified": YES,
-                "flucyt_dose_datetime": get_utcnow() + relativedelta(minutes=1),
+                "flucyt_dose_datetime": timezone.now() + relativedelta(minutes=1),
                 "flucyt_dose": 0,
                 "flucyt_dose_0400": 0,
                 "flucyt_dose_1000": 0,
@@ -452,7 +452,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
         cleaned_data.update(
             {
                 "flucon_modified": NO,
-                "flucon_dose_datetime": get_utcnow() + relativedelta(minutes=1),
+                "flucon_dose_datetime": timezone.now() + relativedelta(minutes=1),
             }
         )
         form_validator = StudyMedicationFollowupFormValidator(
@@ -468,7 +468,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
 
     # def test_flucon_flucyt_dose_datetime_equal_report_datetime_ok(self):
     #     self.mock_is_baseline.return_value = False
-    #     report_datetime = get_utcnow() - relativedelta(days=14)
+    #     report_datetime = timezone.now() - relativedelta(days=14)
     #     cleaned_data = self.get_cleaned_data(
     #         visit_code=DAY01,
     #         visit_code_sequence=0,
@@ -490,7 +490,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #
     # def test_flucon_dose_datetime_before_report_datetime_raises(self):
     #     self.mock_is_baseline.return_value = False
-    #     report_datetime = get_utcnow()
+    #     report_datetime = timezone.now()
     #     cleaned_data = self.get_cleaned_data(
     #         visit_code=DAY01,
     #         visit_code_sequence=0,
@@ -512,7 +512,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #
     # def test_flucon_dose_datetime_after_report_datetime_raises(self):
     #     self.mock_is_baseline.return_value = False
-    #     report_datetime = get_utcnow()
+    #     report_datetime = timezone.now()
     #     cleaned_data = self.get_cleaned_data(
     #         visit_code=DAY01,
     #         visit_code_sequence=0,
@@ -778,7 +778,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
                 cleaned_data.update(
                     {
                         "flucyt_modified": answer,
-                        "flucyt_dose_datetime": get_utcnow() + relativedelta(minutes=1),
+                        "flucyt_dose_datetime": timezone.now() + relativedelta(minutes=1),
                     }
                 )
                 form_validator = StudyMedicationFollowupFormValidator(
@@ -794,7 +794,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
 
     # def test_flucyt_dose_datetime_before_report_datetime_raises(self):
     #     self.mock_is_baseline.return_value = False
-    #     report_datetime = get_utcnow()
+    #     report_datetime = timezone.now()
     #     cleaned_data = self.get_cleaned_data(
     #         visit_code=DAY01,
     #         visit_code_sequence=0,
@@ -816,7 +816,7 @@ class TestStudyMedicationFollowupFormValidation(TestCaseMixin, TestCase):
     #
     # def test_flucyt_dose_datetime_after_report_datetime_raises(self):
     #     self.mock_is_baseline.return_value = False
-    #     report_datetime = get_utcnow()
+    #     report_datetime = timezone.now()
     #     cleaned_data = self.get_cleaned_data(
     #         visit_code=DAY01,
     #         visit_code_sequence=0,

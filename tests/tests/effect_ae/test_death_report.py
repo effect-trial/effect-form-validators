@@ -10,10 +10,10 @@ from clinicedc_tests.mixins import FormValidatorTestMixin
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.test import TestCase
+from django.utils import timezone
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.choices import DATE_ESTIMATED_NA
 from edc_form_validators import FormValidatorTestCaseMixin
-from edc_utils import get_utcnow
 
 from effect_form_validators.effect_ae import DeathReportFormValidator as Base
 
@@ -39,8 +39,8 @@ class TestDeathReportFormValidation(FormValidatorTestCaseMixin, TestCaseMixin, T
         cleaned_data = super().get_cleaned_data(**kwargs)
         cleaned_data.update(
             {
-                "report_datetime": get_utcnow(),
-                "death_datetime": get_utcnow() - relativedelta(days=1, hours=6),
+                "report_datetime": timezone.now(),
+                "death_datetime": timezone.now() - relativedelta(days=1, hours=6),
                 "death_as_inpatient": NO,
                 "hospitalization_date": None,
                 "hospitalization_date_estimated": NOT_APPLICABLE,
@@ -73,10 +73,10 @@ class TestDeathReportFormValidation(FormValidatorTestCaseMixin, TestCaseMixin, T
         for days_after in [1, 3, 14]:
             with self.subTest(days_after=days_after):
                 cleaned_data = self.get_cleaned_data()
-                report_datetime = get_utcnow()
+                report_datetime = timezone.now()
                 cleaned_data.update(
                     {
-                        "report_datetime": get_utcnow(),
+                        "report_datetime": timezone.now(),
                         "death_datetime": report_datetime + relativedelta(days=days_after),
                     }
                 )
@@ -97,7 +97,7 @@ class TestDeathReportFormValidation(FormValidatorTestCaseMixin, TestCaseMixin, T
         for days_before in [0, 1, 2, 14]:
             with self.subTest(days_before=days_before):
                 cleaned_data = self.get_cleaned_data()
-                report_datetime = get_utcnow()
+                report_datetime = timezone.now()
                 cleaned_data.update(
                     {
                         "report_datetime": report_datetime,

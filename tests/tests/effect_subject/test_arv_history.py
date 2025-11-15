@@ -8,17 +8,17 @@ from clinicedc_constants import (
     NOT_ESTIMATED,
     YES,
 )
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase, override_settings
+from django.utils import timezone
 from django_mock_queries.query import MockModel, MockSet
 from edc_constants.choices import DATE_ESTIMATED_NA
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import get_utcnow, get_utcnow_as_date
 
+from effect_form_validators.constants import ART_CONTINUED, ART_STOPPED
 from effect_form_validators.effect_subject import ArvHistoryFormValidator as Base
 
-from ...constants import ART_CONTINUED, ART_STOPPED
 from ..mixins import TestCaseMixin
 
 
@@ -31,7 +31,7 @@ class ArvHistoryMockModel(MockModel):
 class ArvHistoryFormValidator(FormValidatorTestMixin, Base):
     @property
     def subject_screening(self):
-        screening_date = get_utcnow_as_date() - relativedelta(years=1)
+        screening_date = timezone.now().date() - relativedelta(years=1)
         return MockModel(
             mock_name="SubjectScreening",
             subject_identifier=self.subject_identifier,
@@ -62,7 +62,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
 
     def get_cleaned_data(self, **kwargs) -> dict:
         if "report_datetime" not in kwargs:
-            kwargs["report_datetime"] = get_utcnow()
+            kwargs["report_datetime"] = timezone.now()
         cleaned_data = super().get_cleaned_data(**kwargs)
         cleaned_data.update(
             {
@@ -912,7 +912,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "has_viral_load_result": YES,
                 "viral_load_result": None,
                 "viral_load_quantifier": EQ,
-                "viral_load_date": get_utcnow_as_date(),
+                "viral_load_date": timezone.now().date(),
                 "viral_load_date_estimated": NO,
             }
         )
@@ -983,7 +983,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "has_viral_load_result": YES,
                 "viral_load_result": 20,
                 "viral_load_quantifier": NOT_APPLICABLE,
-                "viral_load_date": get_utcnow_as_date(),
+                "viral_load_date": timezone.now().date(),
                 "viral_load_date_estimated": NO,
             }
         )
@@ -1021,7 +1021,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                         "has_viral_load_result": YES,
                         "viral_load_result": invalid_ldl_value,
                         "viral_load_quantifier": LT,
-                        "viral_load_date": get_utcnow_as_date(),
+                        "viral_load_date": timezone.now().date(),
                         "viral_load_date_estimated": NO,
                     }
                 )
@@ -1050,7 +1050,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                         "has_viral_load_result": YES,
                         "viral_load_result": valid_ldl_value,
                         "viral_load_quantifier": LT,
-                        "viral_load_date": get_utcnow_as_date(),
+                        "viral_load_date": timezone.now().date(),
                         "viral_load_date_estimated": NO,
                     }
                 )
@@ -1077,7 +1077,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                             "has_viral_load_result": YES,
                             "viral_load_result": valid_ldl_value,
                             "viral_load_quantifier": vl_quantifier,
-                            "viral_load_date": get_utcnow_as_date(),
+                            "viral_load_date": timezone.now().date(),
                             "viral_load_date_estimated": NO,
                         }
                     )
@@ -1099,7 +1099,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "has_viral_load_result": NO,
                 "viral_load_result": None,
                 "viral_load_quantifier": NOT_APPLICABLE,
-                "viral_load_date": get_utcnow_as_date(),
+                "viral_load_date": timezone.now().date(),
                 "viral_load_date_estimated": NOT_APPLICABLE,
             }
         )
@@ -1146,7 +1146,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
             str(cm.exception.error_dict.get("viral_load_date")),
         )
 
-        cleaned_data.update({"viral_load_date": get_utcnow_as_date()})
+        cleaned_data.update({"viral_load_date": timezone.now().date()})
         form_validator = ArvHistoryFormValidator(
             cleaned_data=cleaned_data, model=ArvHistoryMockModel
         )
@@ -1199,7 +1199,7 @@ class TestArvHistoryFormValidator(TestCaseMixin, TestCase):
                 "has_viral_load_result": YES,
                 "viral_load_result": 1001,
                 "viral_load_quantifier": EQ,
-                "viral_load_date": get_utcnow_as_date(),
+                "viral_load_date": timezone.now().date(),
                 "viral_load_date_estimated": NOT_APPLICABLE,
             }
         )

@@ -1,10 +1,10 @@
 from unittest.mock import patch
 
 from clinicedc_constants import NO, NOT_APPLICABLE, YES
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django_mock_queries.query import MockModel
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
 from edc_visit_schedule.constants import DAY01, DAY14, WEEK10, WEEK24
 
 from effect_form_validators.effect_subject import MentalStatusFormValidator as Base

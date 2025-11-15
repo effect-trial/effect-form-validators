@@ -1,9 +1,9 @@
 from clinicedc_constants import NO, NOT_APPLICABLE, YES
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from django import forms
 from django.test import TestCase
+from django.utils import timezone
 from edc_form_validators import FormValidatorTestCaseMixin
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import get_utcnow
 
 from effect_form_validators.effect_consent import (
     SubjectConsentUpdateV2FormValidator as Base,
@@ -24,7 +24,7 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "subject_identifier": "xxx",
-                "consent_datetime": get_utcnow(),
+                "consent_datetime": timezone.now(),
                 "he_substudy": NO,
                 "sample_storage": NO,
                 "sample_export": NOT_APPLICABLE,

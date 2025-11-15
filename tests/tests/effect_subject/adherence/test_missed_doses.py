@@ -1,12 +1,12 @@
 from unittest.mock import patch
 
 from clinicedc_constants import INTERVENTION, OTHER, REFUSED, TOXICITY
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils import timezone
 from django_mock_queries.query import MockModel
 from edc_form_validators import FormValidator
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import get_utcnow
 
 from effect_form_validators.effect_subject import (
     FluconMissedDosesFormValidator,
@@ -37,7 +37,7 @@ class MissedDosesTestFormValidator(
 class TestMissedDosesFormValidatorMixin(TestCaseMixin, TestCase):
     def get_cleaned_data(self, **kwargs) -> dict:
         if "report_datetime" not in kwargs:
-            kwargs["report_datetime"] = get_utcnow()
+            kwargs["report_datetime"] = timezone.now()
         cleaned_data = super().get_cleaned_data(**kwargs)
         cleaned_data.update(
             {
@@ -194,7 +194,7 @@ class TestConcreteMissedDosesFormValidators(TestCaseMixin, TestCase):
 
     def get_cleaned_data(self, form_validator=None, **kwargs) -> dict:
         if "report_datetime" not in kwargs:
-            kwargs["report_datetime"] = get_utcnow()
+            kwargs["report_datetime"] = timezone.now()
         cleaned_data = super().get_cleaned_data(**kwargs)
         cleaned_data.update(
             {

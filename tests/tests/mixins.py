@@ -3,8 +3,8 @@ from decimal import Decimal
 
 from dateutil.relativedelta import relativedelta
 from django.test import TestCase
+from django.utils import timezone
 from django_mock_queries.query import MockModel
-from edc_utils import get_utcnow
 from edc_visit_schedule.constants import (
     DAY01,
     DAY03,
@@ -31,7 +31,7 @@ class TestCaseMixin(TestCase):
 
     def setUp(self) -> None:
         """Setup appointment and subject_visit Mock models"""
-        self.screening_datetime = get_utcnow() - relativedelta(years=1)
+        self.screening_datetime = timezone.now() - relativedelta(years=1)
         self.consent_datetime = self.screening_datetime
         self.subject_identifier = "12345"
         # appointment
