@@ -1,12 +1,12 @@
 from collections import namedtuple
 
 from clinicedc_constants import NO, NOT_APPLICABLE, NOT_ESTIMATED, OTHER, YES
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from django import forms
 from django.test import TestCase
+from django.utils import timezone
 from django_mock_queries.query import MockModel, MockSet
 from edc_form_validators import FormValidatorTestCaseMixin
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import get_utcnow
 
 from effect_form_validators.effect_subject import (
     ParticipantTreatmentFormValidator as Base,
@@ -70,7 +70,7 @@ class TestParticipantTreatmentFormValidation(
     @staticmethod
     def get_cleaned_data_participant_no_cm_no_tx():
         return {
-            "report_datetime": get_utcnow(),
+            "report_datetime": timezone.now(),
             "lp_completed": NO,
             "cm_confirmed": NOT_APPLICABLE,
             "on_cm_tx": NOT_APPLICABLE,
@@ -109,37 +109,37 @@ class TestParticipantTreatmentFormValidation(
     @staticmethod
     def get_cleaned_data_participant_with_cm_with_all_tx():
         return {
-            "report_datetime": get_utcnow(),
+            "report_datetime": timezone.now(),
             "lp_completed": YES,
             "cm_confirmed": YES,
             "on_cm_tx": YES,
             "cm_tx_given": "1w_amb_5fc",
             "cm_tx_given_other": "",
             "on_tb_tx": YES,
-            "tb_tx_date": get_utcnow().date(),
+            "tb_tx_date": timezone.now().date(),
             "tb_tx_date_estimated": NOT_ESTIMATED,
             "tb_tx_given": MockList(name="H", display_name="H"),
             "tb_tx_given_other": "",
             "tb_tx_reason_no": NOT_APPLICABLE,
             "tb_tx_reason_no_other": "",
             "on_steroids": YES,
-            "steroids_date": get_utcnow().date(),
+            "steroids_date": timezone.now().date(),
             "steroids_date_estimated": NOT_ESTIMATED,
             "steroids_given": "oral_prednisolone",
             "steroids_given_other": "",
             "steroids_course": 3,
             "on_co_trimoxazole": YES,
-            "co_trimoxazole_date": get_utcnow().date(),
+            "co_trimoxazole_date": timezone.now().date(),
             "co_trimoxazole_date_estimated": NOT_ESTIMATED,
             "co_trimoxazole_reason_no": NOT_APPLICABLE,
             "co_trimoxazole_reason_no_other": "",
             "on_antibiotics": YES,
-            "antibiotics_date": get_utcnow().date(),
+            "antibiotics_date": timezone.now().date(),
             "antibiotics_date_estimated": NOT_ESTIMATED,
             "antibiotics_given": MockList(name="H", display_name="H"),
             "antibiotics_given_other": "",
             "on_other_drugs": YES,
-            "other_drugs_date": get_utcnow().date(),
+            "other_drugs_date": timezone.now().date(),
             "other_drugs_date_estimated": NOT_ESTIMATED,
             "other_drugs_given": MockList(name="H", display_name="H"),
             "other_drugs_given_other": "",
@@ -339,7 +339,7 @@ class TestParticipantTreatmentFormValidation(
         cleaned_data.update(
             {
                 "on_steroids": YES,
-                "steroids_date": get_utcnow().date(),
+                "steroids_date": timezone.now().date(),
                 "steroids_date_estimated": "MD",
                 "steroids_given": NOT_APPLICABLE,
                 "steroids_given_other": "",
@@ -357,7 +357,7 @@ class TestParticipantTreatmentFormValidation(
         cleaned_data.update(
             {
                 "on_steroids": YES,
-                "steroids_date": get_utcnow().date(),
+                "steroids_date": timezone.now().date(),
                 "steroids_date_estimated": "MD",
                 "steroids_given": OTHER,
                 "steroids_given_other": "",
@@ -375,7 +375,7 @@ class TestParticipantTreatmentFormValidation(
         cleaned_data.update(
             {
                 "on_steroids": YES,
-                "steroids_date": get_utcnow().date(),
+                "steroids_date": timezone.now().date(),
                 "steroids_date_estimated": "MD",
                 "steroids_given": "oral_prednisolone",
                 "steroids_given_other": "xxx",
@@ -409,7 +409,7 @@ class TestParticipantTreatmentFormValidation(
         cleaned_data.update(
             {
                 "on_steroids": YES,
-                "steroids_date": get_utcnow().date(),
+                "steroids_date": timezone.now().date(),
                 "steroids_date_estimated": "MD",
                 "steroids_given": "oral_prednisolone",
                 "steroids_given_other": "",
@@ -457,7 +457,7 @@ class TestParticipantTreatmentFormValidation(
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": NO,
-                        f"{field_stub}_date": get_utcnow().date(),
+                        f"{field_stub}_date": timezone.now().date(),
                     }
                 )
                 self.assertFormValidatorError(
@@ -479,7 +479,7 @@ class TestParticipantTreatmentFormValidation(
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": YES,
-                        f"{field_stub}_date": get_utcnow().date(),
+                        f"{field_stub}_date": timezone.now().date(),
                         f"{field_stub}_date_estimated": NOT_APPLICABLE,
                     }
                 )
@@ -523,7 +523,7 @@ class TestParticipantTreatmentFormValidation(
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": YES,
-                        f"{field_stub}_date": get_utcnow().date(),
+                        f"{field_stub}_date": timezone.now().date(),
                         f"{field_stub}_date_estimated": "YMD",
                         f"{field_stub}_given": None,
                     }
@@ -570,7 +570,7 @@ class TestParticipantTreatmentFormValidation(
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": YES,
-                        f"{field_stub}_date": get_utcnow().date(),
+                        f"{field_stub}_date": timezone.now().date(),
                         f"{field_stub}_date_estimated": "YMD",
                         f"{field_stub}_given": MockList(name=OTHER, display_name=OTHER),
                         f"{field_stub}_given_other": "",
@@ -634,7 +634,7 @@ class TestParticipantTreatmentFormValidation(
                 cleaned_data.update(
                     {
                         f"on_{field_stub}": YES,
-                        f"{field_stub}_date": get_utcnow().date(),
+                        f"{field_stub}_date": timezone.now().date(),
                         f"{field_stub}_date_estimated": "YMD",
                         f"{field_stub}_reason_no": "contraindicated",
                     }

@@ -1,11 +1,10 @@
 from datetime import timedelta
 
 from clinicedc_constants import NO, NOT_APPLICABLE, UNKNOWN, YES
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from django import forms
 from django.test import TestCase
-from edc_form_validators import FormValidatorTestCaseMixin
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import get_utcnow, get_utcnow_as_date
+from django.utils import timezone
 
 from effect_form_validators.effect_prn import HospitalizationFormValidator as Base
 
@@ -16,22 +15,22 @@ class HospitalizationFormValidator(FormValidatorTestMixin, Base):
     pass
 
 
-class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixin, TestCase):
+class TestHospitalizationFormValidation(FormValidatorTestMixin, TestCaseMixin, TestCase):
     form_validator_cls = HospitalizationFormValidator
 
     def get_cleaned_data(self, **kwargs) -> dict:  # noqa: ARG002
         return {
-            "report_datetime": get_utcnow(),
+            "report_datetime": timezone.now(),
             "have_details": YES,
-            "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+            "admitted_date": timezone.now().date() - timedelta(days=3),
             "admitted_date_estimated": NO,
             "discharged": YES,
-            "discharged_date": get_utcnow_as_date() - timedelta(days=1),
+            "discharged_date": timezone.now().date() - timedelta(days=1),
             "discharged_date_estimated": NO,
             "lp_performed": YES,
             "lp_count": 2,
             "csf_positive_cm": YES,
-            "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=2),
+            "csf_positive_cm_date": timezone.now().date() - timedelta(days=2),
             "narrative": "Details of admission",
         }
 
@@ -45,9 +44,9 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
 
     def test_minimal_details_ok(self):
         cleaned_data = {
-            "report_datetime": get_utcnow(),
+            "report_datetime": timezone.now(),
             "have_details": NO,
-            "admitted_date": get_utcnow_as_date(),
+            "admitted_date": timezone.now().date(),
             "admitted_date_estimated": NO,
             "discharged": UNKNOWN,
             "discharged_date": None,
@@ -69,7 +68,7 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date(),
+                "admitted_date": timezone.now().date(),
                 "admitted_date_estimated": NO,
                 "discharged": YES,
                 "discharged_date": None,
@@ -91,10 +90,10 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
                 cleaned_data.update(
                     {
                         "have_details": NO,
-                        "admitted_date": get_utcnow_as_date(),
+                        "admitted_date": timezone.now().date(),
                         "admitted_date_estimated": NO,
                         "discharged": answer,
-                        "discharged_date": get_utcnow_as_date(),
+                        "discharged_date": timezone.now().date(),
                     }
                 )
                 form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -111,10 +110,10 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date": timezone.now().date() - timedelta(days=3),
                 "admitted_date_estimated": NO,
                 "discharged": YES,
-                "discharged_date": get_utcnow_as_date() - timedelta(days=1),
+                "discharged_date": timezone.now().date() - timedelta(days=1),
                 "discharged_date_estimated": NO,
             }
         )
@@ -129,13 +128,13 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date": timezone.now().date() - timedelta(days=3),
                 "admitted_date_estimated": NO,
                 "discharged": YES,
-                "discharged_date": get_utcnow_as_date() - timedelta(days=3),
+                "discharged_date": timezone.now().date() - timedelta(days=3),
                 "discharged_date_estimated": NO,
                 # CSF date cannot be after date discharged
-                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=3),
+                "csf_positive_cm_date": timezone.now().date() - timedelta(days=3),
             }
         )
         form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -149,10 +148,10 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date": timezone.now().date() - timedelta(days=3),
                 "admitted_date_estimated": NO,
                 "discharged": YES,
-                "discharged_date": get_utcnow_as_date() - timedelta(days=4),
+                "discharged_date": timezone.now().date() - timedelta(days=4),
                 "discharged_date_estimated": NO,
             }
         )
@@ -170,10 +169,10 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date(),
+                "admitted_date": timezone.now().date(),
                 "admitted_date_estimated": NO,
                 "discharged": YES,
-                "discharged_date": get_utcnow_as_date(),
+                "discharged_date": timezone.now().date(),
                 "discharged_date_estimated": NOT_APPLICABLE,
             }
         )
@@ -193,7 +192,7 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
                 cleaned_data.update(
                     {
                         "have_details": NO,
-                        "admitted_date": get_utcnow_as_date(),
+                        "admitted_date": timezone.now().date(),
                         "admitted_date_estimated": NO,
                         "discharged": answer,
                         "discharged_date": None,
@@ -310,7 +309,7 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
                         "lp_performed": YES,
                         "lp_count": 3,
                         "csf_positive_cm": answer,
-                        "csf_positive_cm_date": get_utcnow_as_date(),
+                        "csf_positive_cm_date": timezone.now().date(),
                     }
                 )
                 form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -329,7 +328,7 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
                 "lp_performed": NO,
                 "lp_count": None,
                 "csf_positive_cm": NOT_APPLICABLE,
-                "csf_positive_cm_date": get_utcnow_as_date(),
+                "csf_positive_cm_date": timezone.now().date(),
             }
         )
         form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -346,12 +345,12 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date": timezone.now().date() - timedelta(days=3),
                 "admitted_date_estimated": NO,
                 "lp_performed": YES,
                 "lp_count": 2,
                 "csf_positive_cm": YES,
-                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=2),
+                "csf_positive_cm_date": timezone.now().date() - timedelta(days=2),
             }
         )
         form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -365,12 +364,12 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date": timezone.now().date() - timedelta(days=3),
                 "admitted_date_estimated": NO,
                 "lp_performed": YES,
                 "lp_count": 2,
                 "csf_positive_cm": YES,
-                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=3),
+                "csf_positive_cm_date": timezone.now().date() - timedelta(days=3),
             }
         )
         form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -384,12 +383,12 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date() - timedelta(days=3),
+                "admitted_date": timezone.now().date() - timedelta(days=3),
                 "admitted_date_estimated": NO,
                 "lp_performed": YES,
                 "lp_count": 2,
                 "csf_positive_cm": YES,
-                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=4),
+                "csf_positive_cm_date": timezone.now().date() - timedelta(days=4),
             }
         )
         form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -406,15 +405,15 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date() - timedelta(days=5),
+                "admitted_date": timezone.now().date() - timedelta(days=5),
                 "admitted_date_estimated": NO,
                 "discharged": YES,
-                "discharged_date": get_utcnow_as_date() - timedelta(days=3),
+                "discharged_date": timezone.now().date() - timedelta(days=3),
                 "discharged_date_estimated": NO,
                 "lp_performed": YES,
                 "lp_count": 2,
                 "csf_positive_cm": YES,
-                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=4),
+                "csf_positive_cm_date": timezone.now().date() - timedelta(days=4),
             }
         )
         form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -428,15 +427,15 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date() - timedelta(days=5),
+                "admitted_date": timezone.now().date() - timedelta(days=5),
                 "admitted_date_estimated": NO,
                 "discharged": YES,
-                "discharged_date": get_utcnow_as_date() - timedelta(days=3),
+                "discharged_date": timezone.now().date() - timedelta(days=3),
                 "discharged_date_estimated": NO,
                 "lp_performed": YES,
                 "lp_count": 2,
                 "csf_positive_cm": YES,
-                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=3),
+                "csf_positive_cm_date": timezone.now().date() - timedelta(days=3),
             }
         )
         form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)
@@ -450,15 +449,15 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
         cleaned_data.update(
             {
                 "have_details": YES,
-                "admitted_date": get_utcnow_as_date() - timedelta(days=5),
+                "admitted_date": timezone.now().date() - timedelta(days=5),
                 "admitted_date_estimated": NO,
                 "discharged": YES,
-                "discharged_date": get_utcnow_as_date() - timedelta(days=3),
+                "discharged_date": timezone.now().date() - timedelta(days=3),
                 "discharged_date_estimated": NO,
                 "lp_performed": YES,
                 "lp_count": 2,
                 "csf_positive_cm": YES,
-                "csf_positive_cm_date": get_utcnow_as_date() - timedelta(days=2),
+                "csf_positive_cm_date": timezone.now().date() - timedelta(days=2),
             }
         )
         form_validator = HospitalizationFormValidator(cleaned_data=cleaned_data)

@@ -1,11 +1,11 @@
 from clinicedc_constants import FEMALE, NO, NOT_APPLICABLE, YES
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.test import TestCase
+from django.utils import timezone
 from edc_consent.constants import HOSPITAL_NUMBER
 from edc_form_validators import FormValidatorTestCaseMixin
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import get_utcnow
 
 from effect_form_validators.effect_consent import SubjectConsentFormValidator as Base
 
@@ -32,8 +32,8 @@ class TestHospitalizationFormValidation(FormValidatorTestCaseMixin, TestCaseMixi
                 "is_able": YES,
                 "is_literate": YES,
                 "witness_name": None,
-                "consent_datetime": get_utcnow(),
-                "dob": get_utcnow().date() - relativedelta(years=20),
+                "consent_datetime": timezone.now(),
+                "dob": timezone.now().date() - relativedelta(years=20),
                 "is_dob_estimated": "D",
                 "identity": "12345",
                 "identity_type": HOSPITAL_NUMBER,

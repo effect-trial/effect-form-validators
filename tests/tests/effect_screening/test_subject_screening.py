@@ -12,13 +12,13 @@ from clinicedc_constants import (
     POS,
     YES,
 )
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from dateutil.relativedelta import relativedelta
 from django import forms
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils import timezone
 from edc_form_validators import FormValidatorTestCaseMixin
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import get_utcnow, get_utcnow_as_date
 
 from effect_form_validators.constants import UNABLE_TO_CONTACT
 from effect_form_validators.effect_screening import SubjectScreeningFormValidator as Base
@@ -36,20 +36,20 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
 
     def get_cleaned_data(self, **kwargs) -> dict:  # noqa: ARG002
         return {
-            "report_datetime": get_utcnow(),
+            "report_datetime": timezone.now(),
             "initials": "EW",
             "gender": FEMALE,
             "age_in_years": 25,
             "parent_guardian_consent": NOT_APPLICABLE,
             "hiv_pos": YES,
-            "hiv_confirmed_date": get_utcnow_as_date() - relativedelta(days=30),
+            "hiv_confirmed_date": timezone.now().date() - relativedelta(days=30),
             "hiv_confirmed_method": "historical_lab_result",
             "cd4_value": self.ELIGIBLE_CD4_VALUE,
-            "cd4_date": get_utcnow_as_date() - relativedelta(days=7),
+            "cd4_date": timezone.now().date() - relativedelta(days=7),
             "serum_crag_value": POS,
-            "serum_crag_date": get_utcnow_as_date() - relativedelta(days=6),
+            "serum_crag_date": timezone.now().date() - relativedelta(days=6),
             "lp_done": YES,
-            "lp_date": get_utcnow_as_date() - relativedelta(days=6),
+            "lp_date": timezone.now().date() - relativedelta(days=6),
             "lp_declined": NOT_APPLICABLE,
             "csf_crag_value": NEG,
             "cm_in_csf": NO,
@@ -253,7 +253,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         cleaned_data.update(
             {
                 "hiv_pos": NO,
-                "hiv_confirmed_date": get_utcnow_as_date(),
+                "hiv_confirmed_date": timezone.now().date(),
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
@@ -270,7 +270,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         cleaned_data.update(
             {
                 "hiv_pos": YES,
-                "hiv_confirmed_date": get_utcnow_as_date() - relativedelta(days=30),
+                "hiv_confirmed_date": timezone.now().date() - relativedelta(days=30),
                 "hiv_confirmed_method": NOT_APPLICABLE,
             }
         )
@@ -310,9 +310,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         cleaned_data = self.get_cleaned_data()
         cleaned_data.update(
             {
-                "report_datetime": get_utcnow(),
+                "report_datetime": timezone.now(),
                 "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                "cd4_date": get_utcnow_as_date() + relativedelta(days=1),
+                "cd4_date": timezone.now().date() + relativedelta(days=1),
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
@@ -328,7 +328,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         for days in [22, 30, 60, 365]:
             with self.subTest(days_after=days):
                 cleaned_data = self.get_cleaned_data()
-                report_datetime = get_utcnow() - relativedelta(days=7)
+                report_datetime = timezone.now() - relativedelta(days=7)
                 cleaned_data.update(
                     {
                         "report_datetime": report_datetime,
@@ -353,9 +353,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
                 cleaned_data.update(
                     {
                         "hiv_pos": YES,
-                        "hiv_confirmed_date": get_utcnow_as_date() - relativedelta(days=7),
+                        "hiv_confirmed_date": timezone.now().date() - relativedelta(days=7),
                         "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                        "cd4_date": get_utcnow_as_date() - relativedelta(days=cd4_days_ago),
+                        "cd4_date": timezone.now().date() - relativedelta(days=cd4_days_ago),
                     }
                 )
                 form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
@@ -369,7 +369,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         cleaned_data.update(
             {
                 "serum_crag_value": NEG,
-                "serum_crag_date": get_utcnow_as_date() - relativedelta(days=1),
+                "serum_crag_date": timezone.now().date() - relativedelta(days=1),
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
@@ -386,9 +386,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         cleaned_data.update(
             {
                 "serum_crag_value": POS,
-                "serum_crag_date": get_utcnow_as_date() - relativedelta(days=2),
+                "serum_crag_date": timezone.now().date() - relativedelta(days=2),
                 "lp_done": YES,
-                "lp_date": get_utcnow_as_date() - relativedelta(days=2),
+                "lp_date": timezone.now().date() - relativedelta(days=2),
                 "lp_declined": NOT_APPLICABLE,
             }
         )
@@ -404,9 +404,9 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         cleaned_data.update(
             {
                 "cd4_value": self.ELIGIBLE_CD4_VALUE,
-                "cd4_date": get_utcnow_as_date() - relativedelta(days=7),
+                "cd4_date": timezone.now().date() - relativedelta(days=7),
                 "serum_crag_value": POS,
-                "serum_crag_date": get_utcnow_as_date() - relativedelta(days=8),
+                "serum_crag_date": timezone.now().date() - relativedelta(days=8),
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)
@@ -416,7 +416,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
             self.fail(f"ValidationError unexpectedly raised. Got {e}")
 
         # test can still save when ineligible
-        cd4_date = get_utcnow_as_date() - relativedelta(days=61)
+        cd4_date = timezone.now().date() - relativedelta(days=61)
         cleaned_data.update(
             {
                 "cd4_value": self.ELIGIBLE_CD4_VALUE,
@@ -435,7 +435,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         for days in [-90, -60, -30, -22]:
             with self.subTest(days_after=days):
                 cleaned_data = self.get_cleaned_data()
-                cd4_date = get_utcnow_as_date() - relativedelta(days=7)
+                cd4_date = timezone.now().date() - relativedelta(days=7)
                 cleaned_data.update(
                     {
                         "cd4_value": self.ELIGIBLE_CD4_VALUE,
@@ -460,7 +460,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         for days in [22, 30, 60, 90]:
             with self.subTest(days_after=days):
                 cleaned_data = self.get_cleaned_data()
-                cd4_date = get_utcnow_as_date() - relativedelta(days=7)
+                cd4_date = timezone.now().date() - relativedelta(days=7)
                 serum_crag_date = cd4_date + relativedelta(days=days)
                 report_datetime = serum_crag_date + relativedelta(days=1)
                 cleaned_data.update(
@@ -488,7 +488,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         for days in [21, 14, 13, 1, 0]:
             with self.subTest(days_before=days):
                 cleaned_data = self.get_cleaned_data()
-                report_datetime = get_utcnow()
+                report_datetime = timezone.now()
                 cleaned_data.update(
                     {
                         "report_datetime": report_datetime,
@@ -509,7 +509,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         for days in [22, 25, 30]:
             with self.subTest(days_before=days):
                 cleaned_data = self.get_cleaned_data()
-                report_datetime = get_utcnow()
+                report_datetime = timezone.now()
                 cleaned_data.update(
                     {
                         "report_datetime": report_datetime,
@@ -850,7 +850,7 @@ class TestSubjectScreeningForm(FormValidatorTestCaseMixin, TestCaseMixin, TestCa
         cleaned_data.update(
             {
                 "gender": MALE,
-                "preg_test_date": get_utcnow_as_date(),
+                "preg_test_date": timezone.now().date(),
             }
         )
         form_validator = SubjectScreeningFormValidator(cleaned_data=cleaned_data)

@@ -3,7 +3,7 @@ from unittest.mock import patch
 from clinicedc_constants import CONTROL, INTERVENTION, REFUSED
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from edc_utils import get_utcnow
+from django.utils import timezone
 
 from effect_form_validators.effect_subject import FlucytMissedDosesFormValidator
 
@@ -39,7 +39,7 @@ class TestFlucytMissedDosesFormValidators(TestCaseMixin, TestCase):
 
     def get_cleaned_data(self, **kwargs) -> dict:
         if "report_datetime" not in kwargs:
-            kwargs["report_datetime"] = get_utcnow()
+            kwargs["report_datetime"] = timezone.now()
         cleaned_data = super().get_cleaned_data(**kwargs)
         cleaned_data.update(
             {

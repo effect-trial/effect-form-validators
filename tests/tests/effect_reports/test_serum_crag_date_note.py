@@ -1,12 +1,12 @@
 from unittest.mock import patch
 
 from clinicedc_constants import CONFIRMED, NOT_AVAILABLE, PENDING
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils import timezone
 from django_mock_queries.query import MockModel
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import get_utcnow
 
 from effect_form_validators.effect_reports import SerumCragDateNoteFormValidator as Base
 
@@ -19,7 +19,7 @@ class SerumCragDateNoteFormValidator(FormValidatorTestMixin, Base):
 
 class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
     def setUp(self) -> None:
-        self.eligibility_datetime = get_utcnow() - relativedelta(years=1)
+        self.eligibility_datetime = timezone.now() - relativedelta(years=1)
 
         subject_screening_patcher = patch(
             "effect_form_validators.effect_reports.serum_crag_date_note_form_validator"
@@ -39,7 +39,7 @@ class TestSerumCragDateNoteFormValidator(TestCaseMixin, TestCase):
             status=CONFIRMED,
             report_model="effect_reports.consentedserumcragdate",
             subject_identifier="123-456-789",
-            report_datetime=get_utcnow(),
+            report_datetime=timezone.now(),
         )
 
     def test_cleaned_data_ok(self):

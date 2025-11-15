@@ -3,12 +3,12 @@ from __future__ import annotations
 from datetime import datetime
 
 from clinicedc_constants import NO, NORMAL, OTHER, YES
+from clinicedc_tests.mixins import FormValidatorTestMixin
 from dateutil.relativedelta import relativedelta
 from django.core.exceptions import ValidationError
 from django.test import TestCase
+from django.utils import timezone
 from django_mock_queries.query import MockModel, MockSet
-from edc_form_validators.tests.mixins import FormValidatorTestMixin
-from edc_utils import get_utcnow
 
 from effect_form_validators.effect_subject import ChestXrayFormValidator as Base
 
@@ -24,7 +24,7 @@ class ChestXrayMockModel(MockModel):
 class ChestXrayFormValidator(FormValidatorTestMixin, Base):
     @property
     def consent_datetime(self) -> datetime:
-        return get_utcnow() - relativedelta(years=1)
+        return timezone.now() - relativedelta(years=1)
 
     @property
     def previous_chest_xray_date(self) -> datetime.date:

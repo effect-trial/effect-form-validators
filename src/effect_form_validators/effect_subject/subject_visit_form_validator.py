@@ -12,10 +12,10 @@ from clinicedc_constants import (
     UNKNOWN,
     YES,
 )
+from clinicedc_utils import get_display_from_choices
 from django import forms
 from edc_appointment.constants import MISSED_APPT
 from edc_constants.choices import ALIVE_DEAD_UNKNOWN_NA_MISSED
-from edc_constants.utils import get_display
 from edc_form_validators import INVALID_ERROR
 from edc_visit_schedule.utils import is_baseline
 from edc_visit_tracking.choices import (
@@ -157,10 +157,10 @@ class SubjectVisitFormValidator(VisitFormValidator):
     ) -> str:
         return (
             "Invalid. Did not expect information source: "
-            f"'{get_display(VISIT_INFO_SOURCE2, info_source)}' for "
-            f"'{get_display(ASSESSMENT_TYPES, assessment_type)}' "
+            f"'{get_display_from_choices(VISIT_INFO_SOURCE2, info_source)}' for "
+            f"'{get_display_from_choices(ASSESSMENT_TYPES, assessment_type)}' "
             "assessment with "
-            f"'{get_display(ASSESSMENT_WHO_CHOICES, assessment_who)}.'"
+            f"'{get_display_from_choices(ASSESSMENT_WHO_CHOICES, assessment_who)}.'"
         )
 
     def validate_info_source_against_assessment_type_who(self):
@@ -182,11 +182,10 @@ class SubjectVisitFormValidator(VisitFormValidator):
 
             if is_baseline(instance=self.cleaned_data.get("appointment")):
                 survival_status = self.cleaned_data.get("survival_status")
-                error_msg = (
-                    "Invalid: Cannot be "
-                    f"'{get_display(ALIVE_DEAD_UNKNOWN_NA_MISSED, survival_status)}' "
-                    "at baseline"
+                choice = get_display_from_choices(
+                    ALIVE_DEAD_UNKNOWN_NA_MISSED, survival_status
                 )
+                error_msg = f"Invalid: Cannot be '{choice}' at baseline"
 
             elif self.cleaned_data.get("assessment_type") == IN_PERSON:
                 error_msg = "Invalid: Expected 'Alive' if this is an 'In person' visit"
